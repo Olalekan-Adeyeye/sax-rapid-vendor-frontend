@@ -1,0 +1,70 @@
+@import "tailwindcss";
+@source "../app";
+
+@theme {
+	--font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+	--color-primary: #000000;
+	--color-primary-dark: #111111;
+	--color-gold: #ffd700;
+	--color-gold-light: #fff44f;
+	--color-accent: #ffd700;
+	--color-vibrant-pink: #ff1493;
+	--color-vibrant-blue: #00bfff;
+	--color-vibrant-purple: #8a2be2;
+}
+
+/* ── Ticker animation ────────────────────────── */
+@keyframes ticker {
+	0% {
+		transform: translateX(0);
+	}
+	100% {
+		transform: translateX(-50%);
+	}
+}
+.animate-ticker {
+	animation: ticker 35s linear infinite;
+}
+
+/* ── Badge pulse ─────────────────────────────── */
+@keyframes pulse-badge {
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.65;
+	}
+}
+.animate-pulse-badge {
+	animation: pulse-badge 2s ease-in-out infinite;
+}
+
+/* ── Hide scrollbar on overflow rows ────────── */
+.no-scrollbar::-webkit-scrollbar {
+	display: none;
+}
+.no-scrollbar {
+	scrollbar-width: none;
+}
+
+/* ── Stock progress gradient ─────────────────── */
+.stock-fill {
+	background: linear-gradient(to right, #ffd700, #fff44f);
+}
+
+/* ── Global button cursor ────────────────────── */
+button,
+[role="button"],
+a {
+	cursor: pointer;
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
