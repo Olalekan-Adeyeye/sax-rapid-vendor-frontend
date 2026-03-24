@@ -9,7 +9,7 @@ export default function WalletPage() {
 		<div className="space-y-10">
 			<div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
 				<div>
-					<h2 className="text-2xl lg:text-4xl font-black tracking-tighter text-black uppercase">
+					<h2 className="text-2xl lg:text-4xl font-black tracking-tighter text-black">
 						My Wallet
 					</h2>
 					<p className="text-gray-400 mt-2 uppercase tracking-[0.2em] text-[10px] font-black">

@@ -23,6 +23,7 @@ import {
     AlertCircle,
 } from "lucide-react";
 import Image from "next/image";
+import { Logo } from "@/components/common/Logo";
 
 const STEPS = [
 	{
@@ -132,17 +133,12 @@ export default function OnboardingPage() {
 
 				<Link
 					href="/"
-					className="flex flex-col leading-none group w-fit relative z-20"
+					className="group w-fit relative z-20 transition-opacity hover:opacity-80"
 				>
-					<span className="text-3xl font-black tracking-tighter text-black group-hover:text-gold transition-colors">
-						SAX<span className="text-gold">·</span>RAPID
-					</span>
-					<span className="text-[10px] font-black tracking-[0.6em] text-gray-400 uppercase mt-1">
-						Vendor Center
-					</span>
+					<Logo size="md" />
 				</Link>
 
-				<div className="relative z-10">
+				<div className="relative z-10 mt-10">
 					<div className="w-12 h-1.5 bg-gold rounded-full mb-10" />
 					<h2 className="text-5xl font-black text-black leading-[1.1] tracking-tighter mb-6">
 						Hey {form.firstName}, <br />
@@ -185,10 +181,8 @@ export default function OnboardingPage() {
 			{/* ── MAIN CONTENT ───────────────────────── */}
 			<div className="flex-1 flex flex-col p-8 lg:px-20 lg:py-12 overflow-y-auto bg-[radial-gradient(circle_at_top_right,var(--tw-gradient-stops))] from-gold/5 via-white to-white font-sans">
 				<div className="lg:hidden mb-12 flex items-center justify-between">
-					<Link href="/" className="flex flex-col leading-none">
-						<span className="text-2xl font-black tracking-tighter text-black">
-							SAX<span className="text-gold">·</span>RAPID
-						</span>
+					<Link href="/" className="transition-opacity hover:opacity-80">
+						<Logo size="md" />
 					</Link>
 					<div className="text-[10px] font-black uppercase tracking-widest text-gray-400">
 						Step {step + 1} / 5

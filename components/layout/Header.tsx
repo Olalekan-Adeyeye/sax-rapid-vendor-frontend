@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import {
 	Menu,
 	Search,
@@ -39,7 +40,7 @@ export function Header({ onMenuClick }: HeaderProps) {
 	];
 
 	return (
-		<header className="h-20 border-b border-gray-100 px-4 lg:px-8 flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur-md z-40 text-black w-full overflow-hidden">
+		<header className="h-20 border-b border-gray-100 px-4 lg:px-8 flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur-md z-100 text-black w-full">
 			<div className="flex items-center gap-2 lg:gap-4 flex-1 min-w-0 max-w-xl">
 				<button
 					onClick={onMenuClick}
@@ -70,11 +71,16 @@ export function Header({ onMenuClick }: HeaderProps) {
 						isDropdownOpen ? "bg-gray-50" : "hover:bg-gray-50"
 					}`}
 				>
-					<div className="w-8 h-8 lg:w-9 lg:h-9 rounded bg-gold/10 border border-gold/10 flex items-center justify-center text-gold font-black text-[10px] lg:text-xs transition-colors group-hover:bg-gold group-hover:text-black shrink-0">
-						TW
+					<div className="w-8 h-8 lg:w-9 lg:h-9 rounded bg-gold/10 border border-gold/10 flex items-center justify-center overflow-hidden shrink-0 relative">
+						<Image 
+							src="/assets/icons/SaxRapid-Logo.png" 
+							alt="User Store" 
+							fill
+							className="object-contain p-1.5" 
+						/>
 					</div>
 					<div className="hidden sm:flex flex-col items-start leading-none gap-1 min-w-0">
-						<span className="text-[9px] lg:text-[10px] font-black uppercase tracking-widest text-black truncate max-w-[80px] lg:max-w-none">
+						<span className="text-[9px] lg:text-[10px] font-black uppercase tracking-widest text-black truncate max-w-20 lg:max-w-none">
 							TechWorld
 						</span>
 						<span className="text-[7px] lg:text-[8px] font-bold uppercase tracking-widest text-gray-400 truncate">

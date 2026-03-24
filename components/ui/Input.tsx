@@ -34,7 +34,7 @@ export function Input({
 				<input
 					id={id}
 					className={`w-full bg-gray-50 border border-gray-200 text-black text-sm rounded py-3.5 placeholder-gray-400 outline-none focus:border-gold focus:bg-white transition-all font-medium 
-						${leftSlot ? "pl-16" : "px-4"} 
+						${leftSlot ? "pl-10" : "px-4"} 
 						${rightSlot ? "pr-14" : "pr-4"} 
 						${className}`}
 					{...props}

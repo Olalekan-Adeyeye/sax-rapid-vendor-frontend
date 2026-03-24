@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Lightbulb, Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
+import { Logo } from "@/components/common/Logo";
 
 export default function LoginPage() {
 	const [email, setEmail] = useState("");
@@ -33,17 +34,12 @@ export default function LoginPage() {
 
 				<Link
 					href="/"
-					className="flex flex-col leading-none group w-fit relative z-20"
+					className="group w-fit relative z-20 transition-opacity hover:opacity-80"
 				>
-					<span className="text-3xl font-black tracking-tighter text-black group-hover:text-gold transition-colors">
-						SAX<span className="text-gold">·</span>RAPID
-					</span>
-					<span className="text-[10px] font-black tracking-[0.6em] text-gray-400 uppercase mt-1">
-						Vendor Center
-					</span>
+					<Logo size="md" />
 				</Link>
 
-				<div className="relative z-10">
+				<div className="relative z-10 mt-10">
 					<div className="w-12 h-1.5 bg-gold rounded-full mb-10" />
 					<h2 className="text-5xl font-black text-black leading-[1.1] tracking-tighter mb-6 underline decoration-gold/30">
 						Welcome <br />
@@ -68,20 +64,14 @@ export default function LoginPage() {
 						</p>
 					</div>
 				</div>
-
-				<p className="text-[10px] font-black uppercase tracking-widest text-gray-800 relative z-10">
-					Secure Merchant Portal · SAX-RAPID
-				</p>
 			</div>
 
 			{/* ── MAIN CONTENT ───────────────────────── */}
 			<div className="flex-1 flex flex-col items-center justify-center p-8 lg:px-20 lg:py-12 bg-[radial-gradient(circle_at_bottom_left,var(--tw-gradient-stops))] from-gold/5 via-white to-white">
 				<div className="w-full max-w-sm">
 					<div className="mb-10 lg:hidden">
-						<Link href="/" className="flex flex-col leading-none group w-fit">
-							<span className="text-2xl font-black tracking-tighter text-black">
-								SAX<span className="text-gold">·</span>RAPID
-							</span>
+						<Link href="/" className="transition-opacity hover:opacity-80">
+							<Logo size="md" />
 						</Link>
 					</div>
 
@@ -118,7 +108,7 @@ export default function LoginPage() {
 									<button
 										type="button"
 										onClick={() => setShowPass(!showPass)}
-										className="text-gray-600 hover:text-gold transition-colors p-1"
+										className="text-gray-600 hover:text-black transition-colors p-1"
 										aria-label={showPass ? "Hide password" : "Show password"}
 									>
 										{showPass ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -126,21 +116,16 @@ export default function LoginPage() {
 								}
 							/>
 							<div className="flex justify-end">
-								<a
-									href="#"
-									className="text-[10px] font-black uppercase tracking-widest text-gold hover:text-white transition-colors"
+								<Link
+									href="/forgot-password"
+									className="text-[10px] font-black uppercase tracking-widest text-black hover:text-gold transition-colors"
 								>
 									Forgot Password?
-								</a>
+								</Link>
 							</div>
 						</div>
 
-						<Button
-							type="submit"
-							loading={loading}
-							fullWidth
-							className="py-5"
-						>
+						<Button type="submit" loading={loading} fullWidth className="py-5">
 							Login
 						</Button>
 

@@ -1,28 +1,96 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import { PageLoaderSimulation } from "@/components/common/PageLoaderSimulation";
 
 const jakarta = Plus_Jakarta_Sans({
-  variable: "--font-jakarta",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
+	variable: "--font-jakarta",
+	subsets: ["latin"],
+	weight: ["300", "400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
-  title: "SAX-RAPID | Premium Online Marketplace",
-  description: "Shop the best deals on fashion, electronics, home essentials, gadgets, and more at SAX-RAPID — your premier online marketplace.",
+	title: {
+		default: "Sax-RAPID | Online Marketplace",
+		template: "%s | Sax-RAPID Vendor Center",
+	},
+	description:
+		"Join SAX-RAPID — Nigeria's premier online marketplace. Expand your business reach with world-class logistics, real-time analytics, and guaranteed weekly payouts.",
+	keywords: [
+		"marketplace",
+		"sell online",
+		"Nigeria ecommerce",
+		"vendor center",
+		"SAX-RAPID",
+	],
+	authors: [{ name: "SAX-RAPID Team" }],
+	creator: "SAX-RAPID",
+	publisher: "SAX-RAPID",
+	formatDetection: {
+		email: false,
+		address: false,
+		telephone: false,
+	},
+	metadataBase: new URL("https://saxrapid.com"),
+	alternates: {
+		canonical: "/",
+	},
+	openGraph: {
+		title: "SAX-RAPID | Online Marketplace",
+		description: "Nigeria's premier online marketplace for serious sellers.",
+		url: "https://saxrapid.com",
+		siteName: "SAX-RAPID",
+		images: [
+			{
+				url: "/assets/icons/SaxRapid-Logo.png",
+				width: 800,
+				height: 600,
+				alt: "SAX-RAPID Branding",
+			},
+		],
+		locale: "en_NG",
+		type: "website",
+	},
+	twitter: {
+		card: "summary_large_image",
+		title: "SAX-RAPID Vendor Center",
+		description: "Reach millions of premium shoppers across Nigeria.",
+		creator: "@sax_rapid",
+		images: ["/assets/icons/SaxRapid-Logo.png"],
+	},
+	icons: {
+		icon: "/assets/icons/SaxRapid-Logo.png",
+		shortcut: "/assets/icons/SaxRapid-Logo.png",
+		apple: "/assets/icons/SaxRapid-Logo.png",
+	},
+	viewport: {
+		width: "device-width",
+		initialScale: 1,
+		maximumScale: 1,
+	},
+	robots: {
+		index: true,
+		follow: true,
+		googleBot: {
+			index: true,
+			follow: true,
+			"max-video-preview": -1,
+			"max-image-preview": "large",
+			"max-snippet": -1,
+		},
+	},
 };
 
 export default function RootLayout({
-  children,
+	children,
 }: Readonly<{
-  children: React.ReactNode;
+	children: React.ReactNode;
 }>) {
-  return (
-    <html lang="en" className={jakarta.variable}>
-      <body className="font-sans antialiased bg-white text-black">
-        {children}
-      </body>
-    </html>
-  );
+	return (
+		<html lang="en" className={jakarta.variable}>
+			<body className="font-sans antialiased bg-white text-black">
+				<PageLoaderSimulation>{children}</PageLoaderSimulation>
+			</body>
+		</html>
+	);
 }

@@ -3,8 +3,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { Mail, Lock, User } from "lucide-react";
+import { Mail, Lock, User, Sparkle } from "lucide-react";
 import Image from "next/image";
+import { Logo } from "@/components/common/Logo";
 
 export default function SignupPage() {
 	const [loading, setLoading] = useState(false);
@@ -40,17 +41,12 @@ export default function SignupPage() {
 
 				<Link
 					href="/"
-					className="flex flex-col leading-none group w-fit relative z-20"
+					className="group w-fit relative z-20 transition-opacity hover:opacity-80"
 				>
-					<span className="text-3xl font-black tracking-tighter text-black group-hover:text-gold transition-colors">
-						SAX<span className="text-gold">·</span>RAPID
-					</span>
-					<span className="text-[10px] font-black tracking-[0.6em] text-gray-400 uppercase mt-1">
-						Vendor Center
-					</span>
+					<Logo size="md" />
 				</Link>
 
-				<div className="relative z-10">
+				<div className="relative z-10 mt-10">
 					<div className="w-12 h-1.5 bg-gold rounded-full mb-10" />
 					<h2 className="text-5xl font-black text-black leading-[1.1] tracking-tighter mb-6 underline decoration-gold/30">
 						Ready to <br />
@@ -60,7 +56,7 @@ export default function SignupPage() {
 						Join the thousands of sellers growing their business with us.
 					</p>
 
-					<div className="space-y-6">
+					<div className="space-y-8">
 						{[
 							"Reach over 5 Million buyers",
 							"We handle your delivery",
@@ -71,7 +67,7 @@ export default function SignupPage() {
 								key={perk}
 								className="flex items-center gap-4 text-xs font-black uppercase tracking-widest text-gray-400"
 							>
-								<span className="text-gold text-lg">✦</span>
+								<Sparkle size={14} className=" fill-current" />
 								{perk}
 							</div>
 						))}
@@ -87,17 +83,12 @@ export default function SignupPage() {
 			<div className="flex-1 flex flex-col items-center justify-center p-8 lg:px-20 lg:py-12 overflow-y-auto bg-[radial-gradient(circle_at_top_right,var(--tw-gradient-stops))] from-gold/5 via-white to-white">
 				<div className="w-full max-w-sm">
 					<div className="mb-10 lg:hidden">
-						<Link
-							href="/"
-							className="flex flex-col leading-none group w-fit mx-auto"
-						>
-							<span className="text-2xl font-black tracking-tighter text-black">
-								SAX<span className="text-gold">·</span>RAPID
-							</span>
+						<Link href="/" className="transition-opacity hover:opacity-80">
+							<Logo size="md" />
 						</Link>
 					</div>
 
-					<div className="mb-10 text-center sm:text-left">
+					<div className="mb-10">
 						<h1 className="text-4xl font-black text-black tracking-tighter mb-2">
 							Create Account.
 						</h1>
@@ -167,13 +158,23 @@ export default function SignupPage() {
 								id="confirmPassword"
 								type={showPass ? "text" : "password"}
 								value={form.confirmPassword}
-								onChange={(f) => setForm((prev) => ({ ...prev, confirmPassword: f.target.value }))}
+								onChange={(f) =>
+									setForm((prev) => ({
+										...prev,
+										confirmPassword: f.target.value,
+									}))
+								}
 								required
 								leftSlot={<Lock size={16} className="text-gray-400" />}
 							/>
 						</div>
 
-						<Button fullWidth type="submit" loading={loading} className="mt-2 py-5" variant="black">
+						<Button
+							fullWidth
+							type="submit"
+							loading={loading}
+							className="mt-2 py-5"
+						>
 							Next Step
 						</Button>
 

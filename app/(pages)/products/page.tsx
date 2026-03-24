@@ -8,7 +8,7 @@ export default function ProductsPage() {
 		<div className="space-y-10">
 			<div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
 				<div>
-					<h2 className="text-2xl lg:text-4xl font-black tracking-tighter text-black uppercase">
+					<h2 className="text-2xl lg:text-4xl font-black tracking-tighter text-black">
 						All Products
 					</h2>
 					<p className="text-gray-400 mt-2 uppercase tracking-[0.2em] text-[10px] font-black">
@@ -98,8 +98,13 @@ export default function ProductsPage() {
 								<tr key={i} className="hover:bg-gray-50/50 transition-colors group">
 									<td className="px-8 py-5">
 										<div className="flex items-center gap-4">
-											<div className="w-12 h-12 rounded bg-gray-100 overflow-hidden shrink-0">
-												<img src={product.img} alt={product.name} className="w-full h-full object-cover" />
+											<div className="w-12 h-12 rounded bg-gray-100 overflow-hidden shrink-0 relative flex items-center justify-center">
+												<img 
+													src="/assets/icons/SaxRapid-Logo.png" 
+													alt="Placeholder" 
+													className="w-1/2 opacity-20 filter grayscale brightness-0 select-none pointer-events-none absolute" 
+												/>
+												<img src={product.img} alt={product.name} className="w-full h-full object-cover relative z-10" />
 											</div>
 											<span className="text-sm font-black text-black">{product.name}</span>
 										</div>

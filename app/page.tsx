@@ -5,21 +5,22 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { BenefitCard } from "@/components/vendor/BenefitCard";
 import { StepItem } from "@/components/vendor/StepItem";
-import { 
-	Menu, 
-	X, 
-	ArrowRight, 
-	Globe, 
-	Zap, 
-	BarChart3, 
-	Gem, 
-	CheckCircle2, 
+import { Logo } from "@/components/common/Logo";
+import {
+	Menu,
+	X,
+	ArrowRight,
+	Globe,
+	Zap,
+	BarChart3,
+	Gem,
+	CheckCircle2,
 	Star,
 	Sparkle,
 	Facebook,
 	Linkedin,
 	Instagram,
-	Twitter
+	Twitter,
 } from "lucide-react";
 
 const stats = [
@@ -76,9 +77,25 @@ const testimonials = [
 	},
 ];
 
+import Script from "next/script";
+
 export default function VendorCenter() {
 	const [activeStep, setActiveStep] = useState(0);
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+	const jsonLd = {
+		"@context": "https://schema.org",
+		"@type": "Organization",
+		"name": "SAX-RAPID",
+		"url": "https://saxrapid.com",
+		"logo": "https://saxrapid.com/assets/icons/SaxRapid-Logo.png",
+		"description": "Nigeria's premier online marketplace for premium vendors.",
+		"sameAs": [
+			"https://twitter.com/sax_rapid",
+			"https://facebook.com/sax_rapid",
+			"https://linkedin.com/company/sax_rapid"
+		]
+	};
 
 	// Prevent scrolling when mobile menu is open
 	useEffect(() => {
@@ -94,6 +111,11 @@ export default function VendorCenter() {
 
 	return (
 		<main className="min-h-screen bg-white font-sans antialiased text-black overflow-x-hidden relative">
+			<Script
+				id="json-ld"
+				type="application/ld+json"
+				dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+			/>
 			{/* Mobile Navigation Overlay */}
 			<div
 				className={`fixed inset-0 bg-[#ffffff] z-9999 transition-all duration-500 lg:hidden flex flex-col ${
@@ -115,15 +137,10 @@ export default function VendorCenter() {
 					<div className="mb-8">
 						<Link
 							href="/"
-							className="flex flex-col leading-none select-none mb-10"
+							className="mb-10"
 							onClick={() => setIsMenuOpen(false)}
 						>
-							<span className="text-2xl font-black tracking-tighter text-black">
-								SAX<span className="text-gold">·</span>RAPID
-							</span>
-							<span className="text-[8px] font-black tracking-[0.5em] text-gray-400 uppercase mt-1">
-								Vendor Center
-							</span>
+							<Logo size="md" />
 						</Link>
 
 						<div className="space-y-6">
@@ -182,18 +199,18 @@ export default function VendorCenter() {
 								Seller Resources
 							</a>
 						</div>
-						<div className="flex items-center gap-2 text-gold text-[10px] font-black uppercase tracking-widest">
+						{/* <div className="flex items-center gap-2 text-gold text-[10px] font-black uppercase tracking-widest">
 							<span className="w-1.5 h-1.5 bg-gold rounded-full animate-pulse" />
 							Track My Application
-						</div>
+						</div> */}
 					</div>
 				</div>
 			</div>
 
 			{/* ── TOP BAR ──────────────────────────────── */}
-			<div className="bg-black text-[10px] uppercase tracking-widest font-black border-b border-white/5">
+			<div className="bg-black text-[10px] uppercase tracking-widest font-black border-b border-white/5 hidden md:block">
 				<div className="max-w-7xl mx-auto px-6 h-8 md:h-10 flex items-center justify-between">
-					<div className="hidden md:flex items-center gap-6 text-gray-400">
+					<div className="flex items-center gap-6 text-gray-400">
 						<Link href="/signup" className="hover:text-gold transition-colors">
 							Become a Seller
 						</Link>
@@ -206,10 +223,10 @@ export default function VendorCenter() {
 							Seller Resources
 						</a>
 					</div>
-					<div className="flex items-center gap-2 text-gold ml-auto md:ml-0">
+					{/* <div className="flex items-center gap-2 text-gold ml-auto md:ml-0">
 						<span className="w-1 md:w-1.5 h-1 md:h-1.5 bg-gold rounded-full animate-pulse" />
 						Track My Application
-					</div>
+					</div> */}
 				</div>
 			</div>
 
@@ -218,14 +235,9 @@ export default function VendorCenter() {
 				<div className="max-w-7xl mx-auto px-6 h-16 md:h-20 flex items-center justify-between">
 					<Link
 						href="/"
-						className="flex flex-col leading-none select-none relative z-50"
+						className="relative z-50 transition-opacity hover:opacity-80"
 					>
-						<span className="text-xl md:text-2xl font-black tracking-tighter text-black">
-							SAX<span className="text-gold">·</span>RAPID
-						</span>
-						<span className="text-[7px] md:text-[8px] font-black tracking-[0.5em] text-gray-400 uppercase mt-0.5">
-							Vendor Center
-						</span>
+						<Logo size="md" />
 					</Link>
 
 					<nav className="hidden lg:flex items-center gap-10 text-[11px] font-black uppercase tracking-widest text-gray-400">
@@ -261,11 +273,7 @@ export default function VendorCenter() {
 							onClick={() => setIsMenuOpen(!isMenuOpen)}
 							aria-label="Toggle Menu"
 						>
-							{isMenuOpen ? (
-								<X size={24} />
-							) : (
-								<Menu size={24} />
-							)}
+							{isMenuOpen ? <X size={24} /> : <Menu size={24} />}
 						</button>
 					</div>
 				</div>
@@ -639,9 +647,9 @@ export default function VendorCenter() {
 				<div className="max-w-7xl mx-auto px-6">
 					<div className="grid grid-cols-2 md:grid-cols-5 gap-10 pb-16 border-b border-white/10">
 						<div className="col-span-2">
-							<div className="text-2xl font-black tracking-tighter mb-4">
-								SAX<span className="text-gold">·</span>RAPID
-							</div>
+							<Link href="/" className="inline-block mb-4 transition-opacity hover:opacity-80">
+								<Logo size="md" light />
+							</Link>
 							<p className="text-gray-500 text-sm leading-relaxed max-w-sm mb-8 font-medium">
 								The premier Nigerian marketplace built for vendors who demand
 								excellence in every transaction.

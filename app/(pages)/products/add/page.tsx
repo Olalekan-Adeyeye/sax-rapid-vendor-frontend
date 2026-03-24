@@ -12,7 +12,7 @@ export default function AddProductPage() {
 						<ArrowLeft size={16} />
 					</Link>
 					<div>
-						<h2 className="text-2xl lg:text-3xl font-black tracking-tighter text-black uppercase">
+						<h2 className="text-2xl lg:text-3xl font-black tracking-tighter text-black">
 							Add New Product
 						</h2>
 						<p className="text-gray-400 mt-1 uppercase tracking-[0.2em] text-[10px] font-black">

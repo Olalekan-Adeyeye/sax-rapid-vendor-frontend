@@ -2,30 +2,31 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-	X, 
-	LayoutDashboard, 
-	ShoppingBag, 
-	Package, 
-	Plus, 
-	Tags, 
-	Settings2, 
-	Layers, 
-	Database, 
-	Star, 
-	Wallet, 
-	ArrowDownCircle, 
-	Zap, 
-	Gift, 
-	Rocket, 
-	LineChart, 
-	Store, 
-	UserCog, 
-	Bell, 
-	MessageSquare, 
-	ArrowUpRight, 
-	Headphones 
+import {
+	X,
+	LayoutDashboard,
+	ShoppingBag,
+	Package,
+	Plus,
+	Tags,
+	Settings2,
+	Layers,
+	Database,
+	Star,
+	Wallet,
+	ArrowDownCircle,
+	Zap,
+	Gift,
+	Rocket,
+	LineChart,
+	Store,
+	UserCog,
+	Bell,
+	MessageSquare,
+	ArrowUpRight,
+	Headphones,
 } from "lucide-react";
+import { Logo } from "@/components/common/Logo";
 
 const navGroups = [
 	{
@@ -42,7 +43,11 @@ const navGroups = [
 			{ name: "All Products", href: "/products", icon: Package },
 			{ name: "Add Product", href: "/products/add", icon: Plus },
 			{ name: "Categories", href: "/products/categories", icon: Tags },
-			{ name: "Product Features", href: "/products/attributes", icon: Settings2 },
+			{
+				name: "Product Features",
+				href: "/products/attributes",
+				icon: Settings2,
+			},
 			{ name: "Variations", href: "/products/variations", icon: Layers },
 			{ name: "Stock", href: "/inventory", icon: Database },
 		],
@@ -92,29 +97,24 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 			{/* Backdrop for mobile */}
 			{isOpen && (
 				<div
-					className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 lg:hidden transition-opacity duration-300"
+					className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[190] lg:hidden transition-opacity duration-300"
 					onClick={onClose}
 				/>
 			)}
 
 			{/* Sidebar Container */}
 			<aside
-				className={`fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-100 flex flex-col z-50 transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+				className={`fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-100 flex flex-col z-[200] transition-transform duration-300 ease-in-out lg:translate-x-0 ${
 					isOpen ? "translate-x-0" : "-translate-x-full"
 				}`}
 			>
 				<div className="p-8 flex items-center justify-between">
 					<Link
 						href="/"
-						className="flex flex-col leading-none select-none"
+						className="group transition-opacity hover:opacity-80"
 						onClick={onClose}
 					>
-						<span className="text-xl font-black tracking-tighter text-black">
-							SAX<span className="text-gold">·</span>RAPID
-						</span>
-						<span className="text-[7px] font-black tracking-[0.5em] text-gray-400 uppercase mt-0.5">
-							Vendor Center
-						</span>
+						<Logo size="sm" />
 					</Link>
 					<button
 						onClick={onClose}

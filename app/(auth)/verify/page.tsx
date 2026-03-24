@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
-import { Mail } from "lucide-react";
+import { Logo } from "@/components/common/Logo";
 
 export default function VerifyPage() {
 	const [otp, setOtp] = useState("");
@@ -35,17 +35,12 @@ export default function VerifyPage() {
 
 				<Link
 					href="/"
-					className="flex flex-col leading-none group w-fit relative z-20"
+					className="group w-fit relative z-20 transition-opacity hover:opacity-80"
 				>
-					<span className="text-3xl font-black tracking-tighter text-black group-hover:text-gold transition-colors">
-						SAX<span className="text-gold">·</span>RAPID
-					</span>
-					<span className="text-[10px] font-black tracking-[0.6em] text-gray-400 uppercase mt-1">
-						Vendor Center
-					</span>
+					<Logo size="md" />
 				</Link>
 
-				<div className="relative z-10">
+				<div className="relative z-10 mt-10">
 					<div className="w-12 h-1.5 bg-gold rounded-full mb-10" />
 					<h2 className="text-5xl font-black text-black leading-[1.1] tracking-tighter mb-6 underline decoration-gold/30">
 						Security <br />
@@ -68,15 +63,13 @@ export default function VerifyPage() {
 					<div className="mb-10 lg:hidden text-center">
 						<Link
 							href="/"
-							className="flex flex-col leading-none group w-fit mx-auto"
+							className="group w-fit mx-auto transition-opacity hover:opacity-80"
 						>
-							<span className="text-2xl font-black tracking-tighter text-black">
-								SAX<span className="text-gold">·</span>RAPID
-							</span>
+							<Logo size="sm" />
 						</Link>
 					</div>
 
-					<div className="text-center mb-10">
+					<div className="mb-10">
 						<h1 className="text-4xl font-black text-black tracking-tighter mb-2">
 							Verify Code.
 						</h1>
@@ -95,8 +88,8 @@ export default function VerifyPage() {
 								type="text"
 								maxLength={6}
 								autoFocus
-								placeholder="0  0  0  0  0  0"
-								className="bg-transparent border-b-2 border-gray-100 text-center text-5xl font-black tracking-[0.4em] text-black outline-none focus:border-gold transition-all w-full max-w-xs py-6 placeholder:text-gray-100"
+								placeholder="0 0 0 0 0 0"
+								className="bg-transparent border-b-2 border-gray-100 text-center text-3xl font-black tracking-[0.2em] text-black outline-none focus:border-gold transition-all w-full max-w-xs py-3 placeholder:text-gray-100"
 								value={otp}
 								onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
 							/>

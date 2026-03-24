@@ -7,7 +7,7 @@ export default function StoreManagement() {
 		<div className="max-w-5xl mx-auto space-y-12">
 			<div className="flex items-center justify-between">
 				<div>
-					<h2 className="text-2xl lg:text-4xl font-black tracking-tighter text-black uppercase">
+					<h2 className="text-2xl lg:text-4xl font-black tracking-tighter text-black">
 						Store Profile
 					</h2>
 					<p className="text-gray-400 mt-2 uppercase tracking-[0.2em] text-[10px] font-black">
@@ -34,7 +34,11 @@ export default function StoreManagement() {
 					{/* Logo Overlay */}
 					<div className="absolute bottom-8 left-8 flex items-end gap-6">
 						<div className="relative w-32 h-32 lg:w-40 lg:h-40 bg-white border-4 border-white rounded overflow-hidden group/logo">
-							<img src="https://images.unsplash.com/photo-1541167760496-1628856ab772?w=400&h=400&fit=crop" alt="Logo" className="w-full h-full object-cover group-hover/logo:scale-110 transition-transform duration-500" />
+							<img 
+								src="/assets/icons/SaxRapid-Logo.png" 
+								alt="Logo" 
+								className="w-full h-full object-contain p-4 group-hover/logo:scale-110 transition-transform duration-500" 
+							/>
 							<div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/logo:opacity-100 transition-opacity bg-black/40">
 								<Camera size={24} className="text-white" />
 							</div>
@@ -54,7 +58,7 @@ export default function StoreManagement() {
 				<div className="lg:col-span-2 space-y-10">
 					{/* About Store */}
 					<div className="bg-white border border-gray-100 rounded p-10 space-y-10">
-						<h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-gold pb-6 border-b border-gray-50 flex items-center gap-3">
+						<h4 className="text-[11px] font-black tracking-[0.2em] text-gold pb-6 border-b border-gray-50 flex items-center gap-3">
 							<Store size={14} />
 							Store Information
 						</h4>
@@ -80,7 +84,7 @@ export default function StoreManagement() {
 
 					{/* Contact Details */}
 					<div className="bg-white border border-gray-100 rounded p-10 space-y-10">
-						<h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-gold pb-6 border-b border-gray-50 flex items-center gap-3">
+						<h4 className="text-[11px] font-black tracking-[0.2em] text-gold pb-6 border-b border-gray-50 flex items-center gap-3">
 							<MapPin size={14} />
 							Contact Information
 						</h4>
@@ -117,7 +121,7 @@ export default function StoreManagement() {
 					{/* Business Status */}
 					<div className="bg-black text-white rounded p-10 space-y-10 relative overflow-hidden group">
 						<div className="absolute -top-10 -right-10 w-40 h-40 bg-white/5 rounded-full group-hover:bg-gold/10 transition-colors" />
-						<h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-gold pb-6 border-b border-white/5 relative z-10">Verification Status</h4>
+						<h4 className="text-[11px] font-black tracking-[0.2em] text-gold pb-6 border-b border-white/5 relative z-10">Verification Status</h4>
 						<div className="space-y-8 relative z-10">
 							<div className="flex items-center gap-4">
 								<div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center text-green-500">
@@ -142,7 +146,7 @@ export default function StoreManagement() {
 
 					{/* Business Details */}
 					<div className="bg-white border border-gray-100 rounded p-10 space-y-8 self-start">
-						<h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-gold pb-6 border-b border-gray-50 flex items-center gap-3">
+						<h4 className="text-[11px] font-black tracking-[0.2em] text-gold pb-6 border-b border-gray-50 flex items-center gap-3">
 							<Briefcase size={14} />
 							Business Info
 						</h4>
