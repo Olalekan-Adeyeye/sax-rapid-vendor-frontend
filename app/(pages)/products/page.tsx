@@ -147,7 +147,7 @@ export default function ProductsPage() {
 									<td className="px-8 py-5 text-xs font-black text-black">
 										{product.price}
 									</td>
-									<td className="px-8 py-5 text-xs font-bold text-gray-400 uppercase tracking-widest">
+									<td className="px-8 py-5 text-xs font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">
 										{product.sku}
 									</td>
 									<td className="px-8 py-5">
@@ -184,7 +184,7 @@ export default function ProductsPage() {
 										</span>
 									</td>
 									<td className="px-8 py-5 text-right">
-										<div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+										<div className="flex items-center justify-end gap-2">
 											<button className="w-9 h-9 rounded bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-black hover:border-gold transition-all">
 												<Edit size={14} />
 											</button>
