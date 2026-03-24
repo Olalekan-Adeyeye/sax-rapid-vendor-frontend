@@ -648,7 +648,7 @@ export default function VendorCenter() {
 					<div className="grid grid-cols-2 md:grid-cols-5 gap-10 pb-16 border-b border-white/10">
 						<div className="col-span-2">
 							<Link href="/" className="inline-block mb-4 transition-opacity hover:opacity-80">
-								<Logo size="md" light />
+								<Logo size="md" />
 							</Link>
 							<p className="text-gray-500 text-sm leading-relaxed max-w-sm mb-8 font-medium">
 								The premier Nigerian marketplace built for vendors who demand
