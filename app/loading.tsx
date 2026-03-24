@@ -17,7 +17,7 @@ export default function Loading() {
 					{/* Center Logo Icon */}
 					<div className="relative w-12 h-12 flex items-center justify-center">
 						<Image
-							src="/assets/icons/SaxRapid-Logo.png"
+							src="/assets/icons/SRM-Logo.png"
 							alt="SAX-RAPID"
 							width={48}
 							height={48}

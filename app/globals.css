@@ -48,6 +48,30 @@
 	scrollbar-width: none;
 }
 
+/* ── Premium Scrollbar ────────────────────────── */
+.premium-scrollbar {
+	scrollbar-width: thin;
+	scrollbar-color: rgba(255, 215, 0, 0.2) transparent;
+}
+
+.premium-scrollbar::-webkit-scrollbar {
+	width: 4px;
+}
+
+.premium-scrollbar::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.premium-scrollbar::-webkit-scrollbar-thumb {
+	background: rgba(255, 215, 0, 0.1);
+	border-radius: 20px;
+	transition: background 0.3s ease;
+}
+
+.premium-scrollbar:hover::-webkit-scrollbar-thumb {
+	background: rgba(255, 215, 0, 0.4);
+}
+
 /* ── Stock progress gradient ─────────────────── */
 .stock-fill {
 	background: linear-gradient(to right, #ffd700, #fff44f);

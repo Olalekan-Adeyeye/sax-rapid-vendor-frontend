@@ -63,7 +63,10 @@ export function Header({ onMenuClick }: HeaderProps) {
 				</div>
 			</div>
 
-			<div className="flex items-center gap-2 lg:gap-4 ml-2 lg:ml-4 relative shrink-0" ref={dropdownRef}>
+			<div
+				className="flex items-center gap-2 lg:gap-4 ml-2 lg:ml-4 relative shrink-0"
+				ref={dropdownRef}
+			>
 				{/* User Avatar Dropdown Toggle */}
 				<button
 					onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -72,11 +75,11 @@ export function Header({ onMenuClick }: HeaderProps) {
 					}`}
 				>
 					<div className="w-8 h-8 lg:w-9 lg:h-9 rounded bg-gold/10 border border-gold/10 flex items-center justify-center overflow-hidden shrink-0 relative">
-						<Image 
-							src="/assets/icons/SaxRapid-Logo.png" 
-							alt="User Store" 
+						<Image
+							src="/assets/icons/SRM-Logo.png"
+							alt="User Store"
 							fill
-							className="object-contain p-1.5" 
+							className="object-contain p-1.5"
 						/>
 					</div>
 					<div className="hidden sm:flex flex-col items-start leading-none gap-1 min-w-0">

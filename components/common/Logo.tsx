@@ -3,75 +3,64 @@ import Image from "next/image";
 
 interface LogoProps {
 	className?: string;
-	showText?: boolean;
 	size?: "sm" | "md" | "lg" | "xl";
-	light?: boolean;
+	showCaption?: boolean;
+	withBackground?: boolean;
 }
 
 export function Logo({
 	className = "",
-	showText = true,
 	size = "md",
-	light = false,
+	showCaption = false,
+	withBackground = true,
 }: LogoProps) {
 	const sizes = {
 		sm: {
-			icon: 24,
-			text: "text-lg",
+			width: 100,
+			height: 40,
 			subtext: "text-[6px]",
-			gap: "gap-1.5",
 		},
 		md: {
-			icon: 40,
-			text: "text-2xl",
+			width: 120,
+			height: 48,
 			subtext: "text-[8px]",
-			gap: "gap-2",
 		},
 		lg: {
-			icon: 56,
-			text: "text-4xl",
+			width: 160,
+			height: 64,
 			subtext: "text-[12px]",
-			gap: "gap-3",
 		},
 		xl: {
-			icon: 80,
-			text: "text-6xl",
-			subtext: "text-[18px]",
-			gap: "gap-4",
+			width: 240,
+			height: 96,
+			subtext: "text-[16px]",
 		},
 	};
 
 	const currentSize = sizes[size];
-	const primaryColor = light ? "text-white" : "text-black";
 
 	return (
-		<div className={`flex items-center ${currentSize.gap} ${className}`}>
+		<div className={`flex flex-col items-center ${className}`}>
 			<div
 				className="relative shrink-0"
-				style={{ width: currentSize.icon, height: currentSize.icon }}
+				style={{ width: currentSize.width, height: currentSize.height }}
 			>
 				<Image
 					src="/assets/icons/SaxRapid-Logo.png"
 					alt="SAX-RAPID Logo"
 					fill
-					className="object-contain"
+					className={`object-contain transition-all ${
+						withBackground ? "bg-black px-2 rounded" : ""
+					}`}
 					priority
 				/>
 			</div>
-
-			{showText && (
-				<div className="flex flex-col leading-none select-none">
-					<span
-						className={`${currentSize.text} font-black tracking-tighter ${primaryColor} uppercase`}
-					>
-						SAX<span className="text-gold">·</span>RAPID
-					</span>
-					<span
-						className={`${currentSize.subtext} font-black tracking-[0.5em] text-gray-400 uppercase mt-0.5`}
-					>
-						Vendor Center
-					</span>
-				</div>
+			{showCaption && (
+				<span
+					className={`${currentSize.subtext} font-black tracking-[0.6em] text-gray-400 uppercase mt-1 select-none whitespace-nowrap`}
+				>
+					Vendor Center
+				</span>
 			)}
 		</div>
 	);

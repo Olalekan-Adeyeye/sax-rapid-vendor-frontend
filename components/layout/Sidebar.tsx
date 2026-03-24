@@ -104,7 +104,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
 			{/* Sidebar Container */}
 			<aside
-				className={`fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-100 flex flex-col z-200 transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+				className={`fixed inset-y-0 left-0 w-64 bg-[#0a0a0a] border-r border-white/5 flex flex-col z-200 transition-transform duration-300 ease-in-out lg:translate-x-0 ${
 					isOpen ? "translate-x-0" : "-translate-x-full"
 				}`}
 			>
@@ -114,20 +114,20 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 						className="group transition-opacity hover:opacity-80"
 						onClick={onClose}
 					>
-						<Logo size="sm" />
+						<Logo size="sm" showCaption={true} withBackground={false} />
 					</Link>
 					<button
 						onClick={onClose}
-						className="lg:hidden w-8 h-8 rounded bg-gray-50 flex items-center justify-center text-gray-400 hover:text-black transition-colors"
+						className="lg:hidden w-8 h-8 rounded bg-white/5 flex items-center justify-center text-gray-500 hover:text-white transition-colors"
 					>
 						<X size={18} />
 					</button>
 				</div>
 
-				<nav className="flex-1 px-4 pb-8 space-y-6 overflow-y-auto no-scrollbar">
+				<nav className="flex-1 px-4 pb-8 space-y-6 overflow-y-auto premium-scrollbar">
 					{navGroups.map((group) => (
 						<div key={group.title} className="space-y-2">
-							<h3 className="px-4 text-[9px] font-black uppercase tracking-[0.2em] text-gray-300">
+							<h3 className="px-4 text-[9px] font-black uppercase tracking-[0.2em] text-gray-600">
 								{group.title}
 							</h3>
 							<div className="space-y-1">
@@ -140,13 +140,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 											className={`flex items-center gap-4 px-4 py-3 rounded text-[10px] font-black uppercase tracking-widest transition-all duration-200 ${
 												isActive
 													? "bg-gold text-black"
-													: "text-gray-400 hover:text-black hover:bg-gray-50"
+													: "text-gray-400 hover:text-white hover:bg-white/5"
 											}`}
 											onClick={onClose}
 										>
 											<item.icon
 												size={16}
-												className={isActive ? "text-black" : "text-gray-400"}
+												className={isActive ? "text-black" : "text-gray-500 group-hover:text-white transition-colors"}
 											/>
 											{item.name}
 										</Link>
@@ -157,20 +157,20 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 					))}
 				</nav>
 
-				<div className="p-4 border-t border-gray-100">
-					<div className="bg-gray-50 rounded p-5 flex flex-col gap-4">
+				<div className="p-4 border-t border-white/5">
+					<div className="bg-white/5 border border-white/5 rounded p-5 flex flex-col gap-4">
 						<div className="flex items-center gap-3">
 							<div className="w-8 h-8 rounded bg-gold/10 flex items-center justify-center text-gold">
 								<Headphones size={16} />
 							</div>
-							<p className="text-[10px] font-black uppercase tracking-widest text-black">
+							<p className="text-[10px] font-black uppercase tracking-widest text-white">
 								Support Center
 							</p>
 						</div>
-						<p className="text-[10px] font-medium text-gray-400 leading-relaxed">
+						<p className="text-[10px] font-medium text-gray-500 leading-relaxed">
 							Need help with your store? Our elite support team is here 24/7.
 						</p>
-						<button className="flex items-center justify-between group/btn text-[10px] font-black uppercase tracking-widest text-gold hover:text-black transition-colors">
+						<button className="flex items-center justify-between group/btn text-[10px] font-black uppercase tracking-widest text-gold hover:text-white transition-colors">
 							Get Assistance
 							<ArrowUpRight
 								size={14}

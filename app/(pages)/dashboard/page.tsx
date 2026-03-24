@@ -17,34 +17,54 @@ function StatCard({
 	title,
 	value,
 	detail,
-	trend,
 	icon: Icon,
+	variant = "light",
 }: {
 	title: string;
 	value: string;
 	detail: string;
 	trend?: string;
 	icon: React.ElementType;
+	variant?: "light" | "dark";
 }) {
+	const isDark = variant === "dark";
+
 	return (
-		<div className="bg-white border border-gray-100 rounded p-6 lg:p-8 hover:border-gold/30 transition-all group">
+		<div
+			className={`rounded p-6 transition-all group border ${
+				isDark
+					? "bg-black border-black text-white hover:border-gold/30"
+					: "bg-white border-gray-100 text-black hover:border-gold/30"
+			}`}
+		>
 			<div className="flex items-start justify-between mb-4">
-				<div className="w-10 h-10 rounded bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-gold group-hover:text-black transition-all">
+				<div
+					className={`w-10 h-10 rounded flex items-center justify-center transition-all ${
+						isDark
+							? "bg-white/10 text-gold group-hover:bg-gold group-hover:text-black"
+							: "bg-gray-50 text-gray-400 group-hover:bg-gold group-hover:text-black"
+					}`}
+				>
 					<Icon size={20} />
 				</div>
-				{trend && (
-					<span className="text-[9px] font-black text-green-600 bg-green-50 px-2 py-1 rounded">
-						{trend}
-					</span>
-				)}
 			</div>
-			<p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1 group-hover:text-gold transition-colors">
+			<p
+				className={`text-[10px] font-black uppercase tracking-[0.2em] mb-1 transition-colors ${
+					isDark
+						? "text-gray-500 group-hover:text-gold"
+						: "text-gray-400 group-hover:text-gold"
+				}`}
+			>
 				{title}
 			</p>
-			<h3 className="text-2xl lg:text-3xl font-black text-black tracking-tighter mb-2">
+			<h3 className="text-2xl lg:text-3xl font-black tracking-tighter mb-2">
 				{value}
 			</h3>
-			<p className="text-[9px] font-bold uppercase tracking-widest text-gray-400">
+			<p
+				className={`text-[9px] font-bold uppercase tracking-widest ${
+					isDark ? "text-gray-600" : "text-gray-400"
+				}`}
+			>
 				{detail}
 			</p>
 		</div>
@@ -139,6 +159,7 @@ export default function DashboardOverview() {
 					value="₦14,247,500"
 					detail="Lifetime earnings"
 					trend="+12.5%"
+					variant="dark"
 				/>
 				<StatCard
 					icon={ShoppingBag}
@@ -286,7 +307,7 @@ export default function DashboardOverview() {
 
 			{/* Secondary Stats/Activity */}
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-				<div className="bg-white border border-gray-100 rounded p-6 lg:p-8">
+				<div className="bg-white border border-gray-100 rounded p-6">
 					<div className="flex items-center justify-between mb-8">
 						<h4 className="text-[10px] font-black tracking-widest text-black">
 							Revenue Performance
@@ -311,7 +332,7 @@ export default function DashboardOverview() {
 					</div>
 				</div>
 
-				<div className="bg-white border border-gray-100 rounded p-6 lg:p-8">
+				<div className="bg-white border border-gray-100 rounded p-6">
 					<div className="flex items-center justify-between mb-8">
 						<h4 className="text-[10px] font-black tracking-widest text-black">
 							Popular Categories
