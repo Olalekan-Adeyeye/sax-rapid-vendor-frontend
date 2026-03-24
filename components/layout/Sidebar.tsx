@@ -97,14 +97,14 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 			{/* Backdrop for mobile */}
 			{isOpen && (
 				<div
-					className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[190] lg:hidden transition-opacity duration-300"
+					className="fixed inset-0 bg-black/60 backdrop-blur-sm z-190 lg:hidden transition-opacity duration-300"
 					onClick={onClose}
 				/>
 			)}
 
 			{/* Sidebar Container */}
 			<aside
-				className={`fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-100 flex flex-col z-[200] transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+				className={`fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-100 flex flex-col z-200 transition-transform duration-300 ease-in-out lg:translate-x-0 ${
 					isOpen ? "translate-x-0" : "-translate-x-full"
 				}`}
 			>

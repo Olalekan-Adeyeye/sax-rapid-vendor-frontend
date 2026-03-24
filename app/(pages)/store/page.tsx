@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { Store, Camera, Save, MapPin, Phone, Mail, Globe, Briefcase, Trash2, Check } from "lucide-react";
+import Image from "next/image";
 
 export default function StoreManagement() {
 	return (
@@ -23,21 +24,28 @@ export default function StoreManagement() {
 			{/* Banner & Logo Section */}
 			<div className="space-y-8">
 				<div className="relative h-64 lg:h-80 w-full bg-gray-50 rounded overflow-hidden group">
-					<img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1600&h=400&fit=crop" alt="Store Banner" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-60" />
+					<Image
+						src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1600&h=400&fit=crop"
+						alt="Store Banner"
+						fill
+						className="object-cover group-hover:scale-105 transition-transform duration-700 opacity-60"
+						priority
+					/>
 					<div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 backdrop-blur-[2px]">
 						<button className="px-8 py-4 rounded bg-white text-[10px] font-black uppercase tracking-widest text-black flex items-center gap-3">
 							<Camera size={16} />
 							Update Banner
 						</button>
 					</div>
-					
+
 					{/* Logo Overlay */}
 					<div className="absolute bottom-8 left-8 flex items-end gap-6">
 						<div className="relative w-32 h-32 lg:w-40 lg:h-40 bg-white border-4 border-white rounded overflow-hidden group/logo">
-							<img 
-								src="/assets/icons/SaxRapid-Logo.png" 
-								alt="Logo" 
-								className="w-full h-full object-contain p-4 group-hover/logo:scale-110 transition-transform duration-500" 
+							<Image
+								src="/assets/icons/SaxRapid-Logo.png"
+								alt="Logo"
+								fill
+								className="object-contain p-4 group-hover/logo:scale-110 transition-transform duration-500"
 							/>
 							<div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/logo:opacity-100 transition-opacity bg-black/40">
 								<Camera size={24} className="text-white" />

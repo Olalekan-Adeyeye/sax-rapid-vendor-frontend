@@ -11,6 +11,8 @@ import {
 	MoreVertical,
 } from "lucide-react";
 
+import Image from "next/image";
+
 function StatCard({
 	title,
 	value,
@@ -63,15 +65,21 @@ function ProductViewCard({
 	return (
 		<div className="bg-white border border-gray-100 rounded overflow-hidden group hover:border-gold/30 transition-all">
 			<div className="aspect-square bg-gray-50 overflow-hidden relative flex items-center justify-center">
-				<img
-					src="/assets/icons/SaxRapid-Logo.png"
-					alt="Placeholder"
-					className="w-1/3 opacity-20 filter grayscale brightness-0 select-none pointer-events-none absolute"
-				/>
-				<img
+				<div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
+					<div className="w-1/3 h-1/3 relative opacity-20 filter grayscale brightness-0">
+						<Image
+							src="/assets/icons/SaxRapid-Logo.png"
+							alt="Placeholder"
+							fill
+							className="object-contain"
+						/>
+					</div>
+				</div>
+				<Image
 					src={image}
 					alt={name}
-					className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 relative z-10"
+					fill
+					className="object-cover group-hover:scale-105 transition-transform duration-500 relative z-10"
 				/>
 				<div className="absolute top-3 right-3 z-20">
 					<div className="bg-white/90 backdrop-blur-sm p-1.5 rounded-full text-black hover:bg-gold transition-colors">

@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { UserCog, Bell, Shield, Lock, Save, ChevronRight } from "lucide-react";
+import Image from "next/image";
 
 export default function AccountSettingsPage() {
 	const [activeTab, setActiveTab] = React.useState("Profile");
@@ -39,8 +40,13 @@ export default function AccountSettingsPage() {
 			<div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
 				<div className="lg:col-span-1 space-y-8">
 					<div className="bg-white border border-gray-100 rounded p-8 flex flex-col items-center text-center space-y-4">
-						<div className="w-24 h-24 rounded-full bg-gold/10 border-4 border-white flex items-center justify-center text-gold overflow-hidden">
-							<img src="https://images.unsplash.com/photo-1541167760496-1628856ab772?w=400&h=400&fit=crop" alt="Profile" className="w-full h-full object-cover" />
+						<div className="w-24 h-24 rounded-full bg-gold/10 border-4 border-white flex items-center justify-center text-gold overflow-hidden relative">
+							<Image
+								src="https://images.unsplash.com/photo-1541167760496-1628856ab772?w=400&h=400&fit=crop"
+								alt="Profile"
+								fill
+								className="object-cover"
+							/>
 						</div>
 						<div>
 							<h4 className="text-sm font-black uppercase tracking-tight text-black">TechWorld Enterprise</h4>
