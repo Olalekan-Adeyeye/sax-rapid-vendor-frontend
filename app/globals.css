@@ -92,14 +92,18 @@ a {
 		opacity: 1;
 	}
 }
-@keyframes loadingLine {
+.animate-fade-in {
+	animation: fadeIn 0.3s ease-in-out forwards;
+}
+
+@keyframes progress {
 	0% {
-		transform: translateX(-100%);
-	}
-	50% {
-		transform: translateX(50%);
+		transform: scaleX(0);
 	}
 	100% {
-		transform: translateX(200%);
+		transform: scaleX(1);
 	}
+}
+.animate-progress {
+	animation: progress 0.8s ease-in-out forwards;
 }

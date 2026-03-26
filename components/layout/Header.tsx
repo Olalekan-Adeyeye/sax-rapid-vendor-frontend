@@ -100,7 +100,7 @@ export function Header({ onMenuClick }: HeaderProps) {
 
 				{/* Dropdown Menu */}
 				{isDropdownOpen && (
-					<div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-100 rounded p-1.5 z-50 shadow-large">
+					<div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-100 rounded p-1.5 z-50">
 						<div className="px-3 py-2 border-b border-gray-50 mb-1.5">
 							<p className="text-[8px] font-black uppercase tracking-widest text-gray-400">
 								Signed in as

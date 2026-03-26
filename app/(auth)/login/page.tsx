@@ -71,7 +71,7 @@ export default function LoginPage() {
 				<div className="w-full max-w-sm">
 					<div className="mb-10 lg:hidden">
 						<Link href="/" className="transition-opacity hover:opacity-80">
-							<Logo size="md" />
+							<Logo size="md" className="items-start" />
 						</Link>
 					</div>
 

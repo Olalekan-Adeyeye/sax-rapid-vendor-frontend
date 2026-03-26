@@ -60,12 +60,12 @@ export default function VerifyPage() {
 			{/* ── MAIN CONTENT ───────────────────────── */}
 			<div className="flex-1 flex flex-col items-center justify-center p-8 lg:px-20 lg:py-10 overflow-y-auto bg-[radial-gradient(circle_at_top_right,var(--tw-gradient-stops))] from-gold/5 via-white to-white">
 				<div className="w-full max-w-sm">
-					<div className="mb-10 lg:hidden text-center">
+					<div className="mb-10 lg:hidden text-left">
 						<Link
 							href="/"
-							className="group w-fit mx-auto transition-opacity hover:opacity-80"
+							className="group w-fit transition-opacity hover:opacity-80"
 						>
-							<Logo size="sm" />
+							<Logo size="sm" className="items-start" />
 						</Link>
 					</div>
 

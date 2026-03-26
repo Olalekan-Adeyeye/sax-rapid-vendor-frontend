@@ -43,7 +43,19 @@ export default function MessagesPage() {
 	];
 
 	return (
-		<div className="flex h-[calc(100vh-180px)] bg-white border border-gray-100 rounded overflow-hidden relative">
+		<div className="space-y-8 lg:space-y-10">
+			<div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+				<div>
+					<h2 className="text-2xl lg:text-4xl font-black tracking-tighter text-black">
+						Messages
+					</h2>
+					<p className="text-gray-400 mt-2 uppercase tracking-[0.2em] text-[10px] font-black">
+						Direct communication with your customers and support team
+					</p>
+				</div>
+			</div>
+
+			<div className="flex h-[calc(100vh-280px)] bg-white border border-gray-100 rounded overflow-hidden relative">
 			{/* Chat List Sidebar */}
 			<div
 				className={`w-full md:w-80 lg:w-96 border-r border-gray-100 flex flex-col shrink-0 transition-all duration-300 ${
@@ -217,6 +229,7 @@ export default function MessagesPage() {
 					</div>
 				)}
 			</div>
+		</div>
 		</div>
 	);
 }

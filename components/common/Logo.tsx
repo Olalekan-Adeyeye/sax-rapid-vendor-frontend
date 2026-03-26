@@ -12,7 +12,7 @@ export function Logo({
 	className = "",
 	size = "md",
 	showCaption = false,
-	withBackground = true,
+	withBackground = false,
 }: LogoProps) {
 	const sizes = {
 		sm: {
@@ -40,7 +40,7 @@ export function Logo({
 	const currentSize = sizes[size];
 
 	return (
-		<div className={`flex flex-col items-center ${className}`}>
+		<div className={`flex flex-col ${className.includes("items-") ? "" : "items-center"} ${className}`}>
 			<div
 				className="relative shrink-0"
 				style={{ width: currentSize.width, height: currentSize.height }}
