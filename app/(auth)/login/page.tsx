@@ -3,29 +3,72 @@ import { useState } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { Lightbulb, Eye, EyeOff } from "lucide-react";
+import { Lightbulb, Eye, EyeOff, AlertCircle } from "lucide-react";
 import Image from "next/image";
 import { Logo } from "@/components/common/Logo";
+import { login } from "@/lib/api/services/auth";
+import { useRouter } from "next/navigation";
+import axios from "axios";
+import { ApiError, mapAuthToProfile } from "@/lib/api/types/auth.types";
+import { tokenStorage } from "@/lib/api/apiClient";
+import { useAuth } from "@/lib/context/AuthContext";
 
 export default function LoginPage() {
+	const router = useRouter();
+	const { setUser } = useAuth();
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [showPass, setShowPass] = useState(false);
 	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState<string | null>(null);
 
-	const handleSubmit = (e: React.FormEvent) => {
+	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setLoading(true);
-		// Simple mock login
-		setTimeout(() => {
-			window.location.href = "/dashboard";
-		}, 1500);
+		setError(null);
+
+		try {
+			const response = await login({ email, password });
+			
+			// 1. Determine access
+			if (response.role !== "Seller") {
+				setError("Access denied. Only Vendor accounts are allowed to access this dashboard.");
+				setLoading(false);
+				return;
+			}
+
+			// 2. Update context with user
+			setUser(mapAuthToProfile(response));
+
+			// 3. Manually manage tokens
+			if (response.token && response.refreshToken) {
+				tokenStorage.setTokens(response.token, response.refreshToken);
+			}
+
+			// 4. Redirect path
+			if (!response.isVerified) {
+				router.push("/verify");
+			} else if (response.isTwoFactorEnabled) {
+				router.push("/2fa");
+			} else {
+				router.push("/dashboard");
+			}
+		} catch (err: unknown) {
+			setUser(null);
+			tokenStorage.clearTokens();
+			let message = "Invalid email or password";
+			if (axios.isAxiosError<ApiError>(err)) {
+				message = err.response?.data?.message || message;
+			}
+			setError(message);
+			setLoading(false);
+		}
 	};
 
 	return (
 		<div className="min-h-screen bg-[#fcfcfc] flex font-sans antialiased overflow-hidden text-black">
 			{/* ── LEFT PANEL ─────────────────────────── */}
-			<div className="hidden lg:flex flex-col justify-between w-120 shrink-0 bg-[#f8f8f8] border-r border-gray-200/50 p-16 relative overflow-hidden">
+			<div className="hidden lg:flex flex-col w-120 shrink-0 bg-[#f8f8f8] border-r border-gray-200/50 p-16 relative overflow-hidden">
 				<div className="absolute top-0 right-0 w-100 h-100 bg-gold/10 rounded-full blur-[100px] pointer-events-none" />
 				<div className="absolute top-0 right-0 w-80 h-80 bg-vibrant-pink/20 rounded-full -mr-32 -mt-32" />
 				<div className="absolute bottom-0 left-0 w-100 h-100 bg-vibrant-blue/15 rounded-full -ml-40 -mb-40" />
@@ -85,6 +128,13 @@ export default function LoginPage() {
 					</div>
 
 					<form onSubmit={handleSubmit} className="space-y-5">
+						{error && (
+							<div className="flex items-center gap-3 p-4 bg-red-50 border border-red-100 rounded text-red-600 text-xs font-semibold animate-in fade-in slide-in-from-top-1">
+								<AlertCircle size={16} />
+								<p>{error}</p>
+							</div>
+						)}
+
 						<Input
 							id="email"
 							label="Email Address"

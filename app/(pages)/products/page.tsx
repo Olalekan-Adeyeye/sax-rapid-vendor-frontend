@@ -1,10 +1,59 @@
 "use client";
-import React from "react";
-import { Plus, Search, Filter, MoreVertical, Edit, Trash2 } from "lucide-react";
+import React, { useEffect, useState, useCallback } from "react";
+import { Plus, Search, Filter, MoreVertical, Edit, Trash2, Loader2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import * as productsService from "@/lib/api/services/products";
+import { getMyVendorProfile } from "@/lib/api/services/vendor";
+import { ProductResponseDTO } from "@/lib/api/types/products.types";
+import { useToast } from "@/lib/context/ToastContext";
+import { getErrorMessage } from "@/lib/utils/errors";
 
 export default function ProductsPage() {
+	const [products, setProducts] = useState<ProductResponseDTO[]>([]);
+	const [loading, setLoading] = useState(true);
+	const [searchQuery, setSearchQuery] = useState("");
+	const [deletingId, setDeletingId] = useState<string | null>(null);
+	const { toast } = useToast();
+
+	const fetchProducts = useCallback(async () => {
+		try {
+			setLoading(true);
+			const vendorProfile = await getMyVendorProfile();
+			if (vendorProfile && vendorProfile.id) {
+				const data = await productsService.getProductsByVendor(vendorProfile.id);
+				setProducts(data.items || []);
+			}
+		} catch (error) {
+			toast("Error", getErrorMessage(error), "error");
+		} finally {
+			setLoading(false);
+		}
+	}, [toast]);
+
+	useEffect(() => {
+		fetchProducts();
+	}, [fetchProducts]);
+
+	const handleDelete = async (id: string) => {
+		if (!confirm("Are you sure you want to delete this product?")) return;
+		try {
+			setDeletingId(id);
+			await productsService.deleteProduct(id);
+			toast("Success", "Product deleted successfully.", "success");
+			fetchProducts();
+		} catch (error) {
+			toast("Error", getErrorMessage(error), "error");
+		} finally {
+			setDeletingId(null);
+		}
+	};
+
+	const filteredProducts = products.filter((p) =>
+		p.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+		p.sku?.toLowerCase().includes(searchQuery.toLowerCase())
+	);
+
 	return (
 		<div className="space-y-10">
 			<div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
@@ -35,6 +84,8 @@ export default function ProductsPage() {
 						<input
 							type="text"
 							placeholder="Search by product name, SKU..."
+							value={searchQuery}
+							onChange={(e) => setSearchQuery(e.target.value)}
 							className="w-full bg-gray-50 rounded py-3 pl-12 pr-4 text-[10px] font-black uppercase tracking-widest text-black outline-none border border-transparent focus:border-gold/30 transition-all placeholder:text-gray-300"
 						/>
 					</div>
@@ -45,8 +96,6 @@ export default function ProductsPage() {
 						</button>
 						<select className="px-6 py-3 rounded border border-gray-100 text-[9px] font-black uppercase tracking-widest text-gray-400 outline-none bg-white">
 							<option>All Categories</option>
-							<option>Electronics</option>
-							<option>Fashion</option>
 						</select>
 					</div>
 				</div>
@@ -74,130 +123,114 @@ export default function ProductsPage() {
 							</tr>
 						</thead>
 						<tbody className="divide-y divide-gray-50">
-							{[
-								{
-									name: "Premium Watch 5",
-									cat: "Electronics",
-									price: "₦125,000",
-									sku: "JW-8291-BL",
-									stock: 42,
-									status: "Active",
-									img: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100&h=100&fit=crop",
-								},
-								{
-									name: "Studio Headphones",
-									cat: "Electronics",
-									price: "₦85,000",
-									sku: "AUD-9102-S",
-									stock: 12,
-									status: "Active",
-									img: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=100&h=100&fit=crop",
-								},
-								{
-									name: "Speed Sneakers",
-									cat: "Fashion",
-									price: "₦45,000",
-									sku: "FTW-3829-R",
-									stock: 0,
-									status: "Out of Stock",
-									img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100&h=100&fit=crop",
-								},
-								{
-									name: "Dashed Fragrance",
-									cat: "Beauty",
-									price: "₦25,000",
-									sku: "BTY-1102-V",
-									stock: 156,
-									status: "Draft",
-									img: "https://images.unsplash.com/photo-1585333127302-3f8d9560f63b?w=100&h=100&fit=crop",
-								},
-							].map((product, i) => (
-								<tr
-									key={i}
-									className="hover:bg-gray-50/50 transition-colors group"
-								>
-									<td className="px-8 py-5">
-										<div className="flex items-center gap-4">
-											<div className="w-12 h-12 rounded bg-gray-100 overflow-hidden shrink-0 relative flex items-center justify-center">
-												<div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
-													<div className="w-1/2 h-1/2 relative opacity-20 filter grayscale brightness-0">
-														<Image
-															src="/assets/icons/SaxRapid-Logo.png"
-															alt="Placeholder"
-															fill
-															className="object-contain"
-														/>
-													</div>
-												</div>
-												<Image
-													src={product.img}
-													alt={product.name}
-													fill
-													className="object-cover relative z-10"
-												/>
-											</div>
-											<span className="text-sm font-black text-black">
-												{product.name}
-											</span>
-										</div>
-									</td>
-									<td className="px-8 py-5 text-xs font-bold text-gray-500 uppercase">
-										{product.cat}
-									</td>
-									<td className="px-8 py-5 text-xs font-black text-black">
-										{product.price}
-									</td>
-									<td className="px-8 py-5 text-xs font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">
-										{product.sku}
-									</td>
-									<td className="px-8 py-5">
-										<div className="flex flex-col gap-1.5 min-w-25">
-											<div className="flex items-center justify-between text-[10px] font-black uppercase">
-												<span
-													className={
-														product.stock === 0 ? "text-red-500" : "text-black"
-													}
-												>
-													{product.stock} left
-												</span>
-												<span className="text-gray-300">/ 200</span>
-											</div>
-											<div className="h-1 bg-gray-50 rounded-full overflow-hidden">
-												<div
-													className={`h-full rounded-full ${product.stock === 0 ? "bg-red-500" : "bg-gold"}`}
-													style={{ width: `${(product.stock / 200) * 100}%` }}
-												/>
-											</div>
-										</div>
-									</td>
-									<td className="px-8 py-5">
-										<span
-											className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full ${
-												product.status === "Active"
-													? "bg-green-50 text-green-600"
-													: product.status === "Out of Stock"
-														? "bg-red-50 text-red-600"
-														: "bg-gray-100 text-gray-400"
-											}`}
-										>
-											{product.status}
-										</span>
-									</td>
-									<td className="px-8 py-5 text-right">
-										<div className="flex items-center justify-end gap-2">
-											<button className="w-9 h-9 rounded bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-black hover:border-gold transition-all">
-												<Edit size={14} />
-											</button>
-											<button className="w-9 h-9 rounded bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-red-500 hover:border-red-500 transition-all">
-												<Trash2 size={14} />
-											</button>
-											<button className="w-9 h-9 rounded bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-gold transition-all">
-												<MoreVertical size={14} />
-											</button>
+							{loading ? (
+								<tr>
+									<td colSpan={7} className="px-8 py-10 text-center">
+										<div className="flex justify-center">
+											<Loader2 className="h-6 w-6 animate-spin text-gold" />
 										</div>
 									</td>
 								</tr>
-							))}
+							) : filteredProducts.length === 0 ? (
+								<tr>
+									<td colSpan={7} className="px-8 py-10 text-center">
+										<p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+											No products found.
+										</p>
+									</td>
+								</tr>
+							) : (
+								filteredProducts.map((product) => (
+									<tr
+										key={product.id}
+										className="hover:bg-gray-50/50 transition-colors group"
+									>
+										<td className="px-8 py-5">
+											<div className="flex items-center gap-4">
+												<div className="w-12 h-12 rounded bg-gray-100 overflow-hidden shrink-0 relative flex items-center justify-center">
+													{product.images && product.images.length > 0 ? (
+														<Image
+															src={product.images.find(img => img.isPrimary)?.imageUrl || product.images[0].imageUrl || "/assets/icons/SaxRapid-Logo.png"}
+															alt={product.name || "Product"}
+															fill
+															className="object-cover relative z-10"
+														/>
+													) : (
+														<div className="w-1/2 h-1/2 relative opacity-20 filter grayscale brightness-0">
+															<Image
+																src="/assets/icons/SaxRapid-Logo.png"
+																alt="Placeholder"
+																fill
+																className="object-contain"
+															/>
+														</div>
+													)}
+												</div>
+												<span className="text-sm font-black text-black">
+													{product.name}
+												</span>
+											</div>
+										</td>
+										<td className="px-8 py-5 text-xs font-bold text-gray-500 uppercase">
+											{product.categoryName || "Uncategorized"}
+										</td>
+										<td className="px-8 py-5 text-xs font-black text-black">
+											₦{product.basePrice.toLocaleString()}
+										</td>
+										<td className="px-8 py-5 text-xs font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">
+											{product.sku || "N/A"}
+										</td>
+										<td className="px-8 py-5">
+											<div className="flex flex-col gap-1.5 min-w-25">
+												<div className="flex items-center justify-between text-[10px] font-black uppercase">
+													<span
+														className={
+															product.stockQuantity === 0 ? "text-red-500" : "text-black"
+														}
+													>
+														{product.stockQuantity} left
+													</span>
+													<span className="text-gray-300">/ 200</span>
+												</div>
+												<div className="h-1 bg-gray-50 rounded-full overflow-hidden">
+													<div
+														className={`h-full rounded-full ${product.stockQuantity === 0 ? "bg-red-500" : "bg-gold"}`}
+														style={{ width: `${Math.min((product.stockQuantity / 200) * 100, 100)}%` }}
+													/>
+												</div>
+											</div>
+										</td>
+										<td className="px-8 py-5">
+											<span
+												className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full ${
+													product.isActive
+														? "bg-green-50 text-green-600"
+														: "bg-gray-100 text-gray-400"
+												}`}
+											>
+												{product.isActive ? "Active" : "Draft"}
+											</span>
+										</td>
+										<td className="px-8 py-5 text-right">
+											<div className="flex items-center justify-end gap-2">
+												<button className="w-9 h-9 rounded bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-black hover:border-gold transition-all">
+													<Edit size={14} />
+												</button>
+												<button 
+													onClick={() => handleDelete(product.id)}
+													disabled={deletingId === product.id}
+													className="w-9 h-9 rounded bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-red-500 hover:border-red-500 transition-all disabled:opacity-50"
+												>
+													{deletingId === product.id ? <Loader2 className="animate-spin" size={14} /> : <Trash2 size={14} />}
+												</button>
+												<button className="w-9 h-9 rounded bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-gold transition-all">
+													<MoreVertical size={14} />
+												</button>
+											</div>
+										</td>
+									</tr>
+								))
+							)}
 						</tbody>
 					</table>
 				</div>

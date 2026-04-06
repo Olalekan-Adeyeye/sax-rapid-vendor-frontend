@@ -2,7 +2,8 @@
 @source "../app";
 
 @theme {
-	--font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+	--font-sans:
+		var(--font-jakarta), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 	--color-primary: #000000;
 	--color-primary-dark: #111111;
 	--color-gold: #ffd700;

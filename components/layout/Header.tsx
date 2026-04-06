@@ -1,6 +1,9 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/context/AuthContext";
+import { tokenStorage } from "@/lib/api/apiClient";
 import {
 	Menu,
 	Search,
@@ -16,6 +19,8 @@ interface HeaderProps {
 }
 
 export function Header({ onMenuClick }: HeaderProps) {
+	const router = useRouter();
+	const { user, setUser } = useAuth();
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 	const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -32,11 +37,17 @@ export function Header({ onMenuClick }: HeaderProps) {
 		return () => document.removeEventListener("mousedown", handleClickOutside);
 	}, []);
 
+	const handleLogout = () => {
+		tokenStorage.clearTokens();
+		setUser(null);
+		router.push("/login");
+	};
+
 	const menuItems = [
 		{ label: "My Profile", icon: User, href: "/profile" },
 		{ label: "Account Settings", icon: Settings, href: "/settings" },
 		{ label: "Billing & Plans", icon: CreditCard, href: "/billing" },
-		{ label: "Logout", icon: LogOut, href: "/logout", variant: "danger" },
+		{ label: "Logout", icon: LogOut, action: handleLogout, variant: "danger" },
 	];
 
 	return (
@@ -75,19 +86,23 @@ export function Header({ onMenuClick }: HeaderProps) {
 					}`}
 				>
 					<div className="w-8 h-8 lg:w-9 lg:h-9 rounded bg-gold/10 border border-gold/10 flex items-center justify-center overflow-hidden shrink-0 relative">
-						<Image
-							src="/assets/icons/SRM-Logo.png"
-							alt="User Store"
-							fill
-							className="object-contain p-1.5"
-						/>
+						{user?.avatarUrl ? (
+							<Image
+								src={user.avatarUrl}
+								alt={user.firstName}
+								fill
+								className="object-cover"
+							/>
+						) : (
+							<User size={18} className="text-gold" />
+						)}
 					</div>
 					<div className="hidden sm:flex flex-col items-start leading-none gap-1 min-w-0">
 						<span className="text-[9px] lg:text-[10px] font-black uppercase tracking-widest text-black truncate max-w-20 lg:max-w-none">
-							TechWorld
+							{user?.firstName || "Welcome"} {user?.lastName || ""}
 						</span>
 						<span className="text-[7px] lg:text-[8px] font-bold uppercase tracking-widest text-gray-400 truncate">
-							Platinum Account
+							{user?.role || "Account Member"}
 						</span>
 					</div>
 					<ChevronDown
@@ -106,13 +121,21 @@ export function Header({ onMenuClick }: HeaderProps) {
 								Signed in as
 							</p>
 							<p className="text-[10px] font-bold text-black truncate">
-								admin@techworld.com
+								{user?.email || "guest@example.com"}
 							</p>
 						</div>
 						<div className="space-y-0.5">
 							{menuItems.map((item) => (
 								<button
 									key={item.label}
+									onClick={() => {
+										setIsDropdownOpen(false);
+										if ("action" in item && item.action) {
+											item.action();
+										} else if ("href" in item && item.href) {
+											router.push(item.href);
+										}
+									}}
 									className={`w-full flex items-center gap-3 px-3 py-2.5 rounded text-[10px] font-black uppercase tracking-widest transition-all ${
 										item.variant === "danger"
 											? "text-red-500 hover:bg-red-50"

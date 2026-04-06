@@ -3,13 +3,41 @@ import { useState } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { Mail, Lock, User, Sparkle } from "lucide-react";
+import { Select } from "@/components/ui/Select";
+import { Mail, Lock, User, Sparkle, Check, Phone, AlertCircle } from "lucide-react";
 import Image from "next/image";
 import { Logo } from "@/components/common/Logo";
+import axios from "axios";
+import { register } from "@/lib/api/services/auth";
+import { useRouter } from "next/navigation";
+import { ApiError, mapAuthToProfile } from "@/lib/api/types/auth.types";
+import { useToast } from "@/lib/context/ToastContext";
+import { useEffect } from "react";
+import { doPasswordsMatch } from "@/lib/utils/validation";
+import { useAuth } from "@/lib/context/AuthContext";
+import { tokenStorage } from "@/lib/api/apiClient";
+
+const countries = [
+	{ label: "Nigeria", value: "NG", code: "+234" },
+	{ label: "South Africa", value: "ZA", code: "+27" },
+	{ label: "Ghana (Coming Soon)", value: "GH", code: "+233", disabled: true },
+	{ label: "Kenya (Coming Soon)", value: "KE", code: "+254", disabled: true },
+	{
+		label: "United Kingdom (Coming Soon)",
+		value: "GB",
+		code: "+44",
+		disabled: true,
+	},
+];
 
 export default function SignupPage() {
+	const router = useRouter();
+	const { setUser } = useAuth();
+	const { toast } = useToast();
 	const [loading, setLoading] = useState(false);
 	const [showPass, setShowPass] = useState(false);
+	const [showConfirmPass, setShowConfirmPass] = useState(false);
+	const [error, setError] = useState<string | null>(null);
 
 	const [form, setForm] = useState({
 		firstName: "",
@@ -17,16 +45,72 @@ export default function SignupPage() {
 		email: "",
 		password: "",
 		confirmPassword: "",
+		phoneNumber: "",
+		countryCode: "NG", // Default to Nigeria
 	});
 
 	const update = (field: keyof typeof form, value: string) =>
 		setForm((f) => ({ ...f, [field]: value }));
 
-	const handleSubmit = (e: React.FormEvent) => {
+	const selectedCountry = countries.find((c) => c.value === form.countryCode);
+	const isComingSoon = selectedCountry?.disabled;
+
+	// Toast for coming soon
+	useEffect(() => {
+		if (isComingSoon) {
+			toast(
+				"Coming Soon",
+				`Launching in ${selectedCountry?.label.split(" (")[0]} soon. Stay tuned!`,
+				"warning",
+			);
+		}
+	}, [form.countryCode, isComingSoon, selectedCountry, toast]);
+
+	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
+		if (isComingSoon) return;
+
+		if (!doPasswordsMatch(form.password, form.confirmPassword)) {
+			setError("Passwords do not match");
+			return;
+		}
+
 		setLoading(true);
-		// Simulate account creation then redirect to verification
-		setTimeout(() => (window.location.href = "/verify"), 1500);
+		setError(null);
+
+		try {
+			// Persist registration
+			const response = await register({
+				firstName: form.firstName,
+				lastName: form.lastName,
+				email: form.email,
+				password: form.password,
+				phoneNumber: form.phoneNumber,
+				countryCode: form.countryCode,
+				role: "Seller",
+			});
+
+			// 1. Update context with user
+			setUser(mapAuthToProfile(response));
+
+			// 2. Manually manage tokens
+			if (response.token && response.refreshToken) {
+				tokenStorage.setTokens(response.token, response.refreshToken);
+			}
+
+			// Navigate to verify
+			toast("Account Created", "Your account was created successfully. Let's verify your email.", "success");
+			router.push("/verify");
+		} catch (err: unknown) {
+			setUser(null);
+			tokenStorage.clearTokens();
+			let message = "Registration failed. Please try again.";
+			if (axios.isAxiosError<ApiError>(err)) {
+				message = err.response?.data?.message || message;
+			}
+			setError(message);
+			setLoading(false);
+		}
 	};
 
 	return (
@@ -101,6 +185,13 @@ export default function SignupPage() {
 						onSubmit={handleSubmit}
 						className="space-y-5 animate-in fade-in slide-in-from-bottom-4"
 					>
+						{error && (
+							<div className="flex items-center gap-3 p-4 bg-red-50 border border-red-100 rounded text-red-600 text-xs font-semibold">
+								<AlertCircle size={16} />
+								<p>{error}</p>
+							</div>
+						)}
+
 						<div className="grid grid-cols-2 gap-4">
 							<Input
 								id="firstName"
@@ -134,6 +225,43 @@ export default function SignupPage() {
 							leftSlot={<Mail size={16} className="text-gray-400" />}
 						/>
 
+						<Select
+							label="Country"
+							id="countryCode"
+							options={countries}
+							value={form.countryCode}
+							onChange={(e) => update("countryCode", e.target.value)}
+							className="h-12.5 rounded"
+						/>
+
+						<div className="space-y-2">
+							<Input
+								id="phoneNumber"
+								label="Phone Number"
+								type="tel"
+								placeholder="08012345678"
+								value={form.phoneNumber}
+								onChange={(e) =>
+									update("phoneNumber", e.target.value.replace(/\D/g, ""))
+								}
+								required
+								className="h-12.5 rounded pl-28!"
+								leftSlot={
+									<div className="flex items-center gap-3 pr-5 border-r border-gray-200 transition-colors group-focus-within:border-gold/30 h-5">
+										<Phone size={16} className="text-gray-400 shrink-0" />
+										<span className="text-sm font-medium text-gray-400 pointer-events-none select-none">
+											{selectedCountry?.code}
+										</span>
+									</div>
+								}
+								rightSlot={
+									form.phoneNumber.length > 7 ? (
+										<Check size={18} className="text-gold animate-in zoom-in" />
+									) : null
+								}
+							/>
+						</div>
+
 						<div className="grid grid-cols-1 gap-5">
 							<Input
 								label="Password"
@@ -153,29 +281,54 @@ export default function SignupPage() {
 									</button>
 								}
 							/>
-							<Input
-								label="Confirm Password"
-								id="confirmPassword"
-								type={showPass ? "text" : "password"}
-								value={form.confirmPassword}
-								onChange={(f) =>
-									setForm((prev) => ({
-										...prev,
-										confirmPassword: f.target.value,
-									}))
-								}
-								required
-								leftSlot={<Lock size={16} className="text-gray-400" />}
-							/>
+							<div className="flex flex-col gap-2">
+								<Input
+									label="Confirm Password"
+									id="confirmPassword"
+									type={showConfirmPass ? "text" : "password"}
+									value={form.confirmPassword}
+									onChange={(f) =>
+										setForm((prev) => ({
+											...prev,
+											confirmPassword: f.target.value,
+										}))
+									}
+									required
+									leftSlot={<Lock size={16} className="text-gray-400" />}
+									rightSlot={
+										<button
+											type="button"
+											onClick={() => setShowConfirmPass(!showConfirmPass)}
+											className="text-[9px] font-black text-gray-400 hover:text-gold transition-colors uppercase"
+										>
+											{showConfirmPass ? "Hide" : "Show"}
+										</button>
+									}
+								/>
+								{form.confirmPassword.length > 0 && (
+									<span
+										className={`text-[10px] font-bold animate-in fade-in slide-in-from-top-1 ${
+											doPasswordsMatch(form.password, form.confirmPassword)
+												? "text-green-500"
+												: "text-red-500"
+										}`}
+									>
+										{doPasswordsMatch(form.password, form.confirmPassword)
+											? "Passwords match"
+											: "Passwords do not match"}
+									</span>
+								)}
+							</div>
 						</div>
 
 						<Button
 							fullWidth
 							type="submit"
 							loading={loading}
+							disabled={isComingSoon}
 							className="mt-2 py-5"
 						>
-							Next Step
+							Create Account
 						</Button>
 
 						<div className="flex items-center gap-4 py-4">

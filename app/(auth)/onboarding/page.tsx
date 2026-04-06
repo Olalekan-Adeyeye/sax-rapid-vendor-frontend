@@ -11,7 +11,6 @@ import {
 	ShieldCheck,
 	Check,
 	ChevronRight,
-	ChevronLeft,
 	MapPin,
 	Palette,
 	Shirt,
@@ -25,8 +24,16 @@ import {
 	User,
 	Building2,
 } from "lucide-react";
-import Image from "next/image";
 import { Logo } from "@/components/common/Logo";
+import { useAuth } from "@/lib/context/AuthContext";
+import { useToast } from "@/lib/context/ToastContext";
+import { useRouter } from "next/navigation";
+import { isAxiosError } from "axios";
+import {
+	createVendorProfile,
+	uploadVendorDocuments,
+} from "@/lib/api/services/vendor";
+import type { AccountType } from "@/lib/api/types/vendor.types";
 
 const STEPS = [
 	{
@@ -102,21 +109,26 @@ const accountTypes = [
 ];
 
 export default function OnboardingPage() {
+	const router = useRouter();
+	const { user, updateUser } = useAuth();
+	const { toast } = useToast();
 	const [step, setStep] = useState(0);
 	const [loading, setLoading] = useState(false);
 	const [stepLoading, setStepLoading] = useState(false);
 
 	const [form, setForm] = useState({
-		firstName: "Arthur",
-		lastName: "Sax",
+		firstName: user?.firstName || "",
+		lastName: user?.lastName || "",
 		accountType: "individual",
 		country: "NG",
-		phone: "",
+		phone: user?.phoneNumber || "",
 		shopName: "",
 		companyName: "",
 		businessRegNumber: "",
 		address: "",
 		suite: "",
+		city: "",
+		state: "",
 		postalCode: "",
 		idType: "",
 		idFile: null as File | null,
@@ -126,6 +138,30 @@ export default function OnboardingPage() {
 		businessCategory: "handmade",
 		agreedToTerms: false,
 	});
+
+	useEffect(() => {
+		if (user) {
+			// Wrap in setTimeout to avoid synchronous cascading render lint error
+			const timer = setTimeout(() => {
+				setForm((prev) => {
+					if (
+						prev.firstName === user.firstName &&
+						prev.lastName === user.lastName &&
+						prev.phone === user.phoneNumber
+					) {
+						return prev;
+					}
+					return {
+						...prev,
+						firstName: user.firstName || prev.firstName,
+						lastName: user.lastName || prev.lastName,
+						phone: user.phoneNumber || prev.phone,
+					};
+				});
+			}, 0);
+			return () => clearTimeout(timer);
+		}
+	}, [user]);
 
 	const update = (
 		field: keyof typeof form,
@@ -151,7 +187,7 @@ export default function OnboardingPage() {
 		}, 600);
 	};
 
-	const handleSubmit = (e: React.FormEvent) => {
+	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (step === 5 && !form.agreedToTerms) return;
 
@@ -159,13 +195,57 @@ export default function OnboardingPage() {
 			next();
 		} else {
 			setLoading(true);
-			setTimeout(() => (window.location.href = "/dashboard"), 2000);
+			try {
+				// 1. Create the Vendor Profile
+				await createVendorProfile({
+					shopName: form.shopName,
+					accountType: (form.accountType.charAt(0).toUpperCase() +
+						form.accountType.slice(1)) as AccountType,
+					companyName: form.companyName,
+					businessRegistrationNumber: form.businessRegNumber,
+					storeAddress: form.address,
+					storeCity: form.city,
+					storeState: form.state,
+					description: `Category: ${form.businessCategory}`,
+				});
+
+				// 2. Upload Documents (Using placeholders as agreed)
+				await uploadVendorDocuments({
+					governmentIdUrl: "https://sax-rapid.com/placeholders/id-proof.pdf",
+					businessDocumentUrl: form.bizFile
+						? "https://sax-rapid.com/placeholders/business-doc.pdf"
+						: null,
+				});
+
+				toast(
+					"Empire Built",
+					"Your shop has been created and is pending review.",
+					"success",
+				);
+				updateUser({ role: "Seller" });
+				router.push("/dashboard");
+			} catch (err: unknown) {
+				console.error("Onboarding failed:", err);
+				let message =
+					"We encountered an issue while setting up your shop. Please try again.";
+				if (isAxiosError(err)) {
+					const data = err.response?.data;
+					message =
+						data?.Result ||
+						data?.Message ||
+						data?.message ||
+						err.message ||
+						message;
+				}
+				toast("Setup Error", message, "error");
+			} finally {
+				setLoading(false);
+			}
 		}
 	};
 
 	const currentStepData = STEPS[step];
 
-	// Instant scroll back to top when step changes (masked by loader)
 	useEffect(() => {
 		window.scrollTo({
 			top: 0,
@@ -266,9 +346,6 @@ export default function OnboardingPage() {
 							{step === 0 && (
 								<div className="space-y-8 lg:space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 ease-out fill-mode-both">
 									<div className="bg-white border border-gray-100 rounded overflow-hidden relative">
-										{/* Premium Accent */}
-										<div className="absolute top-0 right-0 w-32 h-32 bg-gold/5 rounded -z-1" />
-
 										<div className="p-7 md:p-14 space-y-8 lg:space-y-12">
 											<div className="flex flex-col md:flex-row items-start gap-8 lg:gap-10">
 												<div className="w-20 h-20 lg:w-24 lg:h-24 rounded bg-black flex items-center justify-center text-gold shrink-0 border-4 border-gold/20 rotate-3 hover:rotate-0 transition-transform duration-500">
@@ -441,17 +518,8 @@ export default function OnboardingPage() {
 													}
 												</span>
 											}
-											rightSlot={
-												form.phone.length > 6 ? (
-													<Check
-														size={18}
-														className="text-gold animate-in zoom-in"
-													/>
-												) : null
-											}
 										/>
 
-										{/* COMING SOON ALERT */}
 										{form.country !== "NG" && form.country !== "ZA" && (
 											<div className="bg-black text-white p-6 lg:p-8 rounded flex items-center gap-5 lg:gap-6 animate-in slide-in-from-left-4 fade-in">
 												<div className="w-10 h-10 lg:w-12 lg:h-12 rounded bg-gold/20 flex items-center justify-center text-gold shrink-0">
@@ -463,13 +531,7 @@ export default function OnboardingPage() {
 													</h4>
 													<p className="text-xs lg:text-sm text-gray-400 font-medium leading-relaxed">
 														Our platform is currently launching in Nigeria and
-														South Africa. Wait-listed for{" "}
-														{
-															countries
-																.find((c) => c.value === form.country)
-																?.label.split(" ")[0]
-														}
-														.
+														South Africa.
 													</p>
 												</div>
 											</div>
@@ -512,27 +574,11 @@ export default function OnboardingPage() {
 												className="h-12 lg:h-14 rounded"
 											/>
 
-											{/* CONDITIONAL BUSINESS FIELDS */}
 											{form.accountType === "business" && (
 												<div className="pt-4 lg:pt-6 space-y-5 lg:space-y-6 animate-in slide-in-from-top-4 fade-in">
 													<div className="h-px bg-gray-100 w-full mb-5 lg:mb-6" />
 													<Input
-														label={
-															form.country === "NG"
-																? "Legally Registered Company Name"
-																: "Registered Business Name"
-														}
-														id="companyLegalName"
-														placeholder="e.g. Apex Global Limited"
-														className="h-12 lg:h-14 rounded"
-														required
-													/>
-													<Input
-														label={
-															form.country === "NG"
-																? "RC / Business Number (CAC)"
-																: "Business ID (CIPC)"
-														}
+														label="Business ID Number"
 														id="businessReg"
 														placeholder="e.g. BN-1234567"
 														value={form.businessRegNumber}
@@ -597,30 +643,38 @@ export default function OnboardingPage() {
 											<MapPin size={22} className="text-gray-200" />
 										</div>
 										<p className="text-xs lg:text-sm text-gray-500 font-medium mb-6 lg:mb-8">
-											Please provide your detailed street address for courier
-											logistics.
+											Please provide your detailed street address.
 										</p>
 										<Input
-											label="Store or Pick up Address"
+											label="Address"
 											id="address"
 											placeholder="Start typing your address..."
 											value={form.address}
 											onChange={(e) => update("address", e.target.value)}
 											required
-											className="h-12 lg:h-14 rounded pl-12"
-											leftSlot={
-												<Image
-													src="/assets/icons/google.svg"
-													alt="G"
-													width={16}
-													height={16}
-												/>
-											}
+											className="h-12 lg:h-14 rounded"
 										/>
-										<p className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 mt-2 flex items-center gap-2">
-											<span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-											Address verified via Google Cloud Service
-										</p>
+
+										<div className="grid grid-cols-2 gap-4 lg:gap-6 mt-8 lg:mt-10">
+											<Input
+												label="City"
+												id="city"
+												placeholder="e.g. Lagos"
+												value={form.city}
+												onChange={(e) => update("city", e.target.value)}
+												required
+												className="h-12 lg:h-14 rounded"
+											/>
+											<Input
+												label="State / Region"
+												id="state"
+												placeholder="e.g. Ikeja"
+												value={form.state}
+												onChange={(e) => update("state", e.target.value)}
+												required
+												className="h-12 lg:h-14 rounded"
+											/>
+										</div>
 
 										<div className="grid grid-cols-2 gap-4 lg:gap-6 mt-8 lg:mt-10">
 											<Input
@@ -632,7 +686,7 @@ export default function OnboardingPage() {
 												className="h-12 lg:h-14 rounded"
 											/>
 											<Input
-												label="Region / Postal"
+												label="Postal Code"
 												id="postalCode"
 												placeholder="100001"
 												value={form.postalCode}
@@ -640,22 +694,6 @@ export default function OnboardingPage() {
 												required
 												className="h-12 lg:h-14 rounded"
 											/>
-										</div>
-									</div>
-
-									<div className="h-40 lg:h-48 bg-gray-200 rounded flex items-center justify-center relative overflow-hidden grayscale opacity-50">
-										<Image
-											src="https://www.transparenttextures.com/patterns/cubes.png"
-											alt="Map"
-											fill
-											className="object-cover opacity-20"
-											unoptimized
-										/>
-										<div className="flex flex-col items-center relative z-10 text-black">
-											<MapPin size={28} />
-											<p className="text-[9px] lg:text-[10px] font-black uppercase tracking-[0.2em] mt-2">
-												Global Map Node Loading...
-											</p>
 										</div>
 									</div>
 								</div>
@@ -673,7 +711,7 @@ export default function OnboardingPage() {
 										</div>
 										<div className="mb-6 lg:mb-8">
 											<Select
-												label="Choose Identification Type"
+												label="ID Type"
 												id="idType"
 												options={idTypes}
 												value={form.idType}
@@ -682,59 +720,9 @@ export default function OnboardingPage() {
 											/>
 										</div>
 										<FileUpload
-											label="Upload Official Govt ID Proof"
+											label="Upload ID Proof"
 											id="idFile"
 											onChange={(f) => update("idFile", f)}
-										/>
-									</div>
-
-									{/* CONDITIONAL BUSINESS DOCS */}
-									{form.accountType === "business" && (
-										<div className="bg-white border border-gray-100 p-6 lg:p-8 rounded animate-in slide-in-from-bottom-4 fade-in">
-											<div className="flex items-center justify-between mb-1.5 lg:mb-2 text-black">
-												<h3 className="text-base lg:text-lg font-black">
-													Business Verification
-												</h3>
-												<Image
-													src={
-														form.country === "NG"
-															? "https://www.cac.gov.ng/wp-content/uploads/2021/01/cac_logo.png"
-															: "https://www.cipc.co.za/wp-content/themes/cipc/images/logo.png"
-													}
-													alt="CERT"
-													width={22}
-													height={22}
-													className="grayscale"
-													unoptimized
-												/>
-											</div>
-											<p className="text-xs lg:text-sm text-gray-500 font-medium mb-6 lg:mb-8">
-												Please upload your official business registration
-												certificate.
-											</p>
-											<FileUpload
-												label={
-													form.country === "NG"
-														? "Upload CAC Certificate"
-														: "Upload CIPC Certificate"
-												}
-												id="regFile"
-												onChange={(f) => update("regFile", f)}
-											/>
-										</div>
-									)}
-
-									<div className="bg-white border border-gray-100 p-6 lg:p-8 rounded">
-										<div className="flex items-center justify-between mb-1.5 lg:mb-2 text-black">
-											<h3 className="text-base lg:text-lg font-black">
-												Address Proof
-											</h3>
-											<MapPin size={22} className="text-gray-200" />
-										</div>
-										<FileUpload
-											label="Bank Statement or Utility Bill"
-											id="bizFile"
-											onChange={(f) => update("bizFile", f)}
 										/>
 									</div>
 								</div>
@@ -743,126 +731,101 @@ export default function OnboardingPage() {
 							{/* STEP 5: REVIEW */}
 							{step === 5 && (
 								<div className="space-y-6 lg:space-y-8">
-									<div className="bg-black text-white p-7 lg:p-10 rounded relative overflow-hidden group">
-										<div className="absolute inset-0 bg-gold/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-										<p className="text-[10px] font-black uppercase tracking-[0.2em] text-gold mb-5 lg:mb-6 relative z-10">
+									<div className="bg-black text-white p-7 lg:p-10 rounded">
+										<p className="text-[10px] font-black uppercase tracking-[0.2em] text-gold mb-5">
 											Profile Summary
 										</p>
-										<div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10 relative z-10">
+										<div className="grid grid-cols-2 gap-8">
 											<div>
 												<h4 className="text-gray-500 text-[9px] font-black uppercase tracking-widest mb-1">
-													Merchant Admin
+													Merchant
 												</h4>
-												<p className="text-lg lg:text-xl font-bold">
+												<p className="text-lg font-bold">
 													{form.firstName} {form.lastName}
 												</p>
-												<p className="text-[11px] lg:text-xs text-gray-500 mt-1 capitalize">
-													{form.accountType} Category
-												</p>
 											</div>
 											<div>
 												<h4 className="text-gray-500 text-[9px] font-black uppercase tracking-widest mb-1">
-													Active Shop
+													Store
 												</h4>
-												<p className="text-lg lg:text-xl font-bold">
-													{form.shopName || "Untitled Store"}
-												</p>
-												<p className="text-[11px] lg:text-xs text-gray-500 mt-1 capitalize underline decoration-gold/40 decoration-2">
-													{form.businessCategory} Segment
-												</p>
+												<p className="text-lg font-bold">{form.shopName}</p>
 											</div>
 										</div>
 									</div>
 
-									<div className="bg-gold/5 border border-gold/20 p-6 lg:p-8 rounded flex items-center gap-5 lg:gap-6 text-black">
-										<div className="w-12 h-12 lg:w-16 lg:h-16 rounded bg-black text-gold flex items-center justify-center shrink-0">
-											<CheckCircle2 size={24} className="lg:w-8 lg:h-8" />
-										</div>
-										<div>
-											<h4 className="font-black text-sm lg:text-base mb-0.5 lg:mb-1">
-												Verification Sync Active
-											</h4>
-											<p className="text-xs text-gray-500 font-medium leading-relaxed">
-												Review your details carefully. If everything is correct,
-												accept the terms and finish the setup.
-											</p>
-										</div>
-									</div>
-
-									<label className="flex items-start gap-3 lg:gap-4 cursor-pointer p-5 lg:p-6 bg-white border border-gray-100 rounded hover:border-black transition-all group">
+									<label className="flex items-start gap-4 cursor-pointer p-6 bg-white border border-gray-100 rounded hover:border-black transition-all group font-sans">
 										<div
-											className={`w-5 h-5 lg:w-6 lg:h-6 rounded border-2 shrink-0 flex items-center justify-center transition-all ${form.agreedToTerms ? "bg-black border-black text-gold" : "border-gray-200 group-hover:border-black"}`}
+											className={`w-6 h-6 rounded border-2 shrink-0 flex items-center justify-center transition-all ${form.agreedToTerms ? "bg-black border-black text-gold" : "border-gray-200"}`}
 										>
 											{form.agreedToTerms && (
-												<Check
-													size={12}
-													className="lg:w-3.5 lg:h-3.5"
-													strokeWidth={4}
-												/>
+												<Check size={14} strokeWidth={4} />
 											)}
 										</div>
 										<input
 											type="checkbox"
+											className="hidden"
 											checked={form.agreedToTerms}
 											onChange={(e) =>
 												update("agreedToTerms", e.target.checked)
 											}
-											className="hidden"
 										/>
-										<span className="text-[11px] lg:text-xs text-black font-bold leading-relaxed pt-0.5">
-											I confirm that the information provided is accurate and I
-											accept the{" "}
-											<span className="underline decoration-gold/50">
-												Terms and Conditions
-											</span>
-											.
-										</span>
+										<div className="text-xs font-medium text-gray-500 leading-relaxed">
+											I agree to the{" "}
+											<span className="text-black font-black underline decoration-gold/30">
+												Merchant Services Agreement
+											</span>{" "}
+											and the SAX RAPID Privacy Policy.
+										</div>
 									</label>
 								</div>
 							)}
 						</div>
 
-						{/* NAVIGATION */}
-						<div className="flex items-center justify-between pt-8 lg:pt-12 border-t border-gray-100 mt-8 lg:mt-12">
-							{step > 0 ? (
-								<button
-									type="button"
-									onClick={back}
-									className="text-[10px] lg:text-xs font-black uppercase tracking-widest text-gray-400 hover:text-black flex items-center gap-2 transition-all p-2"
-								>
-									<ChevronLeft size={14} className="lg:w-4 lg:h-4" /> Back
-								</button>
-							) : (
-								<div />
-							)}
+						<div className="flex items-center justify-between pt-8 border-t border-gray-100">
+							<button
+								type="button"
+								onClick={back}
+								disabled={step === 0 || loading || stepLoading}
+								className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-black disabled:opacity-0 transition-all px-4 py-2"
+							>
+								<ChevronLeft size={14} /> Back
+							</button>
 
 							<Button
 								type="submit"
 								loading={loading}
-								variant="black"
-								disabled={
-									(step === 5 && !form.agreedToTerms) ||
-									(step === 1 && form.country !== "NG" && form.country !== "ZA")
-								}
-								className="min-w-48 lg:min-w-55 rounded px-8 lg:px-12"
+								disabled={stepLoading}
+								className="min-w-40 lg:min-w-56 py-4 lg:py-6 text-[10px] uppercase font-black tracking-widest shadow-xl hover:shadow-gold/20"
 							>
-								{step === 5 ? "Finish Setup" : "Continue"}
-								<ChevronRight size={18} className="ml-2" />
+								{step === STEPS.length - 1 ? "Finish Setup" : "Continue"}
+								<ChevronRight size={14} className="ml-2" />
 							</Button>
 						</div>
 					</form>
 				</div>
 			</div>
-
-			{/* ── STEP TRANSITION LOADER ──────────────── */}
-			{stepLoading && (
-				<div className="fixed inset-0 z-100 bg-white flex flex-col items-center justify-center animate-fade-in">
-					<div className="w-8 h-8 border-2 border-gray-100 border-t-gold rounded-full animate-spin" />
-					<p className="mt-4 text-[9px] font-black uppercase tracking-[0.4em] text-gray-300">
-						Loading
-					</p>
-				</div>
-			)}
 		</div>
 	);
 }
+
+const ChevronLeft = ({
+	size,
+	className,
+}: {
+	size?: number;
+	className?: string;
+}) => (
+	<svg
+		width={size}
+		height={size}
+		viewBox="0 0 24 24"
+		fill="none"
+		stroke="currentColor"
+		strokeWidth="2.5"
+		strokeLinecap="round"
+		strokeLinejoin="round"
+		className={className}
+	>
+		<path d="m15 18-6-6 6-6" />
+	</svg>
+);

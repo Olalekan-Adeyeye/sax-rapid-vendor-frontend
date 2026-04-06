@@ -170,13 +170,16 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 						<p className="text-[10px] font-medium text-gray-500 leading-relaxed">
 							Need help with your store? Our elite support team is here 24/7.
 						</p>
-						<button className="flex items-center justify-between group/btn text-[10px] font-black uppercase tracking-widest text-gold hover:text-white transition-colors">
+						<Link 
+							href="/support"
+							className="flex items-center justify-between group/btn text-[10px] font-black uppercase tracking-widest text-gold hover:text-white transition-colors"
+						>
 							Get Assistance
 							<ArrowUpRight
 								size={14}
 								className="transition-transform group-hover/btn:-translate-y-0.5 group-hover/btn:translate-x-0.5"
 							/>
-						</button>
+						</Link>
 					</div>
 				</div>
 			</aside>

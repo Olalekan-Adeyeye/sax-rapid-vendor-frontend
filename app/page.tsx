@@ -86,15 +86,15 @@ export default function VendorCenter() {
 	const jsonLd = {
 		"@context": "https://schema.org",
 		"@type": "Organization",
-		"name": "SAX-RAPID",
-		"url": "https://saxrapid.com",
-		"logo": "https://saxrapid.com/assets/icons/SaxRapid-Logo.png",
-		"description": "Nigeria's premier online marketplace for premium vendors.",
-		"sameAs": [
+		name: "SAX-RAPID",
+		url: "https://saxrapid.com",
+		logo: "https://saxrapid.com/assets/icons/SaxRapid-Logo.png",
+		description: "Nigeria's premier online marketplace for premium vendors.",
+		sameAs: [
 			"https://twitter.com/sax_rapid",
 			"https://facebook.com/sax_rapid",
-			"https://linkedin.com/company/sax_rapid"
-		]
+			"https://linkedin.com/company/sax_rapid",
+		],
 	};
 
 	// Prevent scrolling when mobile menu is open
@@ -133,31 +133,27 @@ export default function VendorCenter() {
 					<X size={24} />
 				</button>
 
-				<div className="h-full flex flex-col p-6 overflow-y-auto">
-					<div className="mb-8">
-						<Link
-							href="/"
-							className="mb-10"
-							onClick={() => setIsMenuOpen(false)}
-						>
-							<Logo size="md" />
+				<div className="h-full flex flex-col gap-8 p-6 overflow-y-auto">
+					<div className="">
+						<Link href="/" className="" onClick={() => setIsMenuOpen(false)}>
+							<Logo size="md" className="items-start" />
 						</Link>
 
-						<div className="space-y-6">
+						<div className="space-y-6 mt-8">
 							<p className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-400">
 								Navigation
 							</p>
 							<nav className="flex flex-col gap-6">
 								{["Solutions", "Fees & Commissions", "FAQ", "Resources"].map(
 									(l) => (
-										<a
+										<Link
 											key={l}
-											href="#"
+											href="/"
 											onClick={() => setIsMenuOpen(false)}
 											className="text-1xl font-black tracking-tighter text-black hover:text-gold transition-colors"
 										>
 											{l}
-										</a>
+										</Link>
 									),
 								)}
 							</nav>
@@ -192,12 +188,12 @@ export default function VendorCenter() {
 							<Link href="/signup" onClick={() => setIsMenuOpen(false)}>
 								Become a Seller
 							</Link>
-							<a href="#" onClick={() => setIsMenuOpen(false)}>
+							<Link href="/" onClick={() => setIsMenuOpen(false)}>
 								SAX Academy
-							</a>
-							<a href="#" onClick={() => setIsMenuOpen(false)}>
+							</Link>
+							<Link href="/" onClick={() => setIsMenuOpen(false)}>
 								Seller Resources
-							</a>
+							</Link>
 						</div>
 						{/* <div className="flex items-center gap-2 text-gold text-[10px] font-black uppercase tracking-widest">
 							<span className="w-1.5 h-1.5 bg-gold rounded-full animate-pulse" />
@@ -215,13 +211,13 @@ export default function VendorCenter() {
 							Become a Seller
 						</Link>
 						<span className="text-white/10">|</span>
-						<a href="#" className="hover:text-gold transition-colors">
+						<Link href="/" className="hover:text-gold transition-colors">
 							SAX Academy
-						</a>
+						</Link>
 						<span className="text-white/10">|</span>
-						<a href="#" className="hover:text-gold transition-colors">
+						<Link href="/" className="hover:text-gold transition-colors">
 							Seller Resources
-						</a>
+						</Link>
 					</div>
 					{/* <div className="flex items-center gap-2 text-gold ml-auto md:ml-0">
 						<span className="w-1 md:w-1.5 h-1 md:h-1.5 bg-gold rounded-full animate-pulse" />
@@ -243,13 +239,13 @@ export default function VendorCenter() {
 					<nav className="hidden lg:flex items-center gap-10 text-[11px] font-black uppercase tracking-widest text-gray-400">
 						{["Solutions", "Fees & Commissions", "FAQ", "Resources"].map(
 							(l) => (
-								<a
+								<Link
 									key={l}
-									href="#"
+									href="/"
 									className="hover:text-black transition-colors"
 								>
 									{l}
-								</a>
+								</Link>
 							),
 						)}
 					</nav>
@@ -647,7 +643,10 @@ export default function VendorCenter() {
 				<div className="max-w-7xl mx-auto px-6">
 					<div className="grid grid-cols-2 md:grid-cols-5 gap-10 pb-16 border-b border-white/10">
 						<div className="col-span-2">
-							<Link href="/" className="inline-block mb-4 transition-opacity hover:opacity-80">
+							<Link
+								href="/"
+								className="inline-block mb-4 transition-opacity hover:opacity-80"
+							>
 								<Logo size="md" />
 							</Link>
 							<p className="text-gray-500 text-sm leading-relaxed max-w-sm mb-8 font-medium">
@@ -691,12 +690,12 @@ export default function VendorCenter() {
 								<ul className="flex flex-col gap-4">
 									{col.links.map((l) => (
 										<li key={l}>
-											<a
-												href="#"
+											<Link
+												href="/"
 												className="text-xs text-gray-500 hover:text-white transition-colors font-bold uppercase tracking-widest"
 											>
 												{l}
-											</a>
+											</Link>
 										</li>
 									))}
 								</ul>
@@ -709,12 +708,12 @@ export default function VendorCenter() {
 							© 2026 SAX-RAPID Vendor Center. All Rights Reserved.
 						</p>
 						<div className="flex gap-6 text-[10px] font-bold uppercase tracking-widest text-gray-600">
-							<a href="#" className="hover:text-white transition-colors">
+							<Link href="/" className="hover:text-white transition-colors">
 								Privacy Policy
-							</a>
-							<a href="#" className="hover:text-white transition-colors">
+							</Link>
+							<Link href="/" className="hover:text-white transition-colors">
 								Terms of Service
-							</a>
+							</Link>
 						</div>
 					</div>
 				</div>

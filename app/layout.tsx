@@ -1,7 +1,16 @@
-import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { PageLoaderSimulation } from "@/components/common/PageLoaderSimulation";
+import { ToastProvider } from "@/lib/context/ToastContext";
+import { AuthProvider } from "@/lib/context/AuthContext";
+import { AuthGuard } from "@/components/auth/AuthGuard";
+
+const inter = Inter({
+	variable: "--font-inter",
+	subsets: ["latin"],
+	weight: ["300", "400", "500", "600", "700", "800", "900"],
+});
 
 const jakarta = Plus_Jakarta_Sans({
 	variable: "--font-jakarta",
@@ -63,11 +72,6 @@ export const metadata: Metadata = {
 		shortcut: "/assets/icons/SaxRapid-Logo.png",
 		apple: "/assets/icons/SaxRapid-Logo.png",
 	},
-	viewport: {
-		width: "device-width",
-		initialScale: 1,
-		maximumScale: 1,
-	},
 	robots: {
 		index: true,
 		follow: true,
@@ -81,15 +85,27 @@ export const metadata: Metadata = {
 	},
 };
 
+export const viewport: Viewport = {
+	width: "device-width",
+	initialScale: 1,
+	maximumScale: 1,
+};
+
 export default function RootLayout({
 	children,
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="en" className={jakarta.variable}>
+		<html lang="en" className={`${inter.variable} ${jakarta.variable}`}>
 			<body className="font-sans antialiased bg-white text-black">
-				<PageLoaderSimulation>{children}</PageLoaderSimulation>
+				<AuthProvider>
+					<ToastProvider>
+						<AuthGuard>
+							<PageLoaderSimulation>{children}</PageLoaderSimulation>
+						</AuthGuard>
+					</ToastProvider>
+				</AuthProvider>
 			</body>
 		</html>
 	);

@@ -1,12 +1,24 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Logo } from "@/components/common/Logo";
+import { useRouter } from "next/navigation";
+import axios from "axios";
+import { ApiError } from "@/lib/api/types/auth.types";
+import { useAuth } from "@/lib/context/AuthContext";
+import { useToast } from "@/lib/context/ToastContext";
+import { verifyOtp, resendOtp } from "@/lib/api/services/auth";
+import { tokenStorage } from "@/lib/api/apiClient";
 
 export default function VerifyPage() {
+	const router = useRouter();
+	const { user, refreshProfile } = useAuth();
+	const { toast } = useToast();
 	const [otp, setOtp] = useState("");
 	const [loading, setLoading] = useState(false);
+	const [resending, setResending] = useState(false);
 	const [timer, setTimer] = useState(45);
 
 	useEffect(() => {
@@ -16,11 +28,52 @@ export default function VerifyPage() {
 		return () => clearInterval(interval);
 	}, []);
 
-	const handleSubmit = (e: React.FormEvent) => {
+	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
+		if (otp.length < 6) return;
+
 		setLoading(true);
-		// Simulate verification
-		setTimeout(() => (window.location.href = "/onboarding"), 1500);
+		try {
+			const response = await verifyOtp({
+				email: user?.email || "",
+				otpCode: otp,
+			});
+
+			// 1. Manually manage tokens
+			if (response.token && response.refreshToken) {
+				tokenStorage.setTokens(response.token, response.refreshToken);
+			}
+
+			// 2. Refresh profile state
+			await refreshProfile();
+
+			toast("Success", "Email verified successfully!", "success");
+
+			// Let AuthGuard handle the final destination
+			router.replace("/dashboard");
+		} catch (err: unknown) {
+			let message = "Invalid or expired OTP";
+			if (axios.isAxiosError<ApiError>(err)) {
+				message = err.response?.data?.message || message;
+			}
+			toast("Verification Failed", message, "error");
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleResend = async () => {
+		if (!user?.email) return;
+		setResending(true);
+		try {
+			await resendOtp({ email: user.email });
+			toast("OTP Resent", "A new code has been sent to your email.", "success");
+			setTimer(45);
+		} catch {
+			toast("Error", "Failed to resend OTP. Please try again.", "error");
+		} finally {
+			setResending(false);
+		}
 	};
 
 	return (
@@ -104,10 +157,33 @@ export default function VerifyPage() {
 								) : (
 									<button
 										type="button"
-										onClick={() => setTimer(45)}
-										className="text-[10px] font-black uppercase tracking-widest text-gold hover:text-black transition-colors underline underline-offset-4"
+										onClick={handleResend}
+										disabled={resending}
+										className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gold hover:text-black transition-colors underline underline-offset-4 disabled:opacity-50 disabled:cursor-not-allowed"
 									>
-										Resend Code Now
+										{resending && (
+											<svg
+												className="animate-spin h-3 w-3"
+												xmlns="http://www.w3.org/2000/svg"
+												fill="none"
+												viewBox="0 0 24 24"
+											>
+												<circle
+													className="opacity-25"
+													cx="12"
+													cy="12"
+													r="10"
+													stroke="currentColor"
+													strokeWidth="4"
+												/>
+												<path
+													className="opacity-75"
+													fill="currentColor"
+													d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+												/>
+											</svg>
+										)}
+										{resending ? "Resending..." : "Resend Code Now"}
 									</button>
 								)}
 							</div>
