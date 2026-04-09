@@ -35,6 +35,7 @@ import {
 	Path,
 } from "react-hook-form";
 import { productSchema, ProductFormValues } from "@/lib/schemas/vendor";
+import { CreateProductDTO } from "@/lib/api/types/products.types";
 
 // Helper type that represents the logical OR of all fields for easier RHF integration
 type FlatProductValues = {
@@ -398,42 +399,50 @@ export default function AddProductPage() {
 		const data = values as unknown as FlatProductValues;
 		try {
 			setIsSubmitting(true);
-			await productsService.createProduct({
-				name: data.name,
-				description: data.description,
-				categoryId: Number(data.categoryId),
-				basePrice: data.type === "simple" ? Number(data.regularPrice) : 0,
-				salePrice:
-					data.type === "simple" && data.salePrice
-						? Number(data.salePrice)
-						: null,
-				saleStartDate: data.type === "simple" ? data.saleStartDate : null,
-				saleEndDate: data.type === "simple" ? data.saleEndDate : null,
-				sku: data.sku || null,
-				weight: Number(data.weight),
-				length: data.length ? Number(data.length) : null,
-				width: data.width ? Number(data.width) : null,
-				height: data.height ? Number(data.height) : null,
-				status: data.status,
-				attributes:
-					data.type === "variable"
-						? data.attributes.map((a) => ({
-								name: a.name,
-								values: a.values,
-							}))
-						: null,
-				variations:
-					data.type === "variable"
-						? data.variations.map((v) => ({
-								name: v.name,
-								price: Number(v.price),
-								salePrice: v.salePrice ? Number(v.salePrice) : null,
-								saleStartDate: v.saleStartDate || null,
-								saleEndDate: v.saleEndDate || null,
-								stockQuantity: Number(v.stock),
-							}))
-						: null,
-			});
+
+			let payload: CreateProductDTO;
+
+			if (data.type === "simple") {
+				// Simple products only supports these fields
+				payload = {
+					name: data.name,
+					description: data.description,
+					categoryId: Number(data.categoryId),
+					basePrice: Number(data.regularPrice),
+					sku: data.sku || null,
+				};
+			} else {
+				// For variable products, we send the full schema as it will be supported later
+				payload = {
+					name: data.name,
+					description: data.description,
+					categoryId: Number(data.categoryId),
+					basePrice: 0, // Base price is usually 0 for variable products
+					salePrice: data.salePrice ? Number(data.salePrice) : null,
+					saleStartDate: data.saleStartDate || null,
+					saleEndDate: data.saleEndDate || null,
+					sku: data.sku || null,
+					weight: Number(data.weight),
+					length: data.length ? Number(data.length) : null,
+					width: data.width ? Number(data.width) : null,
+					height: data.height ? Number(data.height) : null,
+					status: data.status,
+					attributes: data.attributes.map((a) => ({
+						name: a.name,
+						values: a.values,
+					})),
+					variations: data.variations.map((v) => ({
+						name: v.name,
+						price: Number(v.price),
+						salePrice: v.salePrice ? Number(v.salePrice) : null,
+						saleStartDate: v.saleStartDate || null,
+						saleEndDate: v.saleEndDate || null,
+						stockQuantity: Number(v.stock),
+					})),
+				};
+			}
+
+			await productsService.createProduct(payload);
 			toast("Success", "Product published successfully", "success");
 			router.push("/products");
 		} catch (error) {

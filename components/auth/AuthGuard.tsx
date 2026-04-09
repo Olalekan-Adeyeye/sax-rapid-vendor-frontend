@@ -62,13 +62,17 @@ export function AuthGuard({ children }: AuthGuardProps) {
 		}
 		*/
 
-		// 5. Status Check: Onboarding (Seller role is the completion flag)
-		if (user.role !== "Seller") {
+		// LAX_FOR_TESTING: Disabled to allow viewing changes
+		/*
+		// 5. Status Check: Onboarding (Vendor/Seller role is the completion flag)
+		const isMerchant = user.role === "Vendor" || user.role === "Seller";
+		if (!isMerchant) {
 			if (pathname !== "/onboarding") {
 				router.replace("/onboarding");
 			}
 			return;
 		}
+		*/
 
 		// 6. Already authenticated & authorized -> redirect away from auth pages
 		// LAX_FOR_TESTING: Disabled to allow viewing changes
@@ -103,13 +107,20 @@ export function AuthGuard({ children }: AuthGuardProps) {
 	}
 	*/
 
-	if (user.role !== "Seller") {
+	// For fully ready sellers, block auth pages
+	// LAX_FOR_TESTING: Disabled to allow viewing changes
+	/*
+	// For users who are NOT yet vendors/sellers, only allow onboarding
+	const isMerchant = user.role === "Vendor" || user.role === "Seller";
+	if (!isMerchant) {
 		return pathname === "/onboarding" ? <>{children}</> : null;
 	}
+	*/
 
 	// For fully ready sellers, block auth pages
 	// LAX_FOR_TESTING: Disabled to allow viewing changes
 	/*
+	// For fully ready merchants, block auth pages
 	if (
 		PUBLIC_PAGES.includes(pathname) ||
 		AUTH_FLOW_PAGES.includes(pathname) ||

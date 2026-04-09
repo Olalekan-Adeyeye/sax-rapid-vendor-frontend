@@ -13,7 +13,12 @@ import {
 	Loader2,
 	Inbox,
 } from "lucide-react";
-import { chatService } from "@/lib/api/services/chat";
+import { 
+	getConversations, 
+	getMessages, 
+	markAsRead, 
+	sendMessage 
+} from "@/lib/api/services/chat";
 import type {
 	ConversationResponseDTO,
 	MessageResponseDTO,
@@ -42,7 +47,7 @@ export default function MessagesPage() {
 	const fetchConversations = React.useCallback(async () => {
 		try {
 			setLoadingConversations(true);
-			const data = await chatService.getConversations();
+			const data = await getConversations();
 			setConversations(data || []);
 		} catch (_error) {
 			console.error("Failed to fetch conversations:", _error);
@@ -56,13 +61,13 @@ export default function MessagesPage() {
 		async (id: string) => {
 			try {
 				setLoadingMessages(true);
-				const data = await chatService.getMessages(id, 1, 100);
+				const data = await getMessages(id, 1, 100);
 				setMessages(data.items || []);
 
 				// Mark as read after fetching
 				const convo = conversations.find((c) => c.id === id);
 				if (convo && convo.unreadCount > 0) {
-					await chatService.markAsRead(id);
+					await markAsRead(id);
 					setConversations((prev) =>
 						prev.map((c) => (c.id === id ? { ...c, unreadCount: 0 } : c)),
 					);
@@ -93,7 +98,7 @@ export default function MessagesPage() {
 
 		try {
 			setSendingMessage(true);
-			const sentMsg = await chatService.sendMessage({
+			const sentMsg = await sendMessage({
 				conversationId: selectedChatId,
 				content: newMessage.trim(),
 			});

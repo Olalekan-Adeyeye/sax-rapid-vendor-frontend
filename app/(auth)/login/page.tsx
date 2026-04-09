@@ -40,9 +40,10 @@ export default function LoginPage() {
       const response = await login(data);
 
       // 1. Determine access
-      if (response.role !== "Seller") {
+      const isMerchant = response.role === "Vendor" || response.role === "Seller";
+      if (!isMerchant) {
         setApiError(
-          "Access denied. Only Vendor accounts are allowed to access this dashboard.",
+          "Access denied. Only Vendor and Seller accounts are allowed to access this dashboard.",
         );
         setLoading(false);
         return;

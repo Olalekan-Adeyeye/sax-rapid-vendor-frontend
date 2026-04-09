@@ -74,7 +74,8 @@ export function FundWalletModal({
 			size="lg"
 		>
 			<form onSubmit={handleSubmit} className="space-y-8">
-				{/* Provider Selection */}\n\t\t\t\t<div className="space-y-4">
+				{/* Provider Selection */}
+				<div className="space-y-4">
 					<label className="block text-[10px] font-black uppercase tracking-widest text-gray-400">
 						Payment Provider
 					</label>

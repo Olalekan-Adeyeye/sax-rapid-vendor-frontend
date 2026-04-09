@@ -121,6 +121,7 @@ export default function SignupPage() {
       if (axios.isAxiosError<ApiError>(err)) {
         message = err.response?.data?.message || message;
       }
+      toast("Error", message, "error");
       setApiError(message);
       setLoading(false);
     }
