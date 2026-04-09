@@ -13,11 +13,8 @@ export type AccountType = "Individual" | "Business";
 
 /** POST /api/Vendor/profile – Create vendor profile */
 export interface CreateVendorProfileRequest {
-  /** Required – 2-200 chars */
   shopName: string;
-  /** Required */
   accountType: AccountType;
-  /** Optional – for Business accounts */
   companyName?: string | null;
   businessRegistrationNumber?: string | null;
   storeAddress?: string | null;
@@ -25,8 +22,8 @@ export interface CreateVendorProfileRequest {
   storeState?: string | null;
   storeLatitude?: number | null;
   storeLongitude?: number | null;
-  /** Store description – max 2000 chars */
   description?: string | null;
+  category?: string | null;
 }
 
 /** PUT /api/Vendor/profile – Update vendor profile */
@@ -48,8 +45,8 @@ export interface UpdateVendorProfileRequest {
 
 /** POST /api/Vendor/profile/documents – Upload KYC documents */
 export interface UploadDocumentsRequest {
-  governmentIdUrl?: string | null;
-  businessDocumentUrl?: string | null;
+  governmentId: File;
+  businessDocument?: File | null;
 }
 
 // ─── Response DTOs ────────────────────────────────────────────────────────────

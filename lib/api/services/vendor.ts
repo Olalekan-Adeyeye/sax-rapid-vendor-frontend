@@ -60,6 +60,11 @@ export async function getVendorById(vendorId: string): Promise<VendorProfileResp
  * Uploads government ID and/or business documents for KYC verification.
  * Submits the vendor profile for admin review.
  */
-export async function uploadVendorDocuments(data: UploadDocumentsRequest): Promise<void> {
-  await apiClient.post(`${BASE}/profile/documents`, data);
+export async function uploadVendorDocuments(
+  data: FormData | UploadDocumentsRequest
+): Promise<void> {
+  const isFormData = data instanceof FormData;
+  await apiClient.post(`${BASE}/profile/documents`, data, {
+    headers: isFormData ? { "Content-Type": "multipart/form-data" } : {},
+  });
 }

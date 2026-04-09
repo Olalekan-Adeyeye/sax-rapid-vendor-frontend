@@ -164,10 +164,8 @@ export default function OnboardingPage() {
       reset({
         firstName: user.firstName || "",
         lastName: user.lastName || "",
-        accountType:
-          (user.accountType?.toLowerCase() as "individual" | "business") ||
-          "individual",
-        country: user.country || "NG",
+        accountType: "individual",
+        country: user.countryCode || "NG",
         phone: user.phoneNumber || "",
         shopName: "",
         companyName: "",
@@ -236,11 +234,10 @@ export default function OnboardingPage() {
           accountType: (data.accountType.charAt(0).toUpperCase() +
             data.accountType.slice(1)) as AccountType,
           companyName: data.companyName || "",
-          businessRegNumber: data.businessRegNumber || "",
-          address: data.address,
-          city: data.city,
-          state: data.state,
-          postalCode: data.postalCode,
+          businessRegistrationNumber: data.businessRegNumber || "",
+          storeAddress: data.address,
+          storeCity: data.city,
+          storeState: data.state,
           category: data.businessCategory,
         });
 
@@ -252,9 +249,10 @@ export default function OnboardingPage() {
           await uploadVendorDocuments(formData);
         }
 
-        toast.success(
+        toast(
           "Success",
           "Your shop has been created and is pending review.",
+          "success"
         );
         updateUser({ role: "Seller" });
         router.push("/dashboard");
@@ -271,7 +269,7 @@ export default function OnboardingPage() {
             err.message ||
             message;
         }
-        toast.error("Error", message);
+        toast("Error", message, "error");
       } finally {
         setLoading(false);
       }
@@ -762,7 +760,7 @@ export default function OnboardingPage() {
                     <FileUpload
                       label="Upload ID Proof"
                       id="idFile"
-                      file={idFile as File | null}
+                      file={formValues.idFile as File | null}
                       error={errors.idFile?.message as string}
                       onChange={(f: File | null) =>
                         setValue("idFile", f, { shouldValidate: true })
