@@ -8,7 +8,10 @@ import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from "axios";
-import type { AuthResponse } from "./types/auth.types";
+import { 
+  AuthResponse, 
+  ApiResponse 
+} from "./types/auth.types";
 
 // ─── Base URL ─────────────────────────────────────────────────────────────────
 
@@ -113,14 +116,22 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const { data } = await axios.post<AuthResponse>(
+        const { data } = await axios.post<ApiResponse<AuthResponse>>(
           `${BASE_URL}/Auth/refresh-token`,
           { refreshToken },
           { headers: { "Content-Type": "application/json" } }
         );
 
-        const newToken = data.token!;
-        tokenStorage.setTokens(newToken, data.refreshToken ?? refreshToken);
+        if (!data.success || !data.data?.token) {
+          throw new Error(data.message || "Failed to refresh token");
+        }
+
+        const newToken = data.data.token;
+        const newRefreshToken = data.data.refreshToken || refreshToken;
+        
+        tokenStorage.setTokens(newToken, newRefreshToken);
+        
+        // Update both instance and the original request
         apiClient.defaults.headers.common.Authorization = `Bearer ${newToken}`;
 
         flushQueue(null, newToken);

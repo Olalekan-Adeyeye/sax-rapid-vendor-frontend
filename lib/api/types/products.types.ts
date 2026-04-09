@@ -61,7 +61,24 @@ export interface CreateProductDTO {
 	categoryId: number;
 	brandId?: number | null;
 	basePrice: number;
+	salePrice?: number | null;
+	saleStartDate?: string | null;
+	saleEndDate?: string | null;
 	sku: string | null;
+	weight?: number | null;
+	length?: number | null;
+	width?: number | null;
+	height?: number | null;
+	status?: string | null;
+	attributes?: { name: string; values: string[] }[] | null;
+	variations?: { 
+		name: string; 
+		price: number; 
+		salePrice?: number | null; 
+		saleStartDate?: string | null;
+		saleEndDate?: string | null;
+		stockQuantity: number 
+	}[] | null;
 }
 
 export interface UpdateProductDTO {
@@ -70,7 +87,17 @@ export interface UpdateProductDTO {
 	categoryId: number;
 	brandId?: number | null;
 	basePrice: number;
+	salePrice?: number | null;
+	saleStartDate?: string | null;
+	saleEndDate?: string | null;
 	sku: string | null;
+	weight?: number | null;
+	length?: number | null;
+	width?: number | null;
+	height?: number | null;
+	status?: string | null;
+	attributes?: { name: string; values: string[] }[] | null;
+	variations?: { name: string; price: number; salePrice?: number | null; stockQuantity: number }[] | null;
 }
 
 export interface ProductQueryParams {

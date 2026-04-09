@@ -18,6 +18,12 @@ const jakarta = Plus_Jakarta_Sans({
 	weight: ["300", "400", "500", "600", "700", "800"],
 });
 
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL 
+  ? process.env.NEXT_PUBLIC_APP_URL 
+  : process.env.VERCEL_URL 
+    ? `https://${process.env.VERCEL_URL}` 
+    : "http://localhost:3000";
+
 export const metadata: Metadata = {
 	title: {
 		default: "Sax-RAPID | Online Marketplace",
@@ -40,14 +46,14 @@ export const metadata: Metadata = {
 		address: false,
 		telephone: false,
 	},
-	metadataBase: new URL("https://saxrapid.com"),
+	metadataBase: new URL(baseUrl),
 	alternates: {
 		canonical: "/",
 	},
 	openGraph: {
 		title: "SAX-RAPID | Online Marketplace",
 		description: "Nigeria's premier online marketplace for serious sellers.",
-		url: "https://saxrapid.com",
+		url: baseUrl,
 		siteName: "SAX-RAPID",
 		images: [
 			{
@@ -65,7 +71,7 @@ export const metadata: Metadata = {
 		title: "SAX-RAPID Vendor Center",
 		description: "Reach millions of premium shoppers across Nigeria.",
 		creator: "@sax_rapid",
-		images: ["/assets/icons/SaxRapid-Logo.png"],
+		images: [`${baseUrl}/assets/icons/SaxRapid-Logo.png`],
 	},
 	icons: {
 		icon: "/assets/icons/SaxRapid-Logo.png",

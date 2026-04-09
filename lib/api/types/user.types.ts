@@ -90,6 +90,7 @@ export function mapUserToProfile(profileData: UserProfileResponse): UserProfile 
     role: profileData.role,
     isVerified: profileData.verificationStatus === "Verified",
     isTwoFactorEnabled: profileData.isTwoFactorEnabled,
+    countryCode: profileData.countryCode || undefined,
     avatarUrl: profileData.profileImageUrl || undefined,
   };
 }

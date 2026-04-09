@@ -131,6 +131,7 @@ export interface UserProfile {
   role: UserRole;
   isVerified: boolean;
   isTwoFactorEnabled: boolean;
+  countryCode?: string;
   avatarUrl?: string;
 }
 

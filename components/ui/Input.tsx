@@ -1,50 +1,65 @@
 import React from "react";
+import { FormField } from "./FormField";
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 	label?: string;
 	id: string;
+	required?: boolean;
+	error?: string;
+	helpText?: string;
+	hideAsterisk?: boolean;
 	leftSlot?: React.ReactNode;
 	rightSlot?: React.ReactNode;
+	outerClassName?: string;
+	ref?: React.Ref<HTMLInputElement>;
 }
 
 export function Input({
 	label,
 	id,
+	required,
+	error,
+	helpText,
+	hideAsterisk,
 	leftSlot,
 	rightSlot,
 	className = "",
+	outerClassName = "",
+	ref,
 	...props
 }: InputProps) {
 	return (
-		<div className="flex flex-col gap-2 w-full text-black">
-			{label && (
-				<label
-					htmlFor={id}
-					className="text-[10px] font-black uppercase tracking-widest text-gray-500"
-				>
-					{label}
-				</label>
-			)}
+		<FormField
+			label={label}
+			id={id}
+			required={required}
+			error={error}
+			helpText={helpText}
+			hideAsterisk={hideAsterisk}
+			className={outerClassName}
+		>
 			<div className="relative flex items-center">
 				{leftSlot && (
-					<div className="absolute left-4 z-10 flex items-center justify-center pointer-events-none">
+					<div className="absolute left-5 z-10 flex items-center justify-center pointer-events-none text-gray-400">
 						{leftSlot}
 					</div>
 				)}
 				<input
 					id={id}
-					className={`w-full bg-gray-50 border border-gray-200 text-black text-sm rounded py-3.5 placeholder-gray-400 outline-none focus:border-gold focus:bg-white transition-all font-medium 
-						${leftSlot ? "pl-10" : "px-4"} 
-						${rightSlot ? "pr-14" : "pr-4"} 
+					ref={ref}
+					required={required}
+					className={`w-full bg-gray-50 border border-gray-200/50 focus:border-gold/50 text-black text-xs font-bold rounded px-5 py-4 placeholder-gray-300 outline-none transition-all 
+						${leftSlot ? "pl-12" : ""} 
+						${rightSlot ? "pr-12" : ""} 
 						${className}`}
 					{...props}
 				/>
 				{rightSlot && (
-					<div className="absolute right-4 top-1/2 -translate-y-1/2">
+					<div className="absolute right-5 flex items-center justify-center text-gray-400">
 						{rightSlot}
 					</div>
 				)}
 			</div>
-		</div>
+		</FormField>
 	);
 }

@@ -1,14 +1,14 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-	title: "Account Settings",
-	description: "Update your profile security, notification preferences, and business details.",
+  title: "Account Settings | Vendor Dashboard",
+  description: "Manage your business account preferences, security, and notification settings.",
 };
 
 export default function SettingsLayout({
-	children,
+  children,
 }: {
-	children: React.ReactNode;
+  children: React.ReactNode;
 }) {
-	return <>{children}</>;
+  return <>{children}</>;
 }

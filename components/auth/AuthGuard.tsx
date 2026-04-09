@@ -71,6 +71,8 @@ export function AuthGuard({ children }: AuthGuardProps) {
 		}
 
 		// 6. Already authenticated & authorized -> redirect away from auth pages
+		// LAX_FOR_TESTING: Disabled to allow viewing changes
+		/*
 		if (
 			PUBLIC_PAGES.includes(pathname) ||
 			AUTH_FLOW_PAGES.includes(pathname) ||
@@ -78,6 +80,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
 		) {
 			router.replace("/dashboard");
 		}
+		*/
 	}, [user, loading, isTwoFactorVerified, pathname, router]);
 
 	// ─── FLASH PREVENTION ──────────────────────────────────────────────
@@ -105,6 +108,8 @@ export function AuthGuard({ children }: AuthGuardProps) {
 	}
 
 	// For fully ready sellers, block auth pages
+	// LAX_FOR_TESTING: Disabled to allow viewing changes
+	/*
 	if (
 		PUBLIC_PAGES.includes(pathname) ||
 		AUTH_FLOW_PAGES.includes(pathname) ||
@@ -112,6 +117,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
 	) {
 		return null;
 	}
+	*/
 
 	return <>{children}</>;
 }

@@ -21,6 +21,8 @@ import { getErrorMessage } from "@/lib/utils/errors";
 import { getMyVendorProfile, updateVendorProfile } from "@/lib/api/services/vendor";
 import type { VendorProfileResponse, UpdateVendorProfileRequest } from "@/lib/api/types/vendor.types";
 import { useToast } from "@/lib/context/ToastContext";
+import { Input } from "@/components/ui/Input";
+import { TextArea } from "@/components/ui/TextArea";
 
 export default function EditStoreProfile() {
 	const router = useRouter();
@@ -220,31 +222,20 @@ export default function EditStoreProfile() {
 							Store Information
 						</h4>
 						<div className="space-y-8">
-							<div className="space-y-3">
-								<label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-									Store Name
-								</label>
-								<input
-									type="text"
-									id="shopName"
-									value={formData.shopName || ""}
-									onChange={handleChange}
-									className="w-full bg-gray-50 border border-transparent focus:border-gold/30 rounded px-5 py-4 text-sm font-black text-black outline-none transition-all"
-								/>
-							</div>
-							<div className="space-y-3">
-								<label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-									Store Description
-								</label>
-								<textarea
-									id="description"
-									value={formData.description || ""}
-									onChange={handleChange}
-									rows={8}
-									className="w-full bg-gray-50 border border-transparent focus:border-gold/30 rounded px-5 py-4 text-sm font-medium text-gray-700 leading-relaxed outline-none transition-all resize-none"
-									placeholder="Describe your store to customers..."
-								/>
-							</div>
+							<Input
+								id="shopName"
+								label="Store Name"
+								value={formData.shopName || ""}
+								onChange={handleChange}
+							/>
+							<TextArea
+								id="description"
+								label="Store Description"
+								value={formData.description || ""}
+								onChange={handleChange}
+								rows={8}
+								placeholder="Describe your store to customers..."
+							/>
 						</div>
 					</div>
 
@@ -255,67 +246,42 @@ export default function EditStoreProfile() {
 							Contact Information
 						</h4>
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-							<div className="space-y-3">
-								<label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-									<Mail size={12} className="inline mr-2" />
-									Email Address
-								</label>
-								<input
-									type="email"
-									defaultValue={vendor.ownerEmail || ""}
-									readOnly
-									className="w-full bg-gray-100 border border-transparent rounded px-5 py-4 text-sm font-black text-gray-400 outline-none cursor-not-allowed"
-								/>
-							</div>
-							<div className="space-y-3">
-								<label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-									<Phone size={12} className="inline mr-2" />
-									Phone Number
-								</label>
-								<input
-									type="text"
-									defaultValue={vendor.ownerName || ""}
-									readOnly
-									className="w-full bg-gray-100 border border-transparent rounded px-5 py-4 text-sm font-black text-gray-400 outline-none cursor-not-allowed"
-								/>
-							</div>
-							<div className="space-y-3 md:col-span-2">
-								<label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-									<MapPin size={12} className="inline mr-2" />
-									Store Address
-								</label>
-								<input
-									type="text"
-									id="storeAddress"
-									value={formData.storeAddress || ""}
-									onChange={handleChange}
-									className="w-full bg-gray-50 border border-transparent focus:border-gold/30 rounded px-5 py-4 text-sm font-black text-black outline-none transition-all"
-								/>
-							</div>
-							<div className="space-y-3">
-								<label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-									City
-								</label>
-								<input
-									type="text"
-									id="storeCity"
-									value={formData.storeCity || ""}
-									onChange={handleChange}
-									className="w-full bg-gray-50 border border-transparent focus:border-gold/30 rounded px-5 py-4 text-sm font-black text-black outline-none transition-all"
-								/>
-							</div>
-							<div className="space-y-3">
-								<label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-									State / Region
-								</label>
-								<input
-									type="text"
-									id="storeState"
-									value={formData.storeState || ""}
-									onChange={handleChange}
-									className="w-full bg-gray-50 border border-transparent focus:border-gold/30 rounded px-5 py-4 text-sm font-black text-black outline-none transition-all"
-								/>
-							</div>
+							<Input
+								id="email-readonly"
+								label="Email Address"
+								leftSlot={<Mail size={12} />}
+								defaultValue={vendor.ownerEmail || ""}
+								readOnly
+								className="bg-gray-100 text-gray-400 cursor-not-allowed border-transparent"
+							/>
+							<Input
+								id="phone-readonly"
+								label="Phone Number"
+								leftSlot={<Phone size={12} />}
+								defaultValue={vendor.ownerName || ""}
+								readOnly
+								className="bg-gray-100 text-gray-400 cursor-not-allowed border-transparent"
+							/>
+							<Input
+								id="storeAddress"
+								label="Store Address"
+								leftSlot={<MapPin size={12} />}
+								value={formData.storeAddress || ""}
+								onChange={handleChange}
+								outerClassName="md:col-span-2"
+							/>
+							<Input
+								id="storeCity"
+								label="City"
+								value={formData.storeCity || ""}
+								onChange={handleChange}
+							/>
+							<Input
+								id="storeState"
+								label="State / Region"
+								value={formData.storeState || ""}
+								onChange={handleChange}
+							/>
 						</div>
 					</div>
 				</div>
@@ -327,29 +293,21 @@ export default function EditStoreProfile() {
 						<h4 className="text-[11px] font-black tracking-[0.2em] text-gold pb-6 border-b border-white/5 relative z-10 uppercase">
 							Legal Information
 						</h4>
-						<div className="space-y-8 relative z-10">
-							<div className="space-y-1">
-								<p className="text-[9px] font-black uppercase tracking-widest text-gray-500">
-									Business Registration (RC)
-								</p>
-								<input
-									type="text"
-									id="businessRegistrationNumber"
-									value={formData.businessRegistrationNumber || ""}
-									onChange={handleChange}
-									className="w-full bg-white/5 border border-white/10 rounded px-4 py-3 text-xs font-black text-white outline-none focus:border-gold/50 transition-all mt-2"
-								/>
-							</div>
-							<div className={`space-y-1 ${!vendor.companyName && "hidden"}`}>
-								<p className="text-[9px] font-black uppercase tracking-widest text-gray-500">
-									Registered company
-								</p>
-								<input
-									type="text"
+						<div className="space-y-6 relative z-10">
+							<Input
+								id="businessRegistrationNumber"
+								label="Business Registration (RC)"
+								value={formData.businessRegistrationNumber || ""}
+								onChange={handleChange}
+								className="bg-white/5 border-white/10 text-white focus:border-gold/50"
+							/>
+							<div className={`${!vendor.companyName && "hidden"}`}>
+								<Input
 									id="companyName"
+									label="Registered company"
 									value={formData.companyName || ""}
 									onChange={handleChange}
-									className="w-full bg-white/5 border border-white/10 rounded px-4 py-3 text-xs font-black text-white outline-none focus:border-gold/50 transition-all mt-2"
+									className="bg-white/5 border-white/10 text-white focus:border-gold/50"
 								/>
 							</div>
 							<div className="pt-4 flex items-center gap-3">

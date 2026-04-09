@@ -1,14 +1,14 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-	title: "All Products",
-	description: "Manage your product catalog, listings, and stock levels.",
+  title: "Inventory Management | Vendor Dashboard",
+  description: "View and manage all your listed products, stock levels, and active promotions.",
 };
 
 export default function ProductsLayout({
-	children,
+  children,
 }: {
-	children: React.ReactNode;
+  children: React.ReactNode;
 }) {
-	return <>{children}</>;
+  return <>{children}</>;
 }

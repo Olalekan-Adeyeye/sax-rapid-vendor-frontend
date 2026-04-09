@@ -1,17 +1,53 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { ArrowLeft, Save, Plus, Upload, X, Trash2, Settings2, PlusCircle, Loader2 } from "lucide-react";
+import React, { useState, useEffect, useMemo } from "react";
+import { ArrowLeft, Save, Plus, Upload, X, Trash2, Settings2, PlusCircle, Loader2, Calendar } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/context/AuthContext";
 import { useToast } from "@/lib/context/ToastContext";
+import { zodResolver } from "@hookform/resolvers/zod";
 import * as categoriesService from "@/lib/api/services/categories";
 import * as productsService from "@/lib/api/services/products";
 import { CategoryResponseDTO } from "@/lib/api/types/categories.types";
 import { ATTRIBUTE_CATEGORIES } from "@/lib/constants/attributeCategories";
 import { ROBUST_CATEGORIES } from "@/lib/constants/categories";
 import { getErrorMessage } from "@/lib/utils/errors";
+import { Input } from "@/components/ui/Input";
+import { TextArea } from "@/components/ui/TextArea";
+import { Select } from "@/components/ui/Select";
+import { 
+	useForm, 
+	useWatch, 
+	UseFormRegister, 
+	UseFormSetValue, 
+	FieldErrors,
+	Path
+} from "react-hook-form";
+import { 
+	productSchema, 
+	ProductFormValues, 
+} from "@/lib/schemas/vendor";
 
-type ProductType = "simple" | "variable";
+// Helper type that represents the logical OR of all fields for easier RHF integration
+type FlatProductValues = {
+	name: string;
+	description: string;
+	categoryId: string;
+	type: "simple" | "variable";
+	regularPrice: string;
+	salePrice?: string;
+	saleStartDate?: string;
+	saleEndDate?: string;
+	stockQuantity: string;
+	sku?: string;
+	weight: string;
+	length?: string;
+	width?: string;
+	height?: string;
+	status: string;
+	attributes: Attribute[];
+	variations: Variation[];
+};
 
 interface Attribute {
 	id: string;
@@ -23,6 +59,9 @@ interface Variation {
 	id: string;
 	name: string;
 	price: string;
+	salePrice?: string;
+	saleStartDate?: string;
+	saleEndDate?: string;
 	stock: string;
 }
 
@@ -63,38 +102,78 @@ const ChipInput = ({ values, onChange, placeholder }: { values: string[], onChan
 
 export default function AddProductPage() {
 	const router = useRouter();
+	const { user } = useAuth();
 	const { toast } = useToast();
-	const [productType, setProductType] = useState<ProductType>("simple");
-	const [attributes, setAttributes] = useState<Attribute[]>([]);
-	const [variations, setVariations] = useState<Variation[]>([]);
-	const [hasGeneratedVariations, setHasGeneratedVariations] = useState(false);
+	
+	const currencySymbol = useMemo(() => {
+		const code = user?.countryCode?.toUpperCase();
+		if (code === "NG") return "₦";
+		if (code === "ZA") return "R";
+		return "$";
+	}, [user?.countryCode]);
 
-	// Form State
-	const [name, setName] = useState("");
-	const [description, setDescription] = useState("");
-	const [basePrice, setBasePrice] = useState("");
-	const [stockQuantity, setStockQuantity] = useState("");
-	const [sku, setSku] = useState("");
-	const [categoryId, setCategoryId] = useState("");
+	const [hasGeneratedVariations, setHasGeneratedVariations] = useState(false);
+	const [expandedVariationSchedules, setExpandedVariationSchedules] = useState<Set<string>>(new Set());
 	
 	const [categories, setCategories] = useState<CategoryResponseDTO[]>([]);
 	const [loadingCategories, setLoadingCategories] = useState(true);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
+	const form = useForm<ProductFormValues>({
+		resolver: zodResolver(productSchema),
+		defaultValues: {
+			type: "simple",
+			name: "",
+			description: "",
+			categoryId: "",
+			regularPrice: "",
+			salePrice: "",
+			saleStartDate: "",
+			saleEndDate: "",
+			weight: "",
+			length: "",
+			width: "",
+			height: "",
+			status: "In stock",
+			attributes: [],
+			variations: [],
+		} as unknown as ProductFormValues,
+	});
+
+	const [isSchedulingSale, setIsSchedulingSale] = useState(false);
+
+	const {
+		register,
+		handleSubmit,
+		setValue,
+		control,
+		formState: { errors },
+	} = form;
+
+	// Typed versions of RHF utilities for the union type
+	// We cast to unknown first to avoid the "neither type sufficiently overlaps" error
+	const registerField = register as unknown as UseFormRegister<FlatProductValues>;
+	const setFieldValue = setValue as unknown as UseFormSetValue<FlatProductValues>;
+	const fieldErrors = errors as unknown as FieldErrors<FlatProductValues>;
+
+	const formValues = useWatch({ control });
+	const productType = formValues.type;
+	const categoryId = formValues.categoryId;
+	const attributes = (formValues.type === "variable" ? formValues.attributes : []) as unknown as Attribute[];
+	const variations = (formValues.type === "variable" ? formValues.variations : []) as unknown as Variation[];
+
 	useEffect(() => {
 		const fetchCats = async () => {
 			try {
 				setLoadingCategories(true);
-				const data = await categoriesService.getCategories();
+				const data = (await categoriesService.getCategories()) || [];
 				
-				// Merge API categories with Robust fallbacks, avoiding duplicates by name
-				const apiCategoryNames = new Set(data.map(c => c.name?.toLowerCase()));
-				const filteredRobust = ROBUST_CATEGORIES.filter(c => !apiCategoryNames.has(c.name?.toLowerCase()));
+				const apiCategoryNames = new Set(data.filter(c => c && c.name).map(c => c.name?.toLowerCase()));
+				const filteredRobust = ROBUST_CATEGORIES.filter(c => c && c.name && !apiCategoryNames.has(c.name?.toLowerCase()));
 				
 				setCategories([...data, ...filteredRobust]);
 			} catch (error) {
 				console.error("Failed to load categories:", error);
-				// On error, still load the robust ones so the UI isn't broken
 				setCategories(ROBUST_CATEGORIES);
 				toast("Info", "Using offline category presets.", "info");
 			} finally {
@@ -104,33 +183,34 @@ export default function AddProductPage() {
 		fetchCats();
 	}, [toast]);
 
-	// Flatten categories for the select dropdown (e.g., "Men's Clothing")
-	const getFlattenedCategories = () => {
+	const flattenedCategories = useMemo(() => {
 		const flat: { id: string; label: string; name: string }[] = [];
+		const seenIds = new Set<string>();
 		
 		const process = (cats: CategoryResponseDTO[]) => {
+			if (!cats || !Array.isArray(cats)) return;
 			cats.forEach(cat => {
-				flat.push({ 
-					id: (cat.id || 0).toString(), 
-					label: cat.name || "",
-					name: cat.name || ""
-				});
+				if (!cat) return;
+				const stringId = (cat.id ?? "").toString();
+				if (stringId && !seenIds.has(stringId)) {
+					flat.push({ 
+						id: stringId, 
+						label: cat.name || "Unnamed Category",
+						name: cat.name || ""
+					});
+					seenIds.add(stringId);
+				}
 				if (cat.subCategories && cat.subCategories.length > 0) {
 					process(cat.subCategories);
 				}
 			});
 		};
-		
 		process(categories);
 		return flat;
-	};
+	}, [categories]);
 
-	const flattenedCategories = getFlattenedCategories();
-
-	const getDisplayedPresets = () => {
+	const displayedPresets = useMemo(() => {
 		if (!categoryId) return [];
-		
-		// Find selected category in flattened list or original tree
 		const findInTree = (cats: CategoryResponseDTO[], id: string): CategoryResponseDTO | undefined => {
 			for (const cat of cats) {
 				if (cat.id.toString() === id) return cat;
@@ -141,53 +221,57 @@ export default function AddProductPage() {
 			}
 			return undefined;
 		};
-
 		const selectedCategory = findInTree(categories, categoryId);
 		if (!selectedCategory) return [];
-		
-		const name = (selectedCategory.name || "").toLowerCase();
+		const catName = (selectedCategory.name || "").toLowerCase();
 		const parentName = (selectedCategory.parentName || "").toLowerCase();
-		
-		const filtered = ATTRIBUTE_CATEGORIES.filter(cat => 
-			cat.keywords.some(k => name.includes(k) || parentName.includes(k))
+		return ATTRIBUTE_CATEGORIES.filter(cat => 
+			cat.keywords.some(k => catName.includes(k) || parentName.includes(k))
 		);
+	}, [categories, categoryId]);
 
-		return filtered;
-	};
-
-	const displayedPresets = getDisplayedPresets();
-
-	const handleTypeSwitch = (type: ProductType) => {
+	const handleTypeSwitch = (type: "simple" | "variable") => {
 		if (type === "simple" && attributes.length > 0) {
-			setAttributes([]);
-			setVariations([]);
+			setValue("attributes", []);
+			setValue("variations", []);
 			setHasGeneratedVariations(false);
 			toast("Switched to Simple", "Attributes and variations were reset.", "warning");
 		}
-		setProductType(type);
+		setValue("type", type);
 	};
 
 	const addAttribute = (name: string = "", initialValues: string[] = []) => {
-		if (name && attributes.some(a => a.name.toLowerCase() === name.toLowerCase())) {
+		if (name && attributes.some((a: Attribute) => a.name.toLowerCase() === name.toLowerCase())) {
 			toast("Already exists", `The attribute '${name}' has already been added.`, "info");
 			return;
 		}
-		setAttributes([...attributes, { id: Math.random().toString(36).substring(7), name, values: initialValues }]);
+		setFieldValue("attributes" as Path<FlatProductValues>, [...attributes, { id: Math.random().toString(36).substring(7), name, values: initialValues }]);
 		if (initialValues.length > 0) {
 			toast("Attribute Added", `${name} added with ${initialValues.length} predefined options.`, "success");
 		}
 	};
 
 	const updateAttribute = (id: string, field: keyof Attribute, value: string | string[]) => {
-		setAttributes(attributes.map(attr => attr.id === id ? { ...attr, [field]: value } : attr) as Attribute[]);
+		const updated = attributes.map((attr: Attribute) => attr.id === id ? { ...attr, [field]: value } : attr);
+		setFieldValue("attributes" as Path<FlatProductValues>, updated);
 	};
 
 	const removeAttribute = (id: string) => {
-		setAttributes(attributes.filter(attr => attr.id !== id));
+		const filtered = attributes.filter((attr: Attribute) => attr.id !== id);
+		setFieldValue("attributes" as Path<FlatProductValues>, filtered);
+	};
+
+	const toggleVariationSchedule = (id: string) => {
+		setExpandedVariationSchedules(prev => {
+			const next = new Set(prev);
+			if (next.has(id)) next.delete(id);
+			else next.add(id);
+			return next;
+		});
 	};
 
 	const generateVariations = () => {
-		const validAttributes = attributes.filter(a => a.name.trim() && a.values.length > 0);
+		const validAttributes = attributes.filter((a: Attribute) => a.name.trim() && a.values.length > 0);
 		if (validAttributes.length === 0) {
 			toast("Action needed", "Add at least one attribute with values to generate variations.", "error");
 			return;
@@ -195,44 +279,64 @@ export default function AddProductPage() {
 
 		const combine = (attrs: Attribute[]): string[][] => {
 			if (attrs.length === 0) return [];
-			if (attrs.length === 1) return attrs[0].values.map(v => [v]);
+			if (attrs.length === 1) return attrs[0].values.map((v: string) => [v]);
 			const rest = combine(attrs.slice(1));
 			const current = attrs[0].values;
-			return current.flatMap(val => rest.map(r => [val, ...r]));
+			return current.flatMap((val: string) => rest.map((r: string[]) => [val, ...r]));
 		};
 
 		const combos = combine(validAttributes);
-		const newVariations: Variation[] = combos.map(combo => ({
+		const newVariations = combos.map((combo: string[]) => ({
 			id: Math.random().toString(36).substring(7),
 			name: combo.join(" / "),
 			price: "",
+			salePrice: "",
+			saleStartDate: "",
+			saleEndDate: "",
 			stock: ""
 		}));
 
-		setVariations(newVariations);
+		setFieldValue("variations" as Path<FlatProductValues>, newVariations);
 		setHasGeneratedVariations(true);
 		toast("Variations Created", `Successfully generated ${newVariations.length} variations.`, "success");
 	};
 
 	const updateVariation = (id: string, field: keyof Variation, value: string) => {
-		setVariations(variations.map(variation => variation.id === id ? { ...variation, [field]: value } : variation));
+		const updated = variations.map((v: Variation) => v.id === id ? { ...v, [field]: value } : v);
+		setFieldValue("variations" as Path<FlatProductValues>, updated);
 	};
 
-	const handleSubmit = async () => {
-		if (!name || !description || !basePrice || !categoryId) {
-			toast("Error", "Please fill in all required fields.", "error");
-			return;
-		}
+	const onSubmit = async (values: ProductFormValues) => {
+		const data = values as unknown as FlatProductValues;
 		try {
 			setIsSubmitting(true);
 			await productsService.createProduct({
-				name,
-				description,
-				categoryId: Number(categoryId),
-				basePrice: Number(basePrice),
-				sku: sku || null,
-			});
-			// Note: Attributes/Variations processing would happen here if the endpoint accepts it
+				name: data.name,
+				description: data.description,
+				categoryId: Number(data.categoryId),
+				basePrice: data.type === "simple" ? Number(data.regularPrice) : 0,
+				salePrice: data.type === "simple" && data.salePrice ? Number(data.salePrice) : null,
+				saleStartDate: data.type === "simple" ? data.saleStartDate : null,
+				saleEndDate: data.type === "simple" ? data.saleEndDate : null,
+				sku: data.sku || null,
+				weight: Number(data.weight),
+				length: data.length ? Number(data.length) : null,
+				width: data.width ? Number(data.width) : null,
+				height: data.height ? Number(data.height) : null,
+				status: data.status,
+				attributes: data.type === "variable" ? data.attributes.map(a => ({
+					name: a.name,
+					values: a.values
+				})) : null,
+					variations: data.type === "variable" ? data.variations.map(v => ({
+						name: v.name,
+						price: Number(v.price),
+						salePrice: v.salePrice ? Number(v.salePrice) : null,
+						saleStartDate: v.saleStartDate || null,
+						saleEndDate: v.saleEndDate || null,
+						stockQuantity: Number(v.stock)
+					})) : null,
+				});
 			toast("Success", "Product published successfully", "success");
 			router.push("/products");
 		} catch (error) {
@@ -241,6 +345,36 @@ export default function AddProductPage() {
 			setIsSubmitting(false);
 		}
 	};
+
+	// Organization Segment shared between mobile and desktop
+	const organizationCard = (
+		<div className="bg-white border border-gray-100 rounded p-8 space-y-8 h-fit">
+			<h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-gold pb-6 border-b border-gray-50">
+				Organization
+			</h4>
+			<div className="space-y-6">
+				<Select
+					id="category-selection"
+					label="Category Selection"
+					required
+					value={categoryId}
+					onChange={(e) => setValue("categoryId", e.target.value)}
+					disabled={loadingCategories}
+					options={flattenedCategories.map(cat => ({ label: cat.label, value: cat.id }))}
+					leftSlot={loadingCategories ? <Loader2 size={14} className="animate-spin" /> : null}
+					error={errors.categoryId?.message}
+				/>
+				<Input
+					id="sku-number"
+					label="SKU Number"
+					placeholder="PROD-8291-BL"
+					{...register("sku")}
+					error={errors.sku?.message}
+					helpText="Leave empty to auto-generate"
+				/>
+			</div>
+		</div>
+	);
 
 	return (
 		<div className="max-w-5xl mx-auto space-y-12 pb-24">
@@ -255,7 +389,7 @@ export default function AddProductPage() {
 							<ArrowLeft size={16} />
 						</Link>
 						<div>
-							<h2 className="text-xl lg:text-3xl font-black tracking-tighter text-black truncate max-w-[200px] sm:max-w-none">
+							<h2 className="text-xl lg:text-3xl font-black tracking-tighter text-black truncate max-w-50 sm:max-w-none">
 								Add New Product
 							</h2>
 							<p className="text-gray-400 mt-0.5 lg:mt-1 uppercase tracking-[0.2em] block text-[8px] lg:text-[10px] font-black">
@@ -268,7 +402,7 @@ export default function AddProductPage() {
 							Save Draft
 						</button>
 						<button 
-							onClick={handleSubmit} 
+							onClick={handleSubmit((data) => onSubmit(data as ProductFormValues))} 
 							disabled={isSubmitting}
 							className="flex-1 lg:flex-none px-4 lg:px-8 py-3 lg:py-3.5 rounded bg-gold text-[9px] lg:text-[10px] font-black uppercase tracking-widest text-black hover:bg-black hover:text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50 whitespace-nowrap"
 						>
@@ -287,31 +421,29 @@ export default function AddProductPage() {
 							General Information
 						</h4>
 						<div className="space-y-6">
-							<div className="space-y-2.5">
-								<label className="block text-[10px] font-black uppercase tracking-widest text-gray-400">
-									Product Name <span className="text-red-500">*</span>
-								</label>
-								<input
-									type="text"
-									placeholder="e.g. Premium Wireless Headphones"
-									value={name}
-									onChange={(e) => setName(e.target.value)}
-									className="w-full bg-gray-50 border border-transparent focus:border-gold/30 rounded px-5 py-4 text-xs font-bold text-black outline-none transition-all placeholder:text-gray-300"
-								/>
-							</div>
-							<div className="space-y-2.5">
-								<label className="block text-[10px] font-black uppercase tracking-widest text-gray-400">
-									Product Description <span className="text-red-500">*</span>
-								</label>
-								<textarea
-									rows={6}
-									placeholder="Describe your product details..."
-									value={description}
-									onChange={(e) => setDescription(e.target.value)}
-									className="w-full bg-gray-50 border border-transparent focus:border-gold/30 rounded px-5 py-4 text-xs font-bold text-black outline-none transition-all placeholder:text-gray-300 resize-none"
-								/>
-							</div>
+							<Input
+								id="product-name"
+								label="Product Name"
+								required
+								placeholder="e.g. Premium Wireless Headphones"
+								{...register("name")}
+								error={errors.name?.message}
+							/>
+							<TextArea
+								id="product-description"
+								label="Product Description"
+								required
+								rows={6}
+								placeholder="Describe your product details..."
+								{...register("description")}
+								error={errors.description?.message}
+							/>
 						</div>
+					</div>
+
+					{/* Mobile Organization (Visible only on small screens) */}
+					<div className="lg:hidden">
+						{organizationCard}
 					</div>
 
 					{/* Media */}
@@ -373,34 +505,71 @@ export default function AddProductPage() {
 
 						{/* Simple Product Fields */}
 						{productType === "simple" && (
-							<div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-								<div className="space-y-2.5">
-									<label className="block text-[10px] font-black uppercase tracking-widest text-gray-400">
-										Base Price (₦) <span className="text-red-500">*</span>
-									</label>
-									<input
+							<div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+								<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+									<Input
+										id="regular-price"
+										label={`Regular Price (${currencySymbol})`}
+										required
 										type="number"
 										min="0"
 										step="0.01"
 										placeholder="0.00"
-										value={basePrice}
-										onChange={(e) => setBasePrice(e.target.value)}
-										className="w-full bg-gray-50 border border-transparent focus:border-gold/30 rounded px-5 py-4 text-xs font-black text-black outline-none transition-all placeholder:text-gray-300"
+										{...registerField("regularPrice")}
+										error={fieldErrors.regularPrice?.message}
 									/>
+									<div className="space-y-2">
+										<label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Sale Price ({currencySymbol})</label>
+										<Input
+											id="sale-price"
+											type="number"
+											min="0"
+											step="0.01"
+											placeholder="0.00"
+											{...registerField("salePrice")}
+											error={fieldErrors.salePrice?.message}
+											outerClassName="!mt-0"
+											rightSlot={
+												<button
+													type="button"
+													onClick={() => setIsSchedulingSale(!isSchedulingSale)}
+													title="Schedule Sale Dates"
+													className={`transition-colors ${isSchedulingSale ? "text-gold" : "text-gray-300 hover:text-gold"}`}
+												>
+													<Calendar size={14} />
+												</button>
+											}
+										/>
+									</div>
 								</div>
-								<div className="space-y-2.5">
-									<label className="block text-[10px] font-black uppercase tracking-widest text-gray-400">
-										Stock Quantity <span className="text-red-500">*</span>
-									</label>
-									<input
-										type="number"
-										min="0"
-										placeholder="0"
-										value={stockQuantity}
-										onChange={(e) => setStockQuantity(e.target.value)}
-										className="w-full bg-gray-50 border border-transparent focus:border-gold/30 rounded px-5 py-4 text-xs font-bold text-black outline-none transition-all placeholder:text-gray-300"
-									/>
-								</div>
+
+								{isSchedulingSale && (
+									<div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-gray-50/50 rounded animate-in zoom-in-95 duration-200">
+										<Input
+											id="sale-start-date"
+											label="Sale Start Date"
+											type="date"
+											{...registerField("saleStartDate")}
+										/>
+										<Input
+											id="sale-end-date"
+											label="Sale End Date"
+											type="date"
+											{...registerField("saleEndDate")}
+										/>
+									</div>
+								)}
+
+								<Input
+									id="stock-quantity"
+									label="Stock Quantity"
+									required
+									type="number"
+									min="0"
+									placeholder="0"
+									{...registerField("stockQuantity")}
+									error={fieldErrors.stockQuantity?.message}
+								/>
 							</div>
 						)}
 
@@ -417,7 +586,7 @@ export default function AddProductPage() {
 									</div>
 									
 									<div className="space-y-4">
-										{attributes.map((attr, index) => (
+										{attributes.map((attr: Attribute) => (
 											<div key={attr.id} className="p-5 border border-gray-100 rounded bg-white space-y-4 relative group">
 												<button 
 													onClick={() => removeAttribute(attr.id)}
@@ -426,18 +595,14 @@ export default function AddProductPage() {
 													<Trash2 size={16} />
 												</button>
 												<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-													<div className="space-y-2.5">
-														<label className="block text-[10px] font-black uppercase tracking-widest text-gray-400">
-															Attribute Name
-														</label>
-														<input
-															type="text"
-															value={attr.name}
-															onChange={e => updateAttribute(attr.id, "name", e.target.value)}
-															placeholder="e.g. Size"
-															className="w-full bg-gray-50 border border-transparent focus:border-gold/30 rounded px-4 py-3 text-xs font-bold text-black outline-none transition-all placeholder:text-gray-300"
-														/>
-													</div>
+													<Input
+														id={`attr-name-${attr.id}`}
+														label="Attribute Name"
+														value={attr.name}
+														onChange={e => updateAttribute(attr.id, "name", e.target.value)}
+														placeholder="e.g. Size"
+														outerClassName="w-full"
+													/>
 													<div className="md:col-span-2 space-y-2.5">
 														<label className="block text-[10px] font-black uppercase tracking-widest text-gray-400">
 															Values (Press enter to add)
@@ -514,7 +679,7 @@ export default function AddProductPage() {
 										<h5 className="text-xs font-black text-black">Variations ({variations.length})</h5>
 										{variations.length > 0 && (
 											<button 
-												onClick={() => { setVariations([]); setHasGeneratedVariations(false); toast("Cleared", "All variations have been cleared.", "info"); }}
+												onClick={() => { setValue("variations", []); setHasGeneratedVariations(false); toast("Cleared", "All variations have been cleared.", "info"); }}
 												className="text-[10px] font-bold text-gray-400 hover:text-red-500 transition-colors"
 											>
 												Clear Variations
@@ -542,42 +707,95 @@ export default function AddProductPage() {
 												<table className="w-full text-left border-collapse">
 													<thead>
 														<tr className="bg-gray-50 border-b border-gray-100">
-															<th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 w-1/2">
+															<th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 w-1/3">
 																Variation Focus
 															</th>
 															<th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 w-1/4">
-																Price (₦)
+																Price ({currencySymbol})
 															</th>
 															<th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 w-1/4">
+																Sale ({currencySymbol})
+															</th>
+															<th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 w-1/6">
 																Stock
 															</th>
 														</tr>
 													</thead>
 													<tbody className="divide-y divide-gray-50">
-														{variations.map((v) => (
-															<tr key={v.id} className="hover:bg-gray-50/50 transition-colors">
-																<td className="px-5 py-4 text-xs font-black text-black">
-																	{v.name}
-																</td>
-																<td className="px-5 py-3">
-																	<input
-																		type="text"
-																		value={v.price}
-																		onChange={e => updateVariation(v.id, "price", e.target.value)}
-																		placeholder="0.00"
-																		className="w-full bg-white border border-gray-200 focus:border-gold/50 rounded px-3 py-2 text-xs font-bold text-black outline-none transition-all placeholder:text-gray-300"
-																	/>
-																</td>
-																<td className="px-5 py-3">
-																	<input
-																		type="number"
-																		value={v.stock}
-																		onChange={e => updateVariation(v.id, "stock", e.target.value)}
-																		placeholder="0"
-																		className="w-full bg-white border border-gray-200 focus:border-gold/50 rounded px-3 py-2 text-xs font-bold text-black outline-none transition-all placeholder:text-gray-300"
-																	/>
-																</td>
-															</tr>
+														{variations.map((v: Variation) => (
+															<React.Fragment key={v.id}>
+																<tr className="hover:bg-gray-50/50 transition-colors border-b border-gray-50">
+																	<td className="px-5 py-4 text-xs font-black text-black">
+																		{v.name}
+																	</td>
+																	<td className="px-5 py-3">
+																		<Input
+																			id={`var-price-${v.id}`}
+																			value={v.price}
+																			onChange={e => updateVariation(v.id, "price", e.target.value)}
+																			placeholder="0.00"
+																			className="bg-white border-gray-200 focus:border-gold/50 !py-2.5 !px-4"
+																		/>
+																	</td>
+																	<td className="px-5 py-3">
+																		<Input
+																			id={`var-sale-price-${v.id}`}
+																			value={v.salePrice}
+																			onChange={e => updateVariation(v.id, "salePrice", e.target.value)}
+																			placeholder="0.00"
+																			className="bg-white border-gray-200 focus:border-gold/50 !py-2.5 !pl-4 !pr-10"
+																			rightSlot={
+																				<button
+																					type="button"
+																					onClick={() => toggleVariationSchedule(v.id)}
+																					title="Schedule Sale Dates"
+																					className={`transition-colors ${expandedVariationSchedules.has(v.id) ? "text-gold" : "text-gray-300 hover:text-gold"}`}
+																				>
+																					<Calendar size={12} />
+																				</button>
+																			}
+																		/>
+																	</td>
+																	<td className="px-5 py-3">
+																		<Input
+																			id={`var-stock-${v.id}`}
+																			type="number"
+																			value={v.stock}
+																			onChange={e => updateVariation(v.id, "stock", e.target.value)}
+																			placeholder="0"
+																			className="bg-white border-gray-200 focus:border-gold/50 !py-2.5 !px-4"
+																		/>
+																	</td>
+																</tr>
+																{expandedVariationSchedules.has(v.id) && (
+																	<tr className="bg-gray-50/30">
+																		<td colSpan={4} className="px-5 py-4">
+																			<div className="grid grid-cols-2 gap-4 animate-in slide-in-from-top-1 duration-200">
+																				<div className="space-y-1.5">
+																					<label className="text-[8px] font-black uppercase tracking-widest text-gray-400 ml-1">Start Date</label>
+																					<Input
+																						id={`var-sale-start-${v.id}`}
+																						type="date"
+																						value={v.saleStartDate}
+																						onChange={e => updateVariation(v.id, "saleStartDate", e.target.value)}
+																						className="bg-white border-gray-100 !py-2 !px-3"
+																					/>
+																				</div>
+																				<div className="space-y-1.5">
+																					<label className="text-[8px] font-black uppercase tracking-widest text-gray-400 ml-1">End Date</label>
+																					<Input
+																						id={`var-sale-end-${v.id}`}
+																						type="date"
+																						value={v.saleEndDate}
+																						onChange={e => updateVariation(v.id, "saleEndDate", e.target.value)}
+																						className="bg-white border-gray-100 !py-2 !px-3"
+																					/>
+																				</div>
+																			</div>
+																		</td>
+																	</tr>
+																)}
+															</React.Fragment>
 														))}
 													</tbody>
 												</table>
@@ -588,70 +806,71 @@ export default function AddProductPage() {
 							</div>
 						)}
 					</div>
-				</div>
 
-				{/* Right Sidebar - Organization */}
-				<div className="space-y-10">
-					<div className="bg-white border border-gray-100 rounded p-8 space-y-8">
-						<h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-gold pb-6 border-b border-gray-50">
-							Organization
+					{/* Shipping & Inventory */}
+					<div className="bg-white border border-gray-100 rounded p-8 space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+						<h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-gold pb-6 border-b border-gray-50 flex items-center gap-2">
+							Shipping & Inventory
 						</h4>
-						<div className="space-y-6">
-							<div className="space-y-2.5">
-								<label className="block text-[10px] font-black uppercase tracking-widest text-gray-400">
-									Category Selection <span className="text-red-500">*</span>
-								</label>
-								<div className="relative">
-									<select 
-										value={categoryId}
-										onChange={(e) => setCategoryId(e.target.value)}
-										disabled={loadingCategories}
-										className="w-full bg-gray-50 border border-transparent focus:border-gold/30 rounded px-5 py-4 text-xs font-bold text-black outline-none transition-all appearance-none cursor-pointer"
-									>
-										<option value="">{loadingCategories ? "Loading categories..." : "Select Category"}</option>
-										{flattenedCategories.map((cat) => (
-											<option key={cat.id} value={cat.id}>
-												{cat.label}
-											</option>
-										))}
-									</select>
-									<div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-gray-400">
-										{loadingCategories ? <Loader2 size={14} className="animate-spin" /> : (
-											<svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
-												<path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-											</svg>
-										)}
-									</div>
-								</div>
-							</div>
-							<div className="space-y-2.5">
-								<label className="block text-[10px] font-black uppercase tracking-widest text-gray-400">
-									SKU Number
-								</label>
-								<input
-									type="text"
-									placeholder="PROD-8291-BL"
-									value={sku}
-									onChange={(e) => setSku(e.target.value)}
-									className="w-full bg-gray-50 border border-transparent focus:border-gold/30 rounded px-5 py-4 text-xs font-bold text-black outline-none transition-all placeholder:text-gray-300"
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+							<Input
+								id="product-weight"
+								label="Weight (kg)"
+								required
+								type="number"
+								step="0.01"
+								min="0"
+								placeholder="0.00"
+								{...registerField("weight")}
+								error={fieldErrors.weight?.message}
+								rightSlot={<span className="text-[10px] font-black text-gray-300 pr-5">KG</span>}
+							/>
+							<Select
+								id="inventory-status"
+								label="Inventory Status"
+								required
+								options={[
+									{ label: "In stock", value: "In stock" },
+									{ label: "Out of Stock", value: "Out of Stock" },
+									{ label: "Pre-order", value: "Pre-order" }
+								]}
+								{...registerField("status")}
+								error={fieldErrors.status?.message}
+							/>
+						</div>
+
+						<div className="pt-4 space-y-4">
+							<label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-2">Dimensions (L x W x H) cm</label>
+							<div className="grid grid-cols-3 gap-4">
+								<Input
+									id="dim-length"
+									placeholder="L"
+									type="number"
+									min="0"
+									{...registerField("length")}
 								/>
-								<p className="text-[9px] text-gray-400 font-bold">Leave empty auto-generate</p>
-							</div>
-							<div className="space-y-2.5 pt-4 border-t border-gray-50">
-								<label className="block text-[10px] font-black uppercase tracking-widest text-gray-400">
-									Launch Status
-								</label>
-								<div className="flex gap-2">
-									<button className="flex-1 py-3.5 rounded bg-black text-[9px] font-black uppercase tracking-widest text-white border border-black transition-all hover:bg-black/90">
-										Publish
-									</button>
-									<button className="flex-1 py-3.5 rounded bg-white text-[9px] font-black uppercase tracking-widest text-gray-400 border border-gray-100 hover:border-gold hover:text-gold transition-all">
-										Schedule
-									</button>
-								</div>
+								<Input
+									id="dim-width"
+									placeholder="W"
+									type="number"
+									min="0"
+									{...registerField("width")}
+								/>
+								<Input
+									id="dim-height"
+									placeholder="H"
+									type="number"
+									min="0"
+									{...registerField("height")}
+								/>
 							</div>
 						</div>
 					</div>
+				</div>
+
+				{/* Right Sidebar - Organization (Visible only on large screens) */}
+				<div className="hidden lg:block space-y-10">
+					{organizationCard}
 				</div>
 			</div>
 		</div>
