@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   ShoppingBag,
   Search,
@@ -7,10 +7,83 @@ import {
   MoreVertical,
   Eye,
   Truck,
+  Loader2,
+  Package,
 } from "lucide-react";
+import * as ordersService from "@/lib/api/services/orders";
+import { OrderResponseDTO, OrderStatus } from "@/lib/api/types/orders.types";
+import { formatCurrency } from "../../../lib/utils/currency";
+import { formatDate } from "@/lib/utils/date";
+import { useToast } from "@/lib/context/ToastContext";
+import Link from "next/link";
 
 export default function OrdersPage() {
   const [activeTab, setActiveTab] = useState("All Orders");
+  const [orders, setOrders] = useState<OrderResponseDTO[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const { toast } = useToast();
+
+  const fetchOrders = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await ordersService.getVendorOrders(1, 100);
+      setOrders(data || []);
+    } catch (error) {
+      console.error("Failed to fetch orders:", error);
+      toast("Error", "Could not load orders. Please try again.", "error");
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
+
+  const filteredOrders = orders.filter((order) => {
+    // Tab Filter
+    if (activeTab !== "All Orders") {
+      const statusMap: Record<string, string> = {
+        "New": OrderStatus.Pending,
+        "Processing": OrderStatus.Processing,
+        "Completed": OrderStatus.Delivered,
+        "Cancelled": OrderStatus.Cancelled,
+        "Returns": OrderStatus.Refunded,
+      };
+      if (order.status !== statusMap[activeTab]) return false;
+    }
+
+    // Search Filter
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      return (
+        order.orderNumber?.toLowerCase().includes(q) ||
+        order.id.toLowerCase().includes(q)
+      );
+    }
+
+    return true;
+  });
+
+  const getStatusStyle = (status: OrderStatus) => {
+    switch (status) {
+      case OrderStatus.Pending:
+        return "bg-gold/20 text-gold";
+      case OrderStatus.Confirmed:
+      case OrderStatus.Processing:
+        return "bg-blue-50 text-blue-600";
+      case OrderStatus.Shipped:
+        return "bg-purple-50 text-purple-600";
+      case OrderStatus.Delivered:
+        return "bg-green-50 text-green-600";
+      case OrderStatus.Cancelled:
+      case OrderStatus.Failed:
+        return "bg-red-50 text-red-600";
+      default:
+        return "bg-gray-100 text-gray-400";
+    }
+  };
 
   return (
     <div className="space-y-10">
@@ -23,7 +96,10 @@ export default function OrdersPage() {
             Manage and track all customer purchases
           </p>
         </div>
-        <button className="px-8 py-4 rounded border border-gray-100 text-[10px] font-black uppercase tracking-widest text-black hover:bg-gray-50 transition-all flex items-center justify-center gap-3">
+        <button 
+          onClick={() => toast("Information", "Export functionality is coming soon", "info")}
+          className="px-8 py-4 rounded border border-gray-100 text-[10px] font-black uppercase tracking-widest text-black hover:bg-gray-50 transition-all flex items-center justify-center gap-3"
+        >
           <ShoppingBag size={16} />
           Export Orders
         </button>
@@ -62,14 +138,19 @@ export default function OrdersPage() {
             />
             <input
               type="text"
-              placeholder="Search by order ID, customer name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by order ID..."
               className="w-full bg-gray-50 rounded py-3 pl-12 pr-4 text-[10px] font-black uppercase tracking-widest text-black outline-none border border-transparent focus:border-gold/30 transition-all"
             />
           </div>
           <div className="flex items-center gap-3">
-            <button className="px-6 py-3 rounded border border-gray-100 text-[9px] font-black uppercase tracking-widest text-gray-400 hover:text-black flex items-center gap-2">
+            <button 
+              onClick={fetchOrders}
+              className="px-6 py-3 rounded border border-gray-100 text-[9px] font-black uppercase tracking-widest text-gray-400 hover:text-black flex items-center gap-2"
+            >
               <Filter size={14} />
-              Advanced Filter
+              Refresh
             </button>
           </div>
         </div>
@@ -97,106 +178,76 @@ export default function OrdersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {[
-                {
-                  id: "#8291",
-                  customer: "John Doe",
-                  items: "Premium Watch 5 · 1 unit",
-                  amount: "₦125,000",
-                  status: "New",
-                  date: "Today, 10:45 AM",
-                },
-                {
-                  id: "#8288",
-                  customer: "Sarah Smith",
-                  items: "Studio Headphones · 2 units",
-                  amount: "₦170,000",
-                  status: "Processing",
-                  date: "Mar 17, 2026",
-                },
-                {
-                  id: "#8285",
-                  customer: "Michael Obi",
-                  items: "Speed Sneakers · 1 unit",
-                  amount: "₦45,000",
-                  status: "Completed",
-                  date: "Mar 16, 2026",
-                },
-                {
-                  id: "#8282",
-                  customer: "Jessica Brown",
-                  items: "Dashed Fragrance · 1 unit",
-                  amount: "₦25,000",
-                  status: "Cancelled",
-                  date: "Mar 15, 2026",
-                },
-                {
-                  id: "#8279",
-                  customer: "David Wilson",
-                  items: "Classic Watch · 1 unit",
-                  amount: "₦85,000",
-                  status: "Returns",
-                  date: "Mar 14, 2026",
-                },
-              ].map((order, i) => (
-                <tr
-                  key={i}
-                  className="hover:bg-gray-50/50 transition-colors group"
-                >
-                  <td className="px-8 py-5 text-sm font-black text-black">
-                    {order.id}
-                  </td>
-                  <td className="px-8 py-5">
-                    <div className="flex flex-col">
-                      <span className="text-xs font-black text-black uppercase tracking-tight">
-                        {order.customer}
-                      </span>
-                      <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
-                        Verified Buyer
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-8 py-5 text-xs font-bold text-gray-500 uppercase">
-                    {order.items}
-                  </td>
-                  <td className="px-8 py-5 text-xs font-black text-black">
-                    {order.amount}
-                  </td>
-                  <td className="px-8 py-5">
-                    <span
-                      className={`text-[8px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full ${
-                        order.status === "New"
-                          ? "bg-gold/20 text-gold"
-                          : order.status === "Processing"
-                            ? "bg-blue-50 text-blue-600"
-                            : order.status === "Completed"
-                              ? "bg-green-50 text-green-600"
-                              : order.status === "Cancelled"
-                                ? "bg-red-50 text-red-600"
-                                : "bg-gray-100 text-gray-400"
-                      }`}
-                    >
-                      {order.status}
-                    </span>
-                  </td>
-                  <td className="px-8 py-5 text-xs font-bold text-gray-400 uppercase tracking-widest">
-                    {order.date}
-                  </td>
-                  <td className="px-8 py-5 text-right">
-                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="w-9 h-9 rounded bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-black hover:border-gold transition-all">
-                        <Eye size={14} />
-                      </button>
-                      <button className="w-9 h-9 rounded bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-black hover:border-gold transition-all">
-                        <Truck size={14} />
-                      </button>
-                      <button className="w-9 h-9 rounded bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-black hover:border-gold transition-all">
-                        <MoreVertical size={14} />
-                      </button>
-                    </div>
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="px-8 py-20 text-center">
+                    <Loader2 className="animate-spin text-gold mx-auto" size={40} />
+                    <p className="mt-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Loading orders...</p>
                   </td>
                 </tr>
-              ))}
+              ) : filteredOrders.length > 0 ? (
+                filteredOrders.map((order) => (
+                  <tr
+                    key={order.id}
+                    className="hover:bg-gray-50/50 transition-colors group"
+                  >
+                    <td className="px-8 py-5 text-[11px] font-black text-black">
+                      #{order.orderNumber || order.id.slice(0, 8)}
+                    </td>
+                    <td className="px-8 py-5">
+                      <div className="flex flex-col">
+                        <span className="text-xs font-black text-black uppercase tracking-tighter">
+                          Customer
+                        </span>
+                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
+                          ID: {order.id.slice(0, 6)}...
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-8 py-5 text-[10px] font-bold text-gray-500 uppercase">
+                      {order.items?.length || 0} {order.items?.length === 1 ? 'Item' : 'Items'}
+                    </td>
+                    <td className="px-8 py-5 text-sm font-black text-black">
+                      {formatCurrency(order.totalAmount)}
+                    </td>
+                    <td className="px-8 py-5">
+                      <span
+                        className={`text-[8px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full ${getStatusStyle(order.status)}`}
+                      >
+                        {order.status}
+                      </span>
+                    </td>
+                    <td className="px-8 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                      {formatDate(order.createdAt)}
+                    </td>
+                    <td className="px-8 py-5 text-right">
+                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Link 
+                          href={`/orders/${order.id}`}
+                          className="w-9 h-9 rounded bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-black hover:border-gold transition-all"
+                        >
+                          <Eye size={14} />
+                        </Link>
+                        <button className="w-9 h-9 rounded bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-black hover:border-gold transition-all">
+                          <Truck size={14} />
+                        </button>
+                        <button className="w-9 h-9 rounded bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-black hover:border-gold transition-all">
+                          <MoreVertical size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={7} className="px-8 py-20 text-center">
+                    <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center text-gray-200 border border-gray-100 mx-auto mb-4">
+                      <Package size={32} />
+                    </div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">No orders found</p>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

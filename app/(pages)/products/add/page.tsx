@@ -1,6 +1,17 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
-import { ArrowLeft, Save, Plus, Upload, X, Trash2, Settings2, PlusCircle, Loader2, Calendar } from "lucide-react";
+import {
+	ArrowLeft,
+	Save,
+	Plus,
+	Upload,
+	X,
+	Trash2,
+	Settings2,
+	PlusCircle,
+	Loader2,
+	Calendar,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/context/AuthContext";
@@ -15,18 +26,15 @@ import { getErrorMessage } from "@/lib/utils/errors";
 import { Input } from "@/components/ui/Input";
 import { TextArea } from "@/components/ui/TextArea";
 import { Select } from "@/components/ui/Select";
-import { 
-	useForm, 
-	useWatch, 
-	UseFormRegister, 
-	UseFormSetValue, 
+import {
+	useForm,
+	useWatch,
+	UseFormRegister,
+	UseFormSetValue,
 	FieldErrors,
-	Path
+	Path,
 } from "react-hook-form";
-import { 
-	productSchema, 
-	ProductFormValues, 
-} from "@/lib/schemas/vendor";
+import { productSchema, ProductFormValues } from "@/lib/schemas/vendor";
 
 // Helper type that represents the logical OR of all fields for easier RHF integration
 type FlatProductValues = {
@@ -65,35 +73,52 @@ interface Variation {
 	stock: string;
 }
 
-const ChipInput = ({ values, onChange, placeholder }: { values: string[], onChange: (v: string[]) => void, placeholder?: string }) => {
+const ChipInput = ({
+	values,
+	onChange,
+	placeholder,
+}: {
+	values: string[];
+	onChange: (v: string[]) => void;
+	placeholder?: string;
+}) => {
 	const [inputValue, setInputValue] = useState("");
 	const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
 		if (e.key === "Enter" && inputValue.trim()) {
 			e.preventDefault();
 			const newVal = inputValue.trim();
-			if (!values.find(v => v.toLowerCase() === newVal.toLowerCase())) {
+			if (!values.find((v) => v.toLowerCase() === newVal.toLowerCase())) {
 				onChange([...values, newVal]);
 			}
 			setInputValue("");
 		}
 	};
 	const removeValue = (valToRemove: string) => {
-		onChange(values.filter(v => v !== valToRemove));
+		onChange(values.filter((v) => v !== valToRemove));
 	};
 	return (
 		<div className="w-full bg-gray-50 border border-transparent focus-within:border-gold/30 rounded px-4 py-3 transition-all flex flex-wrap gap-2 items-center min-h-12.5">
-			{values.map(val => (
-				<span key={val} className="bg-black text-white text-[10px] font-bold px-2.5 py-1.5 rounded flex items-center gap-1.5">
+			{values.map((val) => (
+				<span
+					key={val}
+					className="bg-black text-white text-[10px] font-bold px-2.5 py-1.5 rounded flex items-center gap-1.5"
+				>
 					{val}
-					<X size={12} className="cursor-pointer hover:text-gold transition-colors" onClick={() => removeValue(val)} />
+					<X
+						size={12}
+						className="cursor-pointer hover:text-gold transition-colors"
+						onClick={() => removeValue(val)}
+					/>
 				</span>
 			))}
 			<input
 				type="text"
 				value={inputValue}
-				onChange={e => setInputValue(e.target.value)}
+				onChange={(e) => setInputValue(e.target.value)}
 				onKeyDown={handleKeyDown}
-				placeholder={values.length === 0 ? placeholder : "Type and press Enter..."}
+				placeholder={
+					values.length === 0 ? placeholder : "Type and press Enter..."
+				}
 				className="flex-1 bg-transparent text-xs font-bold text-black outline-none placeholder:text-gray-300 min-w-30"
 			/>
 		</div>
@@ -104,7 +129,7 @@ export default function AddProductPage() {
 	const router = useRouter();
 	const { user } = useAuth();
 	const { toast } = useToast();
-	
+
 	const currencySymbol = useMemo(() => {
 		const code = user?.countryCode?.toUpperCase();
 		if (code === "NG") return "₦";
@@ -113,8 +138,10 @@ export default function AddProductPage() {
 	}, [user?.countryCode]);
 
 	const [hasGeneratedVariations, setHasGeneratedVariations] = useState(false);
-	const [expandedVariationSchedules, setExpandedVariationSchedules] = useState<Set<string>>(new Set());
-	
+	const [expandedVariationSchedules, setExpandedVariationSchedules] = useState<
+		Set<string>
+	>(new Set());
+
 	const [categories, setCategories] = useState<CategoryResponseDTO[]>([]);
 	const [loadingCategories, setLoadingCategories] = useState(true);
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -152,25 +179,35 @@ export default function AddProductPage() {
 
 	// Typed versions of RHF utilities for the union type
 	// We cast to unknown first to avoid the "neither type sufficiently overlaps" error
-	const registerField = register as unknown as UseFormRegister<FlatProductValues>;
-	const setFieldValue = setValue as unknown as UseFormSetValue<FlatProductValues>;
+	const registerField =
+		register as unknown as UseFormRegister<FlatProductValues>;
+	const setFieldValue =
+		setValue as unknown as UseFormSetValue<FlatProductValues>;
 	const fieldErrors = errors as unknown as FieldErrors<FlatProductValues>;
 
 	const formValues = useWatch({ control });
 	const productType = formValues.type;
 	const categoryId = formValues.categoryId;
-	const attributes = (formValues.type === "variable" ? formValues.attributes : []) as unknown as Attribute[];
-	const variations = (formValues.type === "variable" ? formValues.variations : []) as unknown as Variation[];
+	const attributes = (formValues.type === "variable"
+		? formValues.attributes
+		: []) as unknown as Attribute[];
+	const variations = (formValues.type === "variable"
+		? formValues.variations
+		: []) as unknown as Variation[];
 
 	useEffect(() => {
 		const fetchCats = async () => {
 			try {
 				setLoadingCategories(true);
 				const data = (await categoriesService.getCategories()) || [];
-				
-				const apiCategoryNames = new Set(data.filter(c => c && c.name).map(c => c.name?.toLowerCase()));
-				const filteredRobust = ROBUST_CATEGORIES.filter(c => c && c.name && !apiCategoryNames.has(c.name?.toLowerCase()));
-				
+
+				const apiCategoryNames = new Set(
+					data.filter((c) => c && c.name).map((c) => c.name?.toLowerCase()),
+				);
+				const filteredRobust = ROBUST_CATEGORIES.filter(
+					(c) => c && c.name && !apiCategoryNames.has(c.name?.toLowerCase()),
+				);
+
 				setCategories([...data, ...filteredRobust]);
 			} catch (error) {
 				console.error("Failed to load categories:", error);
@@ -186,17 +223,17 @@ export default function AddProductPage() {
 	const flattenedCategories = useMemo(() => {
 		const flat: { id: string; label: string; name: string }[] = [];
 		const seenIds = new Set<string>();
-		
+
 		const process = (cats: CategoryResponseDTO[]) => {
 			if (!cats || !Array.isArray(cats)) return;
-			cats.forEach(cat => {
+			cats.forEach((cat) => {
 				if (!cat) return;
 				const stringId = (cat.id ?? "").toString();
 				if (stringId && !seenIds.has(stringId)) {
-					flat.push({ 
-						id: stringId, 
+					flat.push({
+						id: stringId,
 						label: cat.name || "Unnamed Category",
-						name: cat.name || ""
+						name: cat.name || "",
 					});
 					seenIds.add(stringId);
 				}
@@ -211,7 +248,10 @@ export default function AddProductPage() {
 
 	const displayedPresets = useMemo(() => {
 		if (!categoryId) return [];
-		const findInTree = (cats: CategoryResponseDTO[], id: string): CategoryResponseDTO | undefined => {
+		const findInTree = (
+			cats: CategoryResponseDTO[],
+			id: string,
+		): CategoryResponseDTO | undefined => {
 			for (const cat of cats) {
 				if (cat.id.toString() === id) return cat;
 				if (cat.subCategories) {
@@ -225,8 +265,8 @@ export default function AddProductPage() {
 		if (!selectedCategory) return [];
 		const catName = (selectedCategory.name || "").toLowerCase();
 		const parentName = (selectedCategory.parentName || "").toLowerCase();
-		return ATTRIBUTE_CATEGORIES.filter(cat => 
-			cat.keywords.some(k => catName.includes(k) || parentName.includes(k))
+		return ATTRIBUTE_CATEGORIES.filter((cat) =>
+			cat.keywords.some((k) => catName.includes(k) || parentName.includes(k)),
 		);
 	}, [categories, categoryId]);
 
@@ -235,24 +275,54 @@ export default function AddProductPage() {
 			setValue("attributes", []);
 			setValue("variations", []);
 			setHasGeneratedVariations(false);
-			toast("Switched to Simple", "Attributes and variations were reset.", "warning");
+			toast(
+				"Switched to Simple",
+				"Attributes and variations were reset.",
+				"warning",
+			);
 		}
 		setValue("type", type);
 	};
 
 	const addAttribute = (name: string = "", initialValues: string[] = []) => {
-		if (name && attributes.some((a: Attribute) => a.name.toLowerCase() === name.toLowerCase())) {
-			toast("Already exists", `The attribute '${name}' has already been added.`, "info");
+		if (
+			name &&
+			attributes.some(
+				(a: Attribute) => a.name.toLowerCase() === name.toLowerCase(),
+			)
+		) {
+			toast(
+				"Already exists",
+				`The attribute '${name}' has already been added.`,
+				"info",
+			);
 			return;
 		}
-		setFieldValue("attributes" as Path<FlatProductValues>, [...attributes, { id: Math.random().toString(36).substring(7), name, values: initialValues }]);
+		setFieldValue("attributes" as Path<FlatProductValues>, [
+			...attributes,
+			{
+				id: Math.random().toString(36).substring(7),
+				name,
+				values: initialValues,
+			},
+		]);
 		if (initialValues.length > 0) {
-			toast("Attribute Added", `${name} added with ${initialValues.length} predefined options.`, "success");
+			toast(
+				"Attribute Added",
+				`${name} added with ${initialValues.length} predefined options.`,
+				"success",
+			);
 		}
 	};
 
-	const updateAttribute = (id: string, field: keyof Attribute, value: string | string[]) => {
-		const updated = attributes.map((attr: Attribute) => attr.id === id ? { ...attr, [field]: value } : attr);
+	const updateAttribute = (
+		id: string,
+		field: keyof Attribute,
+		value: string | string[],
+	) => {
+		const updated = attributes.map((attr: Attribute) =>
+			attr.id === id ? { ...attr, [field]: value } : attr,
+		);
 		setFieldValue("attributes" as Path<FlatProductValues>, updated);
 	};
 
@@ -262,7 +332,7 @@ export default function AddProductPage() {
 	};
 
 	const toggleVariationSchedule = (id: string) => {
-		setExpandedVariationSchedules(prev => {
+		setExpandedVariationSchedules((prev) => {
 			const next = new Set(prev);
 			if (next.has(id)) next.delete(id);
 			else next.add(id);
@@ -271,9 +341,15 @@ export default function AddProductPage() {
 	};
 
 	const generateVariations = () => {
-		const validAttributes = attributes.filter((a: Attribute) => a.name.trim() && a.values.length > 0);
+		const validAttributes = attributes.filter(
+			(a: Attribute) => a.name.trim() && a.values.length > 0,
+		);
 		if (validAttributes.length === 0) {
-			toast("Action needed", "Add at least one attribute with values to generate variations.", "error");
+			toast(
+				"Action needed",
+				"Add at least one attribute with values to generate variations.",
+				"error",
+			);
 			return;
 		}
 
@@ -282,7 +358,9 @@ export default function AddProductPage() {
 			if (attrs.length === 1) return attrs[0].values.map((v: string) => [v]);
 			const rest = combine(attrs.slice(1));
 			const current = attrs[0].values;
-			return current.flatMap((val: string) => rest.map((r: string[]) => [val, ...r]));
+			return current.flatMap((val: string) =>
+				rest.map((r: string[]) => [val, ...r]),
+			);
 		};
 
 		const combos = combine(validAttributes);
@@ -293,16 +371,26 @@ export default function AddProductPage() {
 			salePrice: "",
 			saleStartDate: "",
 			saleEndDate: "",
-			stock: ""
+			stock: "",
 		}));
 
 		setFieldValue("variations" as Path<FlatProductValues>, newVariations);
 		setHasGeneratedVariations(true);
-		toast("Variations Created", `Successfully generated ${newVariations.length} variations.`, "success");
+		toast(
+			"Variations Created",
+			`Successfully generated ${newVariations.length} variations.`,
+			"success",
+		);
 	};
 
-	const updateVariation = (id: string, field: keyof Variation, value: string) => {
-		const updated = variations.map((v: Variation) => v.id === id ? { ...v, [field]: value } : v);
+	const updateVariation = (
+		id: string,
+		field: keyof Variation,
+		value: string,
+	) => {
+		const updated = variations.map((v: Variation) =>
+			v.id === id ? { ...v, [field]: value } : v,
+		);
 		setFieldValue("variations" as Path<FlatProductValues>, updated);
 	};
 
@@ -315,7 +403,10 @@ export default function AddProductPage() {
 				description: data.description,
 				categoryId: Number(data.categoryId),
 				basePrice: data.type === "simple" ? Number(data.regularPrice) : 0,
-				salePrice: data.type === "simple" && data.salePrice ? Number(data.salePrice) : null,
+				salePrice:
+					data.type === "simple" && data.salePrice
+						? Number(data.salePrice)
+						: null,
 				saleStartDate: data.type === "simple" ? data.saleStartDate : null,
 				saleEndDate: data.type === "simple" ? data.saleEndDate : null,
 				sku: data.sku || null,
@@ -324,19 +415,25 @@ export default function AddProductPage() {
 				width: data.width ? Number(data.width) : null,
 				height: data.height ? Number(data.height) : null,
 				status: data.status,
-				attributes: data.type === "variable" ? data.attributes.map(a => ({
-					name: a.name,
-					values: a.values
-				})) : null,
-					variations: data.type === "variable" ? data.variations.map(v => ({
-						name: v.name,
-						price: Number(v.price),
-						salePrice: v.salePrice ? Number(v.salePrice) : null,
-						saleStartDate: v.saleStartDate || null,
-						saleEndDate: v.saleEndDate || null,
-						stockQuantity: Number(v.stock)
-					})) : null,
-				});
+				attributes:
+					data.type === "variable"
+						? data.attributes.map((a) => ({
+								name: a.name,
+								values: a.values,
+							}))
+						: null,
+				variations:
+					data.type === "variable"
+						? data.variations.map((v) => ({
+								name: v.name,
+								price: Number(v.price),
+								salePrice: v.salePrice ? Number(v.salePrice) : null,
+								saleStartDate: v.saleStartDate || null,
+								saleEndDate: v.saleEndDate || null,
+								stockQuantity: Number(v.stock),
+							}))
+						: null,
+			});
 			toast("Success", "Product published successfully", "success");
 			router.push("/products");
 		} catch (error) {
@@ -360,8 +457,15 @@ export default function AddProductPage() {
 					value={categoryId}
 					onChange={(e) => setValue("categoryId", e.target.value)}
 					disabled={loadingCategories}
-					options={flattenedCategories.map(cat => ({ label: cat.label, value: cat.id }))}
-					leftSlot={loadingCategories ? <Loader2 size={14} className="animate-spin" /> : null}
+					options={flattenedCategories.map((cat) => ({
+						label: cat.label,
+						value: cat.id,
+					}))}
+					leftSlot={
+						loadingCategories ? (
+							<Loader2 size={14} className="animate-spin" />
+						) : null
+					}
 					error={errors.categoryId?.message}
 				/>
 				<Input
@@ -401,12 +505,18 @@ export default function AddProductPage() {
 						<button className="flex-1 lg:flex-none px-4 lg:px-8 py-3 lg:py-3.5 rounded border border-gray-100 block text-[9px] lg:text-[10px] font-black uppercase tracking-widest text-black hover:bg-gray-50 transition-all whitespace-nowrap">
 							Save Draft
 						</button>
-						<button 
-							onClick={handleSubmit((data) => onSubmit(data as ProductFormValues))} 
+						<button
+							onClick={handleSubmit((data) =>
+								onSubmit(data as ProductFormValues),
+							)}
 							disabled={isSubmitting}
 							className="flex-1 lg:flex-none px-4 lg:px-8 py-3 lg:py-3.5 rounded bg-gold text-[9px] lg:text-[10px] font-black uppercase tracking-widest text-black hover:bg-black hover:text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50 whitespace-nowrap"
 						>
-							{isSubmitting ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+							{isSubmitting ? (
+								<Loader2 size={14} className="animate-spin" />
+							) : (
+								<Save size={14} />
+							)}
 							Publish Product
 						</button>
 					</div>
@@ -442,15 +552,15 @@ export default function AddProductPage() {
 					</div>
 
 					{/* Mobile Organization (Visible only on small screens) */}
-					<div className="lg:hidden">
-						{organizationCard}
-					</div>
+					<div className="lg:hidden">{organizationCard}</div>
 
 					{/* Media */}
 					<div className="bg-white border border-gray-100 rounded p-8 space-y-8">
 						<h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-gold pb-6 border-b border-gray-50 flex justify-between items-center">
 							<span>Product Gallery</span>
-							<span className="text-gray-300 text-[9px] normal-case tracking-normal font-bold">Max 4 images (5MB each)</span>
+							<span className="text-gray-300 text-[9px] normal-case tracking-normal font-bold">
+								Max 4 images (5MB each)
+							</span>
 						</h4>
 						<div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
 							<div className="aspect-square border-2 border-dashed border-gray-200 bg-gray-50 rounded flex flex-col items-center justify-center text-gray-400 hover:border-gold hover:bg-gold/5 hover:text-gold transition-all cursor-pointer group">
@@ -467,7 +577,10 @@ export default function AddProductPage() {
 									key={i}
 									className="aspect-square border-2 border-dashed border-gray-100 rounded flex flex-col items-center justify-center text-gray-200 hover:border-gold hover:text-gold hover:bg-gold/5 transition-all cursor-pointer group"
 								>
-									<Plus size={20} className="group-hover:scale-110 transition-transform" />
+									<Plus
+										size={20}
+										className="group-hover:scale-110 transition-transform"
+									/>
 								</div>
 							))}
 						</div>
@@ -478,14 +591,14 @@ export default function AddProductPage() {
 						<h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-gold pb-6 border-b border-gray-50">
 							Pricing & Variants
 						</h4>
-						
+
 						{/* Type Toggle */}
 						<div className="bg-gray-50 p-1.5 rounded flex w-full mb-4">
 							<button
 								onClick={() => handleTypeSwitch("simple")}
 								className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded transition-all ${
-									productType === "simple" 
-										? "bg-white text-black" 
+									productType === "simple"
+										? "bg-white text-black"
 										: "text-gray-400 hover:text-black"
 								}`}
 							>
@@ -494,8 +607,8 @@ export default function AddProductPage() {
 							<button
 								onClick={() => handleTypeSwitch("variable")}
 								className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded transition-all ${
-									productType === "variable" 
-										? "bg-white text-black" 
+									productType === "variable"
+										? "bg-white text-black"
 										: "text-gray-400 hover:text-black"
 								}`}
 							>
@@ -519,7 +632,9 @@ export default function AddProductPage() {
 										error={fieldErrors.regularPrice?.message}
 									/>
 									<div className="space-y-2">
-										<label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Sale Price ({currencySymbol})</label>
+										<label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+											Sale Price ({currencySymbol})
+										</label>
 										<Input
 											id="sale-price"
 											type="number"
@@ -580,15 +695,23 @@ export default function AddProductPage() {
 								<div className="space-y-6">
 									<div className="flex items-center justify-between">
 										<div>
-											<h5 className="text-xs font-black text-black">Product Attributes</h5>
-											<p className="text-[10px] text-gray-400 font-bold mt-1">Add attributes like Size or Color, and specify their options.</p>
+											<h5 className="text-xs font-black text-black">
+												Product Attributes
+											</h5>
+											<p className="text-[10px] text-gray-400 font-bold mt-1">
+												Add attributes like Size or Color, and specify their
+												options.
+											</p>
 										</div>
 									</div>
-									
+
 									<div className="space-y-4">
 										{attributes.map((attr: Attribute) => (
-											<div key={attr.id} className="p-5 border border-gray-100 rounded bg-white space-y-4 relative group">
-												<button 
+											<div
+												key={attr.id}
+												className="p-5 border border-gray-100 rounded bg-white space-y-4 relative group"
+											>
+												<button
 													onClick={() => removeAttribute(attr.id)}
 													className="absolute top-4 right-4 text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
 												>
@@ -599,7 +722,9 @@ export default function AddProductPage() {
 														id={`attr-name-${attr.id}`}
 														label="Attribute Name"
 														value={attr.name}
-														onChange={e => updateAttribute(attr.id, "name", e.target.value)}
+														onChange={(e) =>
+															updateAttribute(attr.id, "name", e.target.value)
+														}
 														placeholder="e.g. Size"
 														outerClassName="w-full"
 													/>
@@ -607,9 +732,11 @@ export default function AddProductPage() {
 														<label className="block text-[10px] font-black uppercase tracking-widest text-gray-400">
 															Values (Press enter to add)
 														</label>
-														<ChipInput 
-															values={attr.values} 
-															onChange={(newValues) => updateAttribute(attr.id, "values", newValues)} 
+														<ChipInput
+															values={attr.values}
+															onChange={(newValues) =>
+																updateAttribute(attr.id, "values", newValues)
+															}
 															placeholder="Type options like 'Small', 'Red'..."
 														/>
 													</div>
@@ -623,7 +750,7 @@ export default function AddProductPage() {
 										<div>
 											<h6 className="text-[11px] font-black uppercase tracking-widest text-black flex items-center justify-between mb-4">
 												<span>Quick Add Presets</span>
-												<button 
+												<button
 													onClick={() => addAttribute()}
 													className="bg-black hover:bg-gold text-white hover:text-black text-[10px] font-black px-4 py-2 rounded flex items-center gap-1.5 transition-colors border border-transparent"
 												>
@@ -631,22 +758,27 @@ export default function AddProductPage() {
 													Custom Attribute
 												</button>
 											</h6>
-											
+
 											<div className="grid grid-cols-1 sm:grid-cols-3 gap-6 relative">
-												{displayedPresets.map(category => (
+												{displayedPresets.map((category) => (
 													<div key={category.label} className="space-y-2.5">
 														<span className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 block border-l-2 border-gold pl-2">
 															{category.label}
 														</span>
 														<div className="flex flex-col gap-2">
-															{category.attributes.map(attr => (
+															{category.attributes.map((attr) => (
 																<button
 																	key={attr.name}
-																	onClick={() => addAttribute(attr.name, attr.defaultValues)}
+																	onClick={() =>
+																		addAttribute(attr.name, attr.defaultValues)
+																	}
 																	className="bg-gray-50 hover:bg-gold/10 hover:text-gold text-gray-500 text-[10px] font-bold px-3 py-2.5 rounded flex items-center justify-between transition-all border border-transparent hover:border-gold/30 text-left w-full group"
 																>
 																	<span className="flex items-center gap-1.5">
-																		<PlusCircle size={12} className="text-gray-300 group-hover:text-gold" />
+																		<PlusCircle
+																			size={12}
+																			className="text-gray-300 group-hover:text-gold"
+																		/>
 																		{attr.name}
 																	</span>
 																	<span className="text-[9px] font-medium text-gray-300 group-hover:text-gold/60 truncate max-w-20">
@@ -664,37 +796,55 @@ export default function AddProductPage() {
 
 								{/* Generate Variations Button */}
 								<div className="pt-6 border-t border-gray-50">
-									<button 
+									<button
 										onClick={generateVariations}
 										className="w-full py-4 rounded bg-black text-white text-[11px] font-black uppercase tracking-widest hover:bg-gold hover:text-black transition-all flex flex-col items-center justify-center gap-1"
 									>
 										<span>Generate Variations</span>
-										{attributes.length > 0 && <span className="text-[9px] text-gray-400 normal-case tracking-normal font-bold">This will create all combinations based on attributes</span>}
+										{attributes.length > 0 && (
+											<span className="text-[9px] text-gray-400 normal-case tracking-normal font-bold">
+												This will create all combinations based on attributes
+											</span>
+										)}
 									</button>
 								</div>
 
 								{/* Variations Table */}
 								<div className="pt-4 space-y-4">
 									<div className="flex items-center justify-between">
-										<h5 className="text-xs font-black text-black">Variations ({variations.length})</h5>
+										<h5 className="text-xs font-black text-black">
+											Variations ({variations.length})
+										</h5>
 										{variations.length > 0 && (
-											<button 
-												onClick={() => { setValue("variations", []); setHasGeneratedVariations(false); toast("Cleared", "All variations have been cleared.", "info"); }}
+											<button
+												onClick={() => {
+													setValue("variations", []);
+													setHasGeneratedVariations(false);
+													toast(
+														"Cleared",
+														"All variations have been cleared.",
+														"info",
+													);
+												}}
 												className="text-[10px] font-bold text-gray-400 hover:text-red-500 transition-colors"
 											>
 												Clear Variations
 											</button>
 										)}
 									</div>
-									
+
 									{!hasGeneratedVariations ? (
 										<div className="py-12 border border-dashed border-gray-200 rounded flex flex-col items-center justify-center text-center space-y-3 bg-gray-50/50">
 											<div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-gray-300 border border-gray-100">
 												<Settings2 size={24} />
 											</div>
 											<div>
-												<p className="text-sm font-black text-gray-400">No variations generated yet</p>
-												<p className="text-[10px] font-bold text-gray-300 mt-1">Add attributes and click generate above</p>
+												<p className="text-sm font-black text-gray-400">
+													No variations generated yet
+												</p>
+												<p className="text-[10px] font-bold text-gray-300 mt-1">
+													Add attributes and click generate above
+												</p>
 											</div>
 										</div>
 									) : variations.length === 0 ? (
@@ -732,22 +882,36 @@ export default function AddProductPage() {
 																		<Input
 																			id={`var-price-${v.id}`}
 																			value={v.price}
-																			onChange={e => updateVariation(v.id, "price", e.target.value)}
+																			onChange={(e) =>
+																				updateVariation(
+																					v.id,
+																					"price",
+																					e.target.value,
+																				)
+																			}
 																			placeholder="0.00"
-																			className="bg-white border-gray-200 focus:border-gold/50 !py-2.5 !px-4"
+																			className="bg-white border-gray-200 focus:border-gold/50 py-2.5! px-4!"
 																		/>
 																	</td>
 																	<td className="px-5 py-3">
 																		<Input
 																			id={`var-sale-price-${v.id}`}
 																			value={v.salePrice}
-																			onChange={e => updateVariation(v.id, "salePrice", e.target.value)}
+																			onChange={(e) =>
+																				updateVariation(
+																					v.id,
+																					"salePrice",
+																					e.target.value,
+																				)
+																			}
 																			placeholder="0.00"
-																			className="bg-white border-gray-200 focus:border-gold/50 !py-2.5 !pl-4 !pr-10"
+																			className="bg-white border-gray-200 focus:border-gold/50 py-2.5! pl-4! pr-10!"
 																			rightSlot={
 																				<button
 																					type="button"
-																					onClick={() => toggleVariationSchedule(v.id)}
+																					onClick={() =>
+																						toggleVariationSchedule(v.id)
+																					}
 																					title="Schedule Sale Dates"
 																					className={`transition-colors ${expandedVariationSchedules.has(v.id) ? "text-gold" : "text-gray-300 hover:text-gold"}`}
 																				>
@@ -761,9 +925,15 @@ export default function AddProductPage() {
 																			id={`var-stock-${v.id}`}
 																			type="number"
 																			value={v.stock}
-																			onChange={e => updateVariation(v.id, "stock", e.target.value)}
+																			onChange={(e) =>
+																				updateVariation(
+																					v.id,
+																					"stock",
+																					e.target.value,
+																				)
+																			}
 																			placeholder="0"
-																			className="bg-white border-gray-200 focus:border-gold/50 !py-2.5 !px-4"
+																			className="bg-white border-gray-200 focus:border-gold/50 py-2.5! px-4!"
 																		/>
 																	</td>
 																</tr>
@@ -772,23 +942,39 @@ export default function AddProductPage() {
 																		<td colSpan={4} className="px-5 py-4">
 																			<div className="grid grid-cols-2 gap-4 animate-in slide-in-from-top-1 duration-200">
 																				<div className="space-y-1.5">
-																					<label className="text-[8px] font-black uppercase tracking-widest text-gray-400 ml-1">Start Date</label>
+																					<label className="text-[8px] font-black uppercase tracking-widest text-gray-400 ml-1">
+																						Start Date
+																					</label>
 																					<Input
 																						id={`var-sale-start-${v.id}`}
 																						type="date"
 																						value={v.saleStartDate}
-																						onChange={e => updateVariation(v.id, "saleStartDate", e.target.value)}
-																						className="bg-white border-gray-100 !py-2 !px-3"
+																						onChange={(e) =>
+																							updateVariation(
+																								v.id,
+																								"saleStartDate",
+																								e.target.value,
+																							)
+																						}
+																						className="bg-white border-gray-100 py-2! px-3!"
 																					/>
 																				</div>
 																				<div className="space-y-1.5">
-																					<label className="text-[8px] font-black uppercase tracking-widest text-gray-400 ml-1">End Date</label>
+																					<label className="text-[8px] font-black uppercase tracking-widest text-gray-400 ml-1">
+																						End Date
+																					</label>
 																					<Input
 																						id={`var-sale-end-${v.id}`}
 																						type="date"
 																						value={v.saleEndDate}
-																						onChange={e => updateVariation(v.id, "saleEndDate", e.target.value)}
-																						className="bg-white border-gray-100 !py-2 !px-3"
+																						onChange={(e) =>
+																							updateVariation(
+																								v.id,
+																								"saleEndDate",
+																								e.target.value,
+																							)
+																						}
+																						className="bg-white border-gray-100 py-2! px-3!"
 																					/>
 																				</div>
 																			</div>
@@ -823,7 +1009,11 @@ export default function AddProductPage() {
 								placeholder="0.00"
 								{...registerField("weight")}
 								error={fieldErrors.weight?.message}
-								rightSlot={<span className="text-[10px] font-black text-gray-300 pr-5">KG</span>}
+								rightSlot={
+									<span className="text-[10px] font-black text-gray-300 pr-5">
+										KG
+									</span>
+								}
 							/>
 							<Select
 								id="inventory-status"
@@ -832,7 +1022,7 @@ export default function AddProductPage() {
 								options={[
 									{ label: "In stock", value: "In stock" },
 									{ label: "Out of Stock", value: "Out of Stock" },
-									{ label: "Pre-order", value: "Pre-order" }
+									{ label: "Pre-order", value: "Pre-order" },
 								]}
 								{...registerField("status")}
 								error={fieldErrors.status?.message}
@@ -840,7 +1030,9 @@ export default function AddProductPage() {
 						</div>
 
 						<div className="pt-4 space-y-4">
-							<label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-2">Dimensions (L x W x H) cm</label>
+							<label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-2">
+								Dimensions (L x W x H) cm
+							</label>
 							<div className="grid grid-cols-3 gap-4">
 								<Input
 									id="dim-length"
@@ -869,9 +1061,7 @@ export default function AddProductPage() {
 				</div>
 
 				{/* Right Sidebar - Organization (Visible only on large screens) */}
-				<div className="hidden lg:block space-y-10">
-					{organizationCard}
-				</div>
+				<div className="hidden lg:block space-y-10">{organizationCard}</div>
 			</div>
 		</div>
 	);

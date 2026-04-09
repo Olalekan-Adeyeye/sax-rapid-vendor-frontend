@@ -13,6 +13,9 @@ import {
 
 import Image from "next/image";
 import Link from "next/link";
+import { getNotifications } from "@/lib/api/services/notifications";
+import type { NotificationResponse } from "@/lib/api/types/notifications.types";
+import { getRelativeTime } from "@/lib/utils/date";
 
 function StatCard({
   title,
@@ -136,6 +139,23 @@ function ProductViewCard({
 }
 
 export default function DashboardOverview() {
+  const [notifications, setNotifications] = React.useState<NotificationResponse[]>([]);
+  const [loadingNotifications, setLoadingNotifications] = React.useState(true);
+
+  React.useEffect(() => {
+    async function fetchLatest() {
+      try {
+        const data = await getNotifications(1, 4);
+        setNotifications(data?.items || []);
+      } catch (error) {
+        console.error("Failed to fetch dashboard notifications:", error);
+      } finally {
+        setLoadingNotifications(false);
+      }
+    }
+    fetchLatest();
+  }, []);
+
   return (
     <div className="space-y-10 lg:space-y-14">
       {/* Welcome Info */}
@@ -243,72 +263,73 @@ export default function DashboardOverview() {
                 Latest Updates
               </h4>
             </div>
-            <button className="text-[9px] font-black uppercase tracking-widest text-gray-400 hover:text-gold transition-colors">
-              Clear All
-            </button>
+            <Link 
+              href="/notifications" 
+              className="text-[9px] font-black uppercase tracking-widest text-gray-400 hover:text-gold transition-colors"
+            >
+              See All
+            </Link>
           </div>
 
-          <div className="bg-white border border-gray-100 rounded divide-y divide-gray-50">
-            {[
-              {
-                title: "New Order Received",
-                desc: "Order #8291 has been placed for 2 items.",
-                time: "10m ago",
-                type: "order",
-              },
-              {
-                title: "Payout Completed",
-                desc: "₦450,000 was sent to your GTB account.",
-                time: "2h ago",
-                type: "wallet",
-              },
-              {
-                title: "Stock Alert",
-                desc: "Premium Watch 5 is critically low in stock.",
-                time: "5h ago",
-                type: "warning",
-              },
-              {
-                title: "Customer Review",
-                desc: "Sarah gave 5 stars for 'Speed Sneakers'",
-                time: "1d ago",
-                type: "review",
-              },
-            ].map((item, i) => (
-              <div
-                key={i}
-                className="p-5 hover:bg-gray-50/50 transition-colors group cursor-pointer relative overflow-hidden"
-              >
-                <div className="flex items-start gap-4">
-                  <div
-                    className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
-                      item.type === "warning"
-                        ? "bg-red-500"
-                        : item.type === "wallet"
-                          ? "bg-green-500"
-                          : "bg-gold"
-                    }`}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <h5 className="text-[11px] font-black tracking-tight text-black truncate">
-                        {item.title}
-                      </h5>
-                      <span className="text-[8px] font-bold text-gray-400 uppercase">
-                        {item.time}
-                      </span>
+          <div className="bg-white border border-gray-100 rounded divide-y divide-gray-50 overflow-hidden">
+            {loadingNotifications ? (
+              [1, 2, 3, 4].map((i) => (
+                <div key={i} className="p-5 animate-pulse">
+                  <div className="flex items-start gap-4">
+                    <div className="w-2 h-2 rounded-full mt-1.5 bg-gray-100 shrink-0" />
+                    <div className="flex-1 space-y-2">
+                       <div className="h-3 bg-gray-50 rounded w-1/2" />
+                       <div className="h-2 bg-gray-50 rounded w-full" />
                     </div>
-                    <p className="text-[10px] text-gray-500 font-medium leading-relaxed line-clamp-2">
-                      {item.desc}
-                    </p>
                   </div>
                 </div>
+              ))
+            ) : notifications?.length > 0 ? (
+              notifications.map((item) => (
+                <div
+                  key={item.id}
+                  className={`p-5 hover:bg-gray-50/50 transition-colors group cursor-pointer relative overflow-hidden ${!item.isRead ? 'bg-gold/2' : ''}`}
+                >
+                  <div className="flex items-start gap-4">
+                    <div
+                      className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
+                        item.type === "Warning"
+                          ? "bg-red-500"
+                          : item.type === "Wallet"
+                            ? "bg-green-500"
+                            : "bg-gold"
+                      } ${item.isRead ? 'opacity-30' : ''}`}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <h5 className={`text-[11px] tracking-tight truncate ${!item.isRead ? 'font-black text-black' : 'font-bold text-gray-500'}`}>
+                          {item.title}
+                        </h5>
+                        <span className="text-[8px] font-bold text-gray-400 uppercase font-mono">
+                          {getRelativeTime(item.createdAt)}
+                        </span>
+                      </div>
+                      <p className={`text-[10px] font-medium leading-relaxed line-clamp-2 ${!item.isRead ? 'text-gray-700' : 'text-gray-400'}`}>
+                        {item.message}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="p-10 text-center">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                  No new updates
+                </p>
               </div>
-            ))}
+            )}
           </div>
-          <button className="w-full py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black border border-gray-100 rounded transition-all">
+          <Link 
+            href="/notifications"
+            className="block w-full py-4 text-center text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black hover:bg-gray-50/50 border border-gray-100 rounded transition-all"
+          >
             View All Notifications
-          </button>
+          </Link>
         </div>
       </div>
 

@@ -43,7 +43,7 @@ export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
     <ToastContext.Provider value={{ toast }}>
       {children}
       {/* Toast Container */}
-      <div className="fixed top-4 right-4 sm:top-6 sm:right-6 z-9999 flex flex-col gap-3 sm:gap-4 w-full max-w-[calc(100%-2rem)] sm:max-w-sm pointer-events-none">
+      <div className="fixed top-4 right-4 sm:top-6 sm:right-6 z-10001 flex flex-col gap-3 sm:gap-4 w-full max-w-[calc(100%-2rem)] sm:max-w-sm pointer-events-none">
         <AnimatePresence mode="popLayout">
           {toasts.map((t) => (
             <motion.div
