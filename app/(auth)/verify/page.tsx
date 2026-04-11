@@ -184,6 +184,7 @@ export default function VerifyPage() {
 										disabled={resending}
 										variant="link"
 										loading={resending}
+                    className="-mt-4"
 									>
 										Resend Code Now
 									</Button>
