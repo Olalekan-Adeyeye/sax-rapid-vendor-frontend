@@ -3,16 +3,15 @@ import React, { useState, useEffect } from "react";
 import {
 	Store,
 	Camera,
-	Save,
 	MapPin,
 	Phone,
 	Mail,
 	Trash2,
 	Check,
-	Loader2,
 	AlertCircle,
 	X,
 } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback } from "react";
@@ -23,6 +22,7 @@ import type { VendorProfileResponse, UpdateVendorProfileRequest } from "@/lib/ap
 import { useToast } from "@/lib/context/ToastContext";
 import { Input } from "@/components/ui/Input";
 import { TextArea } from "@/components/ui/TextArea";
+import { FullPageLoader } from "@/components/common/FullPageLoader";
 
 export default function EditStoreProfile() {
 	const router = useRouter();
@@ -97,14 +97,7 @@ export default function EditStoreProfile() {
 	const DEFAULT_LOGO = "/assets/icons/SaxRapid-Logo.png";
 
 	if (loading) {
-		return (
-			<div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
-				<Loader2 className="w-12 h-12 text-gold animate-spin" />
-				<p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 animate-pulse">
-					Syncing Store Data...
-				</p>
-			</div>
-		);
+		return <FullPageLoader label="Loading store data..." icon={Store} />;
 	}
 
 	if (error || !vendor) {
@@ -121,12 +114,13 @@ export default function EditStoreProfile() {
 						{error || "We couldn't retrieve your store profile at this time."}
 					</p>
 				</div>
-				<button
+				<Button
 					onClick={fetchVendor}
-					className="px-8 py-4 rounded bg-black text-[10px] font-black uppercase tracking-widest text-white hover:bg-gold hover:text-black transition-all"
+					variant="black"
+					size="lg"
 				>
 					Retry Connection
-				</button>
+				</Button>
 			</div>
 		);
 	}
@@ -138,36 +132,33 @@ export default function EditStoreProfile() {
 					<h2 className="text-2xl lg:text-4xl font-black tracking-tighter text-black">
 						Edit Store Profile
 					</h2>
-					<p className="text-gray-400 mt-2 uppercase tracking-[0.2em] text-[10px] font-black">
+					<p className="text-gray-500 mt-2 text-sm font-medium">
 						Update your public storefront and business details
 					</p>
 				</div>
 				<div className="flex items-center gap-4">
 					<Link
 						href="/store"
-						className="px-6 py-4 rounded bg-gray-100 text-[10px] font-black uppercase tracking-widest text-black hover:bg-gray-200 transition-all flex items-center justify-center gap-3"
+						className="px-6 py-3.5 rounded-full bg-gray-100 text-sm font-bold text-black hover:bg-gray-200 transition-all flex items-center justify-center gap-3"
 					>
 						<X size={16} />
 						Cancel
 					</Link>
-					<button
+					<Button
 						onClick={handleSave}
 						disabled={isSaving}
-						className="px-8 py-4 rounded bg-gold text-[10px] font-black uppercase tracking-widest text-black hover:bg-black hover:text-white transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-wait"
+						rounded="full"
+						loading={isSaving}
+						className="px-8"
 					>
-						{isSaving ? (
-							<Loader2 size={16} className="animate-spin" />
-						) : (
-							<Save size={16} />
-						)}
-						{isSaving ? "Saving..." : "Save Changes"}
-					</button>
+						Save Changes
+					</Button>
 				</div>
 			</div>
 
 			{/* Banner & Logo Section */}
 			<div className="space-y-8">
-				<div className="relative h-64 lg:h-80 w-full bg-gray-50 rounded overflow-hidden group border border-gray-100">
+				<div className="relative h-64 lg:h-80 w-full bg-gray-50 rounded-xl overflow-hidden group border border-gray-100">
 					<Image
 						src={vendor.bannerUrl || GENERIC_BANNER}
 						alt="Store Banner"
@@ -177,10 +168,14 @@ export default function EditStoreProfile() {
 						unoptimized
 					/>
 					<div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 backdrop-blur-[2px]">
-						<button className="px-8 py-4 rounded bg-white text-[10px] font-black uppercase tracking-widest text-black flex items-center gap-3 shadow-2xl">
+						<Button
+							rounded="full"
+							variant="outline"
+							className="px-8 bg-white text-black border-none"
+						>
 							<Camera size={16} />
 							Update Banner
-						</button>
+						</Button>
 					</div>
 
 					{/* Logo Overlay */}
@@ -201,10 +196,10 @@ export default function EditStoreProfile() {
 								{vendor.shopName || "Untitled Store"}
 							</h3>
 							<div className="flex items-center gap-2 mt-2">
-								<span className="text-[9px] font-black uppercase tracking-widest bg-gold px-2 py-1 rounded text-black shadow-sm">
+								<span className="text-[10px] font-bold bg-gold px-3 py-1 rounded-full text-black shadow-sm">
 									{vendor.accountType} Seller
 								</span>
-								<span className="text-[9px] font-black uppercase tracking-widest bg-black/50 backdrop-blur-md px-2 py-1 rounded text-white border border-white/10 shadow-sm">
+								<span className="text-[10px] font-bold bg-black/50 backdrop-blur-md px-3 py-1 rounded-full text-white border border-white/10 shadow-sm">
 									Est. {new Date(vendor.createdAt).getFullYear()}
 								</span>
 							</div>
@@ -217,7 +212,7 @@ export default function EditStoreProfile() {
 				<div className="lg:col-span-2 space-y-10">
 					{/* About Store */}
 					<div className="bg-white border border-gray-100 rounded p-10 space-y-10">
-						<h4 className="text-[11px] font-black tracking-[0.2em] text-gold pb-6 border-b border-gray-50 flex items-center gap-3 uppercase">
+						<h4 className="text-xs font-bold text-gold pb-6 border-b border-gray-50 flex items-center gap-3">
 							<Store size={14} />
 							Store Information
 						</h4>
@@ -241,7 +236,7 @@ export default function EditStoreProfile() {
 
 					{/* Contact Details */}
 					<div className="bg-white border border-gray-100 rounded p-10 space-y-10">
-						<h4 className="text-[11px] font-black tracking-[0.2em] text-gold pb-6 border-b border-gray-50 flex items-center gap-3 uppercase">
+						<h4 className="text-xs font-bold text-gold pb-6 border-b border-gray-50 flex items-center gap-3">
 							<MapPin size={14} />
 							Contact Information
 						</h4>
@@ -290,7 +285,7 @@ export default function EditStoreProfile() {
 					{/* Status Card */}
 					<div className="bg-black text-white rounded p-10 space-y-10 relative overflow-hidden group">
 						<div className="absolute -top-10 -right-10 w-40 h-40 bg-white/5 rounded-full group-hover:bg-gold/10 transition-colors" />
-						<h4 className="text-[11px] font-black tracking-[0.2em] text-gold pb-6 border-b border-white/5 relative z-10 uppercase">
+						<h4 className="text-xs font-bold text-gold pb-6 border-b border-white/5 relative z-10">
 							Legal Information
 						</h4>
 						<div className="space-y-6 relative z-10">
@@ -320,7 +315,7 @@ export default function EditStoreProfile() {
 										<AlertCircle size={14} />
 									)}
 								</div>
-								<p className="text-[9px] font-black uppercase tracking-widest text-gray-400">
+								<p className="text-[10px] font-bold text-gray-400">
 									Verification:{" "}
 									<span className="text-white">
 										{vendor.verificationStatus}
@@ -331,18 +326,23 @@ export default function EditStoreProfile() {
 					</div>
 
 					{/* Danger Zone */}
-					<div className="bg-red-50 border border-red-100 rounded p-10 space-y-6">
-						<h4 className="text-[11px] font-black tracking-[0.2em] text-red-500 uppercase">
+					<div className="bg-red-50 border border-red-100 rounded-xl p-10 space-y-6">
+						<h4 className="text-xs font-bold text-red-500">
 							Danger Zone
 						</h4>
-						<p className="text-[9px] font-medium text-red-400/80 leading-relaxed uppercase tracking-wider">
+						<p className="text-xs font-medium text-red-400/80 leading-relaxed">
 							Deleting your business account is permanent and will remove all
 							product listings, sales history, and storefront data.
 						</p>
-						<button className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest bg-white text-red-500 text-center px-2 py-4 rounded hover:bg-red-500 hover:text-white transition-all w-full border border-red-100 shadow-sm">
+						<Button
+							variant="outline"
+							rounded="full"
+							fullWidth
+							className="bg-white text-red-500 border-red-100 hover:bg-red-500 hover:text-white py-4"
+						>
 							<Trash2 size={12} />
 							Request Account Deletion
-						</button>
+						</Button>
 					</div>
 				</div>
 			</div>

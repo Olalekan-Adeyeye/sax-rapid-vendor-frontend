@@ -26,7 +26,7 @@ export function FormField({
 			{label && (
 				<label
 					htmlFor={id}
-					className="block text-[10px] font-black uppercase tracking-widest text-gray-400 px-0.5"
+					className="block text-sm font-bold text-black/80 px-0.5"
 				>
 					{label}{" "}
 					{required && !hideAsterisk && (
@@ -36,12 +36,12 @@ export function FormField({
 			)}
 			<div className="relative">{children}</div>
 			{helpText && !error && (
-				<p className="text-[9px] font-bold text-gray-400 mt-1 px-1">
+				<p className="text-xs font-medium text-gray-500 mt-1 px-1">
 					{helpText}
 				</p>
 			)}
 			{error && (
-				<p className="text-[10px] font-bold text-red-500 px-1">{error}</p>
+				<p className="text-xs font-medium text-red-600 px-1">{error}</p>
 			)}
 		</div>
 	);

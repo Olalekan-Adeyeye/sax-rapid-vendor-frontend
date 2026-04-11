@@ -18,6 +18,7 @@ import {
   Copy,
   Check
 } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import { useToast } from "@/lib/context/ToastContext";
 import { getUserProfile } from "@/lib/api/services/user";
 import { UserProfileResponse } from "@/lib/api/types/user.types";
@@ -84,9 +85,13 @@ export default function ProfilePage() {
                 />
               </div>
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/avatar:opacity-100 transition-all flex items-center justify-center">
-                <button className="w-10 h-10 rounded bg-gold text-black flex items-center justify-center hover:scale-110 transition-all">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="w-10 h-10 p-0 border-none"
+                >
                   <Edit3 size={18} />
-                </button>
+                </Button>
               </div>
             </div>
             {/* Status Badge */}
@@ -134,13 +139,17 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <Link
-            href="/settings"
-            className="px-8 py-4 rounded bg-black text-white text-[10px] font-black uppercase tracking-widest hover:bg-gold hover:text-black transition-all flex items-center gap-3 shrink-0"
+          <Button
+            asChild
+            rounded="full"
+            size="sm"
+            className="px-8 flex items-center gap-3 shrink-0"
           >
-            <Edit3 size={14} />
-            Edit Profile
-          </Link>
+            <Link href="/settings">
+              <Edit3 size={14} />
+              Edit Profile
+            </Link>
+          </Button>
         </div>
       </div>
 
@@ -208,12 +217,14 @@ export default function ProfilePage() {
                       <Copy size={12} />
                       <span className="text-[8px] font-black uppercase tracking-[0.2em]">User ID</span>
                     </div>
-                    <button 
+                    <Button 
+                      variant="ghost"
+                      size="sm"
                       onClick={() => copyToClipboard(profile.id)}
-                      className="text-gold hover:text-black transition-colors"
+                      className="text-gold hover:text-black transition-colors p-0 h-auto border-none bg-transparent"
                     >
                       {copiedId ? <Check size={12} /> : <Copy size={12} />}
-                    </button>
+                    </Button>
                   </div>
                   <p className="text-[8px] font-bold text-gray-400 break-all truncate">{profile.id}</p>
                 </div>
@@ -264,9 +275,14 @@ export default function ProfilePage() {
               Need help managing your profile or changing your business details? 
               Contact our super-admin team for verified changes.
             </p>
-            <button className="w-full py-4 rounded bg-gray-50 border border-gray-100 text-[9px] font-black uppercase tracking-widest text-black hover:bg-black hover:text-white transition-all">
+            <Button
+              variant="outline"
+              fullWidth
+              size="sm"
+              className="py-4 bg-gray-50 border-gray-100 text-black hover:bg-black hover:text-white"
+            >
               Request Profile Update
-            </button>
+            </Button>
           </div>
         </div>
       </div>

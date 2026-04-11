@@ -109,7 +109,7 @@ export default function LoginPage() {
               <div className="w-10 h-10 rounded bg-gold flex items-center justify-center text-black">
                 <Lightbulb size={20} fill="currentColor" />
               </div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-black">
+              <p className="text-xs font-bold text-black">
                 Daily Tip
               </p>
             </div>
@@ -180,7 +180,7 @@ export default function LoginPage() {
               <div className="flex justify-end">
                 <Link
                   href="/forgot-password"
-                  className="text-[10px] font-black uppercase tracking-widest text-black hover:text-gold transition-colors"
+                  className="text-xs font-bold text-black hover:text-gold transition-colors"
                 >
                   Forgot Password?
                 </Link>
@@ -193,7 +193,7 @@ export default function LoginPage() {
 
             <div className="flex items-center gap-4 py-4">
               <div className="flex-1 h-px bg-gray-100" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+              <span className="text-xs font-bold text-gray-400">
                 or
               </span>
               <div className="flex-1 h-px bg-gray-100" />

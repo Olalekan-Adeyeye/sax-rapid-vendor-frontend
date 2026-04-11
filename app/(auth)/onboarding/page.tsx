@@ -315,7 +315,7 @@ export default function OnboardingPage() {
                 <Rocket size={24} />
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-black mb-1">
+                <p className="text-xs font-bold text-black mb-2">
                   Setup Status
                 </p>
                 <div className="flex items-center gap-3">
@@ -357,9 +357,9 @@ export default function OnboardingPage() {
             key={`header-${step}`}
             className="mb-8 lg:mb-12 animate-in slide-in-from-right-8 fade-in duration-500 ease-out"
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-black text-gold text-[9px] font-black uppercase tracking-widest mb-4 lg:mb-6 border border-black hover:border-gold transition-colors">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded bg-black text-gold text-xs font-bold mb-4 lg:mb-6 border border-black hover:border-gold transition-colors">
               <currentStepData.icon size={12} />
-              Step 0{step + 1} · {currentStepData.title}
+              Step {step + 1} · {currentStepData.title}
             </div>
             <h1 className="text-4xl lg:text-5xl font-black text-black leading-tight mb-3 lg:mb-4 tracking-tighter">
               {currentStepData.heading}
@@ -390,7 +390,7 @@ export default function OnboardingPage() {
                           />
                         </div>
                         <div className="space-y-3 lg:space-y-4">
-                          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gold">
+                          <p className="text-xs font-bold text-gold">
                             Onboarding · Journey Starts
                           </p>
                           <h3 className="text-2xl lg:text-4xl font-black text-black tracking-tight leading-tight">
@@ -427,20 +427,20 @@ export default function OnboardingPage() {
                         ].map((item, i) => (
                           <div
                             key={i}
-                            className="group p-5 lg:p-6 rounded bg-gray-50/50 border border-gray-100/80 hover:bg-white hover:border-gold/30 transition-all duration-300"
+                            className="group p-5 lg:p-6 rounded bg-gray-50/50 border border-transparent hover:bg-white hover:border-gold/30 transition-all duration-300"
                           >
                             <div className="flex items-center justify-between mb-3 lg:mb-4">
-                              <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-lg bg-white flex items-center justify-center text-black group-hover:bg-gold transition-colors">
+                              <div className="w-9 h-9 lg:w-10 lg:h-10 rounded bg-white flex items-center justify-center text-black group-hover:bg-gold transition-colors">
                                 <item.icon size={18} />
                               </div>
                               <span className="text-[10px] font-black text-gray-200 group-hover:text-gold/50 transition-colors">
                                 {item.num}
                               </span>
                             </div>
-                            <h4 className="text-xs font-black uppercase tracking-widest text-black mb-1.5 lg:mb-2">
+                            <h4 className="text-sm font-bold text-black mb-1.5 lg:mb-2">
                               {item.title}
                             </h4>
-                            <p className="text-[10px] font-medium text-gray-400 group-hover:text-gray-500 leading-relaxed">
+                            <p className="text-xs font-medium text-gray-400 group-hover:text-gray-500 leading-relaxed">
                               {item.desc}
                             </p>
                           </div>
@@ -451,7 +451,7 @@ export default function OnboardingPage() {
                         <div className="h-px flex-1 bg-gray-100" />
                         <div className="flex items-center gap-2">
                           <CheckCircle2 size={12} className="text-green-500" />
-                          <span className="text-[8px] lg:text-[9px] font-black uppercase tracking-widest text-gray-400">
+                          <span className="text-xs font-bold text-gray-400">
                             Estimated time: 3-5 Minutes
                           </span>
                         </div>
@@ -468,7 +468,7 @@ export default function OnboardingPage() {
                   <div className="space-y-8 lg:space-y-12">
                     <div className="space-y-4">
                       <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-base lg:text-lg font-black text-black uppercase tracking-tighter">
+                        <h3 className="text-lg font-bold text-black">
                           Country & Account Type
                         </h3>
                         <Globe size={20} className="text-gray-200" />
@@ -476,7 +476,7 @@ export default function OnboardingPage() {
                     </div>
 
                     <div className="space-y-4 lg:space-y-6">
-                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                      <p className="text-xs font-bold text-gray-400">
                         Who are you?
                       </p>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
@@ -498,7 +498,7 @@ export default function OnboardingPage() {
                             }`}
                           >
                             {accountType === type.value && (
-                              <div className="absolute top-3 lg:top-4 right-3 lg:right-4 w-5 h-5 lg:w-6 lg:h-6 rounded-full bg-gold flex items-center justify-center text-black animate-in zoom-in duration-300">
+                              <div className="absolute top-3 lg:top-4 right-3 lg:right-4 w-5 h-5 lg:w-6 lg:h-6 rounded bg-gold flex items-center justify-center text-black animate-in zoom-in duration-300">
                                 <Check size={12} strokeWidth={4} />
                               </div>
                             )}
@@ -514,11 +514,11 @@ export default function OnboardingPage() {
                             </div>
 
                             <div>
-                              <h4 className="font-black text-base lg:text-lg mb-1.5 lg:mb-2 tracking-tight">
+                              <h4 className="font-bold text-base lg:text-lg mb-1.5 lg:mb-2 tracking-tight">
                                 {type.label}
                               </h4>
                               <p
-                                className={`text-[11px] lg:text-xs font-medium leading-relaxed ${
+                                className={`text-xs font-medium leading-relaxed ${
                                   accountType === type.value
                                     ? "text-gray-400"
                                     : "text-gray-500"
@@ -555,7 +555,7 @@ export default function OnboardingPage() {
                       required
                       className="h-12 lg:h-14 rounded pl-20!"
                       leftSlot={
-                        <span className="text-xs font-black text-gray-400 border-r border-gray-200 pr-3 transition-colors group-focus-within:border-gold group-focus-within:text-gold block w-12 text-center">
+                        <span className="text-xs font-bold text-gray-400 border-r border-gray-200 pr-3 transition-colors group-focus-within:border-gold group-focus-within:text-gold block w-12 text-center">
                           {countries.find((c) => c.value === country)?.code}
                         </span>
                       }
@@ -567,7 +567,7 @@ export default function OnboardingPage() {
                           <AlertCircle size={24} />
                         </div>
                         <div>
-                          <h4 className="font-black text-gold text-base lg:text-lg mb-0.5 lg:mb-1">
+                          <h4 className="font-bold text-gold text-base lg:text-lg mb-0.5 lg:mb-1">
                             Coming Soon!
                           </h4>
                           <p className="text-xs lg:text-sm text-gray-400 font-medium leading-relaxed">
@@ -586,12 +586,12 @@ export default function OnboardingPage() {
                 <div className="space-y-6 lg:space-y-10">
                   <div className="bg-white border border-gray-100 p-6 lg:p-8 rounded">
                     <div className="flex items-center justify-between mb-1.5 lg:mb-2 text-black">
-                      <h3 className="text-base lg:text-lg font-black">
+                      <h3 className="text-lg font-bold">
                         Brand Details
                       </h3>
                       <Store size={22} className="text-gray-200" />
                     </div>
-                    <p className="text-xs lg:text-sm text-gray-500 font-medium mb-6 lg:mb-8">
+                    <p className="text-gray-500 font-medium mb-6 lg:mb-8 text-sm">
                       Define how customers identify you on the platform.
                     </p>
 
@@ -633,7 +633,7 @@ export default function OnboardingPage() {
 
                   <div className="bg-white border border-gray-100 p-6 lg:p-8 rounded">
                     <div className="flex items-center justify-between mb-1.5 lg:mb-2 text-black">
-                      <h3 className="text-base lg:text-lg font-black">
+                      <h3 className="text-lg font-bold">
                         What do you sell?
                       </h3>
                       <LayoutDashboard size={22} className="text-gray-200" />
@@ -660,7 +660,7 @@ export default function OnboardingPage() {
                           }`}
                         >
                           <cat.icon size={20} className="mb-2 lg:mb-3" />
-                          <h4 className="text-[9px] lg:text-[10px] font-black uppercase tracking-widest leading-tight">
+                          <h4 className="text-xs font-bold leading-tight">
                             {cat.title}
                           </h4>
                         </button>
@@ -772,14 +772,15 @@ export default function OnboardingPage() {
 
               {/* STEP 5: REVIEW */}
               {step === 5 && (
-                <div className="space-y-6 lg:space-y-8">
-                  <div className="bg-black text-white p-7 lg:p-10 rounded">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gold mb-5">
+                <div className="space-y-6 lg:space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="bg-black text-white p-7 lg:p-10 rounded relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-gold/10 rounded blur-3xl" />
+                    <p className="text-[10px] font-bold text-gold mb-5">
                       Profile Summary
                     </p>
-                    <div className="grid grid-cols-2 gap-8">
+                    <div className="grid grid-cols-2 gap-8 relative z-10">
                       <div>
-                        <h4 className="text-gray-500 text-[9px] font-black uppercase tracking-widest mb-1">
+                        <h4 className="text-gray-500 text-[10px] font-bold mb-1">
                           Merchant
                         </h4>
                         <p className="text-lg font-bold">
@@ -787,7 +788,7 @@ export default function OnboardingPage() {
                         </p>
                       </div>
                       <div>
-                        <h4 className="text-gray-500 text-[9px] font-black uppercase tracking-widest mb-1">
+                        <h4 className="text-gray-500 text-[10px] font-bold mb-1">
                           Store
                         </h4>
                         <p className="text-lg font-bold">{shopName}</p>
@@ -838,7 +839,7 @@ export default function OnboardingPage() {
                 loading={loading}
                 disabled={stepLoading}
                 onClick={step === STEPS.length - 1 ? undefined : next}
-                className="min-w-40 lg:min-w-56 py-4 lg:py-6 text-[10px] uppercase font-black tracking-widest shadow-xl hover:shadow-gold/20"
+                className="min-w-40 lg:min-w-56 py-4 lg:py-6 text-[10px] uppercase font-black tracking-widest"
               >
                 {step === STEPS.length - 1 ? "Finish Setup" : "Continue"}
                 <ChevronRight size={14} className="ml-2" />

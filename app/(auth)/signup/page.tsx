@@ -70,7 +70,6 @@ export default function SignupPage() {
 
   const countryCode = useWatch({ control, name: "countryCode" });
   const phoneNumber = useWatch({ control, name: "phoneNumber" });
-  const confirmPassword = useWatch({ control, name: "confirmPassword" });
 
   const selectedCountry = countries.find((c) => c.value === countryCode);
   const isComingSoon = selectedCountry?.disabled;

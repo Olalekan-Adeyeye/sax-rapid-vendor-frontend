@@ -1,43 +1,47 @@
 "use client";
 import React from "react";
-import { Plus, Search, Edit, Trash2, Layers2 } from "lucide-react";
+import { Plus, Edit, Trash2, Layers2 } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { SearchInput } from "@/components/ui/SearchInput";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 export default function ProductVariationsPage() {
 	return (
 		<div className="space-y-10">
-			<div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
-				<div>
-					<h2 className="text-2xl lg:text-4xl font-black tracking-tighter text-black capitalize">
-						Product Variations
-					</h2>
-					<p className="text-gray-400 mt-2 uppercase tracking-[0.2em] text-[10px] font-black">
-						Manage multiple versions of a single product listing
-					</p>
-				</div>
-				<button className="px-8 py-4 rounded bg-gold text-[10px] font-black uppercase tracking-widest text-black hover:bg-black hover:text-white transition-all flex items-center justify-center gap-3">
-					<Plus size={16} />
-					Bulk Variations
-				</button>
-			</div>
+			<PageHeader
+				title="Product Variations"
+				description="Manage multiple versions of a single product listing"
+				actions={
+					<Button
+						variant="primary"
+						rounded="full"
+						size="sm"
+						className="font-bold whitespace-nowrap"
+					>
+						<Plus size={16} />
+						Bulk Variations
+					</Button>
+				}
+			/>
 
 			<div className="bg-white border border-gray-100 rounded overflow-hidden">
 				<div className="p-6 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
-					<div className="relative flex-1 max-w-md">
-						<Search
-							className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-							size={16}
-						/>
-						<input
-							type="text"
-							placeholder="Search by parent product or SKU..."
-							className="w-full bg-gray-50 rounded py-3 pl-12 pr-4 text-[10px] font-black uppercase tracking-widest text-black outline-none border border-transparent focus:border-gold/30 transition-all placeholder:text-gray-300"
-						/>
-					</div>
+					<SearchInput
+						placeholder="Search by parent product or SKU..."
+						variant="muted"
+						focusColor="gold"
+						fullWidth
+					/>
 					<div className="flex items-center gap-3">
-						<button className="px-6 py-3 rounded border border-gray-100 text-[9px] font-black uppercase tracking-widest text-gray-400 hover:text-black flex items-center gap-2">
+						<Button
+							variant="outline"
+							rounded="full"
+							size="sm"
+							className="font-bold whitespace-nowrap"
+						>
 							<Plus size={14} />
 							Add Variation
-						</button>
+						</Button>
 					</div>
 				</div>
 
@@ -141,12 +145,20 @@ export default function ProductVariationsPage() {
 									</td>
 									<td className="px-8 py-5 text-right">
 										<div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-											<button className="w-8 h-8 rounded border border-gray-100 flex items-center justify-center text-gray-400 hover:text-black hover:border-gold transition-all">
+											<Button
+												variant="outline"
+												size="sm"
+												className="w-8 h-8 p-0"
+											>
 												<Edit size={12} />
-											</button>
-											<button className="w-8 h-8 rounded border border-gray-100 flex items-center justify-center text-gray-400 hover:text-red-500 hover:border-red-500 transition-all">
+											</Button>
+											<Button
+												variant="outline"
+												size="sm"
+												className="w-8 h-8 p-0 text-gray-400 hover:text-red-500 hover:border-red-500"
+											>
 												<Trash2 size={12} />
-											</button>
+											</Button>
 										</div>
 									</td>
 								</tr>

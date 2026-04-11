@@ -40,7 +40,7 @@ export function TextArea({
 				ref={ref}
 				required={required}
 				rows={rows}
-				className={`w-full bg-gray-50 border border-gray-200/50 focus:border-gold/50 text-black text-xs font-bold rounded px-5 py-4 placeholder-gray-300 outline-none transition-all resize-none 
+				className={`w-full bg-white border border-gray-300 focus:border-gold text-black text-sm font-medium rounded px-5 py-3.5 placeholder-gray-400 outline-none transition-all resize-none 
 					${className}`}
 				{...props}
 			/>

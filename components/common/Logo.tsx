@@ -40,7 +40,9 @@ export function Logo({
 	const currentSize = sizes[size];
 
 	return (
-		<div className={`flex flex-col ${className.includes("items-") ? "" : "items-center"} ${className}`}>
+		<div
+			className={`flex flex-col ${className.includes("items-") ? "" : "items-center"} ${className}`}
+		>
 			<div
 				className="relative shrink-0"
 				style={{ width: currentSize.width, height: currentSize.height }}
@@ -57,7 +59,7 @@ export function Logo({
 			</div>
 			{showCaption && (
 				<span
-					className={`${currentSize.subtext} font-black tracking-[0.6em] text-gray-400 uppercase mt-1 select-none whitespace-nowrap`}
+					className={`${currentSize.subtext} font-black tracking-[0.6em] text-gray-500 uppercase mt-1 select-none whitespace-nowrap`}
 				>
 					Vendor Center
 				</span>

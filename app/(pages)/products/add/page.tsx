@@ -1,8 +1,6 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
 import {
-	ArrowLeft,
-	Save,
 	Plus,
 	Upload,
 	X,
@@ -11,8 +9,8 @@ import {
 	PlusCircle,
 	Loader2,
 	Calendar,
+	RefreshCw,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useToast } from "@/lib/context/ToastContext";
@@ -24,8 +22,10 @@ import { ATTRIBUTE_CATEGORIES } from "@/lib/constants/attributeCategories";
 import { ROBUST_CATEGORIES } from "@/lib/constants/categories";
 import { getErrorMessage } from "@/lib/utils/errors";
 import { Input } from "@/components/ui/Input";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { TextArea } from "@/components/ui/TextArea";
 import { Select } from "@/components/ui/Select";
+import { Button } from "@/components/ui/Button";
 import {
 	useForm,
 	useWatch,
@@ -98,11 +98,11 @@ const ChipInput = ({
 		onChange(values.filter((v) => v !== valToRemove));
 	};
 	return (
-		<div className="w-full bg-gray-50 border border-transparent focus-within:border-gold/30 rounded px-4 py-3 transition-all flex flex-wrap gap-2 items-center min-h-12.5">
+		<div className="w-full bg-gray-50 border border-gray-100 focus-within:border-black rounded px-4 py-3 transition-all flex flex-wrap gap-2 items-center min-h-12.5">
 			{values.map((val) => (
 				<span
 					key={val}
-					className="bg-black text-white text-[10px] font-bold px-2.5 py-1.5 rounded flex items-center gap-1.5"
+					className="bg-black text-white text-xs font-bold px-3 py-1.5 rounded flex items-center gap-1.5"
 				>
 					{val}
 					<X
@@ -145,6 +145,7 @@ export default function AddProductPage() {
 
 	const [categories, setCategories] = useState<CategoryResponseDTO[]>([]);
 	const [loadingCategories, setLoadingCategories] = useState(true);
+	const [error, setError] = useState<string | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	const form = useForm<ProductFormValues>({
@@ -196,30 +197,31 @@ export default function AddProductPage() {
 		? formValues.variations
 		: []) as unknown as Variation[];
 
+	const fetchCats = async () => {
+		try {
+			setLoadingCategories(true);
+			setError(null);
+			const data = (await categoriesService.getCategories()) || [];
+
+			const apiCategoryNames = new Set(
+				data.filter((c) => c && c.name).map((c) => c.name?.toLowerCase()),
+			);
+			const filteredRobust = ROBUST_CATEGORIES.filter(
+				(c) => c && c.name && !apiCategoryNames.has(c.name?.toLowerCase()),
+			);
+
+			setCategories([...data, ...filteredRobust]);
+		} catch (err) {
+			console.error("Failed to load categories:", err);
+			setError(getErrorMessage(err));
+		} finally {
+			setLoadingCategories(false);
+		}
+	};
+
 	useEffect(() => {
-		const fetchCats = async () => {
-			try {
-				setLoadingCategories(true);
-				const data = (await categoriesService.getCategories()) || [];
-
-				const apiCategoryNames = new Set(
-					data.filter((c) => c && c.name).map((c) => c.name?.toLowerCase()),
-				);
-				const filteredRobust = ROBUST_CATEGORIES.filter(
-					(c) => c && c.name && !apiCategoryNames.has(c.name?.toLowerCase()),
-				);
-
-				setCategories([...data, ...filteredRobust]);
-			} catch (error) {
-				console.error("Failed to load categories:", error);
-				setCategories(ROBUST_CATEGORIES);
-				toast("Info", "Using offline category presets.", "info");
-			} finally {
-				setLoadingCategories(false);
-			}
-		};
 		fetchCats();
-	}, [toast]);
+	}, []);
 
 	const flattenedCategories = useMemo(() => {
 		const flat: { id: string; label: string; name: string }[] = [];
@@ -455,7 +457,7 @@ export default function AddProductPage() {
 	// Organization Segment shared between mobile and desktop
 	const organizationCard = (
 		<div className="bg-white border border-gray-100 rounded p-8 space-y-8 h-fit">
-			<h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-gold pb-6 border-b border-gray-50">
+			<h4 className="text-sm font-bold text-gold pb-6 border-b border-gray-100">
 				Organization
 			</h4>
 			<div className="space-y-6">
@@ -475,8 +477,27 @@ export default function AddProductPage() {
 							<Loader2 size={14} className="animate-spin" />
 						) : null
 					}
-					error={errors.categoryId?.message}
+					error={error || errors.categoryId?.message}
 				/>
+				{error && (
+					<Button
+						type="button"
+						variant="ghost"
+						size="sm"
+						onClick={fetchCats}
+						className="text-gold hover:text-black border-none p-0 h-auto"
+					>
+						<RefreshCw
+							size={10}
+							className={
+								loadingCategories
+									? "animate-spin"
+									: "hover:rotate-180 transition-transform duration-500"
+							}
+						/>
+						Retry Loading Categories
+					</Button>
+				)}
 				<Input
 					id="sku-number"
 					label="SKU Number"
@@ -491,52 +512,43 @@ export default function AddProductPage() {
 
 	return (
 		<div className="max-w-5xl mx-auto space-y-12 pb-24">
-			{/* Header */}
-			<div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-50 -mx-4 px-4 py-4 mb-8 lg:static lg:bg-transparent lg:backdrop-blur-none lg:border-none lg:mx-0 lg:px-0 lg:py-0 lg:mb-12">
-				<div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-					<div className="flex items-center gap-4 lg:gap-6">
-						<Link
-							href="/products"
-							className="w-10 h-10 rounded border border-gray-100 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-50 transition-all font-bold shrink-0"
-						>
-							<ArrowLeft size={16} />
-						</Link>
-						<div>
-							<h2 className="text-xl lg:text-3xl font-black tracking-tighter text-black truncate max-w-50 sm:max-w-none">
-								Add New Product
-							</h2>
-							<p className="text-gray-400 mt-0.5 lg:mt-1 uppercase tracking-[0.2em] block text-[8px] lg:text-[10px] font-black">
-								Create and publish a new marketplace listing
-							</p>
-						</div>
-					</div>
-					<div className="flex items-center gap-2 lg:gap-3">
-						<button className="flex-1 lg:flex-none px-4 lg:px-8 py-3 lg:py-3.5 rounded border border-gray-100 block text-[9px] lg:text-[10px] font-black uppercase tracking-widest text-black hover:bg-gray-50 transition-all whitespace-nowrap">
-							Save Draft
-						</button>
-						<button
-							onClick={handleSubmit((data) =>
-								onSubmit(data as ProductFormValues),
-							)}
-							disabled={isSubmitting}
-							className="flex-1 lg:flex-none px-4 lg:px-8 py-3 lg:py-3.5 rounded bg-gold text-[9px] lg:text-[10px] font-black uppercase tracking-widest text-black hover:bg-black hover:text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50 whitespace-nowrap"
-						>
-							{isSubmitting ? (
-								<Loader2 size={14} className="animate-spin" />
-							) : (
-								<Save size={14} />
-							)}
-							Publish Product
-						</button>
-					</div>
-				</div>
-			</div>
+					<PageHeader
+						title="Publish New Product"
+						description="List your product to the global marketplace"
+						actions={
+							<>
+								<Button
+									variant="outline"
+									rounded="full"
+									size="sm"
+									className="px-8"
+									onClick={() =>
+										toast("Draft Saved", "Product draft saved locally", "success")
+									}
+								>
+									Save Draft
+								</Button>
+								<Button
+									onClick={handleSubmit((data) =>
+										onSubmit(data as ProductFormValues),
+									)}
+									disabled={isSubmitting}
+									size="sm"
+									rounded="full"
+									loading={isSubmitting}
+									className="flex-1 lg:flex-none px-6 lg:px-8"
+								>
+									Publish Product
+								</Button>
+							</>
+						}
+					/>
 
 			<div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
 				<div className="lg:col-span-2 space-y-10">
 					{/* Basic Info */}
 					<div className="bg-white border border-gray-100 rounded p-8 space-y-8">
-						<h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-gold pb-6 border-b border-gray-50">
+						<h4 className="text-sm font-bold text-gold pb-6 border-b border-gray-100">
 							General Information
 						</h4>
 						<div className="space-y-6">
@@ -565,26 +577,26 @@ export default function AddProductPage() {
 
 					{/* Media */}
 					<div className="bg-white border border-gray-100 rounded p-8 space-y-8">
-						<h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-gold pb-6 border-b border-gray-50 flex justify-between items-center">
+						<h4 className="text-sm font-bold text-gold pb-6 border-b border-gray-100 flex justify-between items-center">
 							<span>Product Gallery</span>
-							<span className="text-gray-300 text-[9px] normal-case tracking-normal font-bold">
+							<span className="text-gray-400 text-xs font-bold">
 								Max 4 images (5MB each)
 							</span>
 						</h4>
 						<div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-							<div className="aspect-square border-2 border-dashed border-gray-200 bg-gray-50 rounded flex flex-col items-center justify-center text-gray-400 hover:border-gold hover:bg-gold/5 hover:text-gold transition-all cursor-pointer group">
+							<div className="aspect-square border-2 border-dashed border-gray-200 bg-gray-50 rounded flex flex-col items-center justify-center text-gray-400 hover:border-black hover:bg-gray-100 hover:text-black transition-all cursor-pointer group">
 								<Upload
 									size={24}
 									className="mb-2 group-hover:-translate-y-1 transition-transform"
 								/>
-								<span className="text-[8px] font-black uppercase tracking-widest text-center px-2">
+								<span className="text-[10px] font-bold text-center px-2">
 									Main Image
 								</span>
 							</div>
 							{[1, 2, 3].map((i) => (
 								<div
 									key={i}
-									className="aspect-square border-2 border-dashed border-gray-100 rounded flex flex-col items-center justify-center text-gray-200 hover:border-gold hover:text-gold hover:bg-gold/5 transition-all cursor-pointer group"
+									className="aspect-square border-2 border-dashed border-gray-100 rounded flex flex-col items-center justify-center text-gray-200 hover:border-black hover:text-black hover:bg-gray-50 transition-all cursor-pointer group"
 								>
 									<Plus
 										size={20}
@@ -597,32 +609,34 @@ export default function AddProductPage() {
 
 					{/* Product Type & Pricing/Inventory */}
 					<div className="bg-white border border-gray-100 rounded p-8 space-y-8">
-						<h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-gold pb-6 border-b border-gray-50">
+						<h4 className="text-sm font-bold text-gold pb-6 border-b border-gray-100">
 							Pricing & Variants
 						</h4>
 
 						{/* Type Toggle */}
-						<div className="bg-gray-50 p-1.5 rounded flex w-full mb-4">
-							<button
+						<div className="bg-gray-100 p-1.5 rounded flex w-full mb-4">
+							<Button
 								onClick={() => handleTypeSwitch("simple")}
-								className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded transition-all ${
+								variant={productType === "simple" ? "primary" : "ghost"}
+								className={`flex-1 py-3 border-none h-auto ${
 									productType === "simple"
 										? "bg-white text-black"
-										: "text-gray-400 hover:text-black"
+										: "text-gray-400 hover:text-black bg-transparent"
 								}`}
 							>
 								Simple Product
-							</button>
-							<button
+							</Button>
+							<Button
 								onClick={() => handleTypeSwitch("variable")}
-								className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded transition-all ${
+								variant={productType === "variable" ? "primary" : "ghost"}
+								className={`flex-1 py-3 border-none h-auto ${
 									productType === "variable"
 										? "bg-white text-black"
-										: "text-gray-400 hover:text-black"
+										: "text-gray-400 hover:text-black bg-transparent"
 								}`}
 							>
 								Variable Product
-							</button>
+							</Button>
 						</div>
 
 						{/* Simple Product Fields */}
@@ -641,7 +655,7 @@ export default function AddProductPage() {
 										error={fieldErrors.regularPrice?.message}
 									/>
 									<div className="space-y-2">
-										<label className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+										<label className="text-xs font-bold text-gray-500">
 											Sale Price ({currencySymbol})
 										</label>
 										<Input
@@ -668,7 +682,7 @@ export default function AddProductPage() {
 								</div>
 
 								{isSchedulingSale && (
-									<div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-gray-50/50 rounded animate-in zoom-in-95 duration-200">
+									<div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-gray-50/50 rounded border border-gray-100 animate-in zoom-in-95 duration-200">
 										<Input
 											id="sale-start-date"
 											label="Sale Start Date"
@@ -704,10 +718,10 @@ export default function AddProductPage() {
 								<div className="space-y-6">
 									<div className="flex items-center justify-between">
 										<div>
-											<h5 className="text-xs font-black text-black">
+											<h5 className="text-sm font-bold text-black">
 												Product Attributes
 											</h5>
-											<p className="text-[10px] text-gray-400 font-bold mt-1">
+											<p className="text-xs text-gray-400 font-medium mt-1">
 												Add attributes like Size or Color, and specify their
 												options.
 											</p>
@@ -718,14 +732,16 @@ export default function AddProductPage() {
 										{attributes.map((attr: Attribute) => (
 											<div
 												key={attr.id}
-												className="p-5 border border-gray-100 rounded bg-white space-y-4 relative group"
+												className="p-5 border border-gray-100 rounded bg-gray-50/30 space-y-4 relative group"
 											>
-												<button
+												<Button
+													variant="ghost"
+													size="sm"
 													onClick={() => removeAttribute(attr.id)}
-													className="absolute top-4 right-4 text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+													className="absolute top-4 right-4 text-gray-300 hover:text-red-500 border-none p-0 h-auto"
 												>
 													<Trash2 size={16} />
-												</button>
+												</Button>
 												<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 													<Input
 														id={`attr-name-${attr.id}`}
@@ -738,7 +754,7 @@ export default function AddProductPage() {
 														outerClassName="w-full"
 													/>
 													<div className="md:col-span-2 space-y-2.5">
-														<label className="block text-[10px] font-black uppercase tracking-widest text-gray-400">
+														<label className="block text-xs font-bold text-gray-500">
 															Values (Press enter to add)
 														</label>
 														<ChipInput
@@ -757,31 +773,36 @@ export default function AddProductPage() {
 									{/* Quick Add and Custom Add Actions */}
 									<div className="space-y-6 pt-4 border-t border-gray-50">
 										<div>
-											<h6 className="text-[11px] font-black uppercase tracking-widest text-black flex items-center justify-between mb-4">
+											<h6 className="text-sm font-bold text-black flex items-center justify-between mb-4">
 												<span>Quick Add Presets</span>
-												<button
+												<Button
 													onClick={() => addAttribute()}
-													className="bg-black hover:bg-gold text-white hover:text-black text-[10px] font-black px-4 py-2 rounded flex items-center gap-1.5 transition-colors border border-transparent"
+													variant="black"
+													size="sm"
+													rounded="full"
+													className="hover:bg-gold hover:text-black"
 												>
 													<Plus size={12} />
 													Custom Attribute
-												</button>
+												</Button>
 											</h6>
 
 											<div className="grid grid-cols-1 sm:grid-cols-3 gap-6 relative">
 												{displayedPresets.map((category) => (
 													<div key={category.label} className="space-y-2.5">
-														<span className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 block border-l-2 border-gold pl-2">
+														<span className="text-xs font-bold text-gray-400 mb-2 block border-l-2 border-gold pl-2">
 															{category.label}
 														</span>
 														<div className="flex flex-col gap-2">
 															{category.attributes.map((attr) => (
-																<button
+																<Button
 																	key={attr.name}
 																	onClick={() =>
 																		addAttribute(attr.name, attr.defaultValues)
 																	}
-																	className="bg-gray-50 hover:bg-gold/10 hover:text-gold text-gray-500 text-[10px] font-bold px-3 py-2.5 rounded flex items-center justify-between transition-all border border-transparent hover:border-gold/30 text-left w-full group"
+																	variant="ghost"
+																	rounded="lg"
+																	className="bg-gray-50 hover:bg-gold/10 hover:text-gold text-gray-500 text-[10px] font-bold px-3 py-2.5 flex items-center justify-between transition-all border border-transparent hover:border-gold/30 text-left w-full h-auto"
 																>
 																	<span className="flex items-center gap-1.5">
 																		<PlusCircle
@@ -793,7 +814,7 @@ export default function AddProductPage() {
 																	<span className="text-[9px] font-medium text-gray-300 group-hover:text-gold/60 truncate max-w-20">
 																		{attr.example}
 																	</span>
-																</button>
+																</Button>
 															))}
 														</div>
 													</div>
@@ -805,17 +826,23 @@ export default function AddProductPage() {
 
 								{/* Generate Variations Button */}
 								<div className="pt-6 border-t border-gray-50">
-									<button
+									<Button
 										onClick={generateVariations}
-										className="w-full py-4 rounded bg-black text-white text-[11px] font-black uppercase tracking-widest hover:bg-gold hover:text-black transition-all flex flex-col items-center justify-center gap-1"
+										variant="black"
+										rounded="full"
+										size="sm"
+										fullWidth
+										className="py-4 flex flex-col items-center justify-center gap-0.5 h-auto"
 									>
-										<span>Generate Variations</span>
+										<span className="text-[11px] font-black uppercase tracking-widest">
+											Generate Variations
+										</span>
 										{attributes.length > 0 && (
-											<span className="text-[9px] text-gray-400 normal-case tracking-normal font-bold">
-												This will create all combinations based on attributes
+											<span className="text-[8px] text-gray-400 normal-case tracking-normal font-bold">
+												Create all combinations based on attributes
 											</span>
 										)}
-									</button>
+									</Button>
 								</div>
 
 								{/* Variations Table */}
@@ -825,7 +852,9 @@ export default function AddProductPage() {
 											Variations ({variations.length})
 										</h5>
 										{variations.length > 0 && (
-											<button
+											<Button
+												variant="ghost"
+												size="sm"
 												onClick={() => {
 													setValue("variations", []);
 													setHasGeneratedVariations(false);
@@ -835,10 +864,10 @@ export default function AddProductPage() {
 														"info",
 													);
 												}}
-												className="text-[10px] font-bold text-gray-400 hover:text-red-500 transition-colors"
+												className="text-gray-400 hover:text-red-500 border-none p-0 h-auto"
 											>
 												Clear Variations
-											</button>
+											</Button>
 										)}
 									</div>
 
@@ -911,23 +940,22 @@ export default function AddProductPage() {
 																					v.id,
 																					"salePrice",
 																					e.target.value,
-																				)
-																			}
-																			placeholder="0.00"
-																			className="bg-white border-gray-200 focus:border-gold/50 py-2.5! pl-4! pr-10!"
-																			rightSlot={
-																				<button
-																					type="button"
-																					onClick={() =>
-																						toggleVariationSchedule(v.id)
-																					}
-																					title="Schedule Sale Dates"
-																					className={`transition-colors ${expandedVariationSchedules.has(v.id) ? "text-gold" : "text-gray-300 hover:text-gold"}`}
-																				>
-																					<Calendar size={12} />
-																				</button>
-																			}
-																		/>
+																					)
+																				}
+																				placeholder="0.00"
+																				className="bg-white border-gray-200 focus:border-gold/50 py-2.5 px-4"
+																				rightSlot={
+																					<Button
+																						type="button"
+																						variant="ghost"
+																						onClick={() => toggleVariationSchedule(v.id)}
+																						title="Schedule Sale Dates"
+																						className={`p-0 h-auto hover:bg-transparent ${expandedVariationSchedules.has(v.id) ? "text-gold" : "text-gray-300 hover:text-gold"}`}
+																					>
+																						<Calendar size={12} />
+																					</Button>
+																				}
+																			/>
 																	</td>
 																	<td className="px-5 py-3">
 																		<Input
@@ -1004,7 +1032,7 @@ export default function AddProductPage() {
 
 					{/* Shipping & Inventory */}
 					<div className="bg-white border border-gray-100 rounded p-8 space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
-						<h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-gold pb-6 border-b border-gray-50 flex items-center gap-2">
+						<h4 className="text-sm font-bold text-gold pb-6 border-b border-gray-100">
 							Shipping & Inventory
 						</h4>
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-8">

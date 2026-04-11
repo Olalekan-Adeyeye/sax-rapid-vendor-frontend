@@ -11,7 +11,6 @@ import {
   CreditCard,
   User,
   ExternalLink,
-  Loader2,
   AlertCircle,
   MessageSquare,
 } from "lucide-react";
@@ -21,6 +20,7 @@ import { formatCurrency } from "../../../../lib/utils/currency";
 import { formatDate } from "@/lib/utils/date";
 import { useToast } from "@/lib/context/ToastContext";
 import { Button } from "@/components/ui/Button";
+import { FullPageLoader } from "@/components/common/FullPageLoader";
 
 export default function OrderDetailsPage() {
   const params = useParams();
@@ -65,14 +65,7 @@ export default function OrderDetailsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-12 h-12 text-gold animate-spin" />
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Loading Order Details...</p>
-        </div>
-      </div>
-    );
+    return <FullPageLoader label="Loading order details..." icon={Package} />;
   }
 
   if (!order) {
@@ -112,17 +105,17 @@ export default function OrderDetailsPage() {
             className="flex items-center gap-2 text-gray-400 hover:text-black transition-colors"
           >
             <ArrowLeft size={16} />
-            <span className="text-[10px] font-black uppercase tracking-widest">Back to Orders</span>
+            <span className="text-xs font-bold">Back to Orders</span>
           </button>
           <div className="flex flex-wrap items-center gap-4">
             <h2 className="text-3xl font-black tracking-tighter text-black">
               Order #{order.orderNumber || order.id.slice(0, 8)}
             </h2>
-            <span className="bg-black text-gold px-3 py-1 rounded text-[9px] font-black uppercase tracking-widest">
+            <span className="bg-black text-gold px-4 py-1.5 rounded text-xs font-bold">
               {order.status}
             </span>
           </div>
-          <p className="text-gray-400 text-xs font-bold uppercase tracking-tight">
+          <p className="text-gray-500 text-sm font-medium">
             Placed on {formatDate(order.createdAt)}
           </p>
         </div>
@@ -131,6 +124,7 @@ export default function OrderDetailsPage() {
             variant="outline" 
             size="sm"
             onClick={() => toast("Coming Soon", "Invoice generation is not available yet", "info")}
+            className="rounded px-6 text-xs font-bold"
           >
             Download Invoice
           </Button>
@@ -140,6 +134,7 @@ export default function OrderDetailsPage() {
             onClick={() => handleUpdateStatus(OrderStatus.Shipped)}
             disabled={updating || order.status === OrderStatus.Shipped || order.status === OrderStatus.Delivered}
             loading={updating}
+            className="rounded px-6 text-xs font-bold"
           >
             Mark as Shipped
           </Button>
@@ -157,19 +152,19 @@ export default function OrderDetailsPage() {
 
             return (
               <div key={step.status} className="relative z-10 flex flex-col items-center gap-4 group">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center border-4 transition-all duration-500 ${
+                <div className={`w-12 h-12 rounded flex items-center justify-center border-4 transition-all duration-500 ${
                   isCompleted ? "bg-black border-gold text-gold" : "bg-white border-gray-50 text-gray-300"
                 }`}>
                   <StepIcon size={20} />
                 </div>
                 <div className="text-center">
-                  <p className={`text-[10px] font-black uppercase tracking-widest ${
+                  <p className={`text-xs font-bold ${
                     isCompleted ? "text-black" : "text-gray-300"
                   }`}>
                     {step.label}
                   </p>
                   {isCurrent && (
-                    <span className="text-[8px] font-black text-gold uppercase tracking-tighter animate-pulse">
+                    <span className="text-[10px] font-bold text-gold animate-pulse">
                       Current Stage
                     </span>
                   )}
@@ -184,8 +179,8 @@ export default function OrderDetailsPage() {
         {/* Main Content: Order Items */}
         <div className="lg:col-span-2 space-y-10">
           <div className="bg-white border border-gray-100 rounded overflow-hidden">
-            <div className="p-6 border-b border-gray-50">
-              <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-black">
+            <div className="p-6 border-b border-gray-100">
+              <h4 className="text-sm font-bold text-black">
                 Order Items ({order.items?.length || 0})
               </h4>
             </div>
@@ -210,13 +205,13 @@ export default function OrderDetailsPage() {
                       </p>
                     )}
                     <div className="flex items-center gap-4 mt-2">
-                       <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                       <span className="text-[10px] font-bold text-gray-400">
                         SKU: <span className="text-black">{item.productSKU || "N/A"}</span>
                       </span>
-                       <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                       <span className="text-[10px] font-bold text-gray-400">
                         Qty: <span className="text-black">{item.quantity}</span>
                       </span>
-                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                      <span className="text-[10px] font-bold text-gray-400">
                         Price: <span className="text-black">{formatCurrency(item.unitPrice)}</span>
                       </span>
                     </div>
@@ -244,7 +239,7 @@ export default function OrderDetailsPage() {
                 </div>
               )}
               <div className="flex justify-between pt-4 border-t border-gray-100">
-                <span className="text-[11px] font-black text-black uppercase tracking-[0.2em]">Total Amount</span>
+                <span className="text-sm font-bold text-black">Total Amount</span>
                 <span className="text-xl font-black text-black">{formatCurrency(order.totalAmount)}</span>
               </div>
             </div>
@@ -255,8 +250,8 @@ export default function OrderDetailsPage() {
         <div className="space-y-10">
           {/* Customer Info */}
           <div className="bg-white border border-gray-100 rounded overflow-hidden">
-            <div className="p-6 border-b border-gray-50 bg-black">
-              <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-white flex items-center gap-3">
+            <div className="p-6 border-b border-gray-100 bg-black">
+              <h4 className="text-sm font-bold text-white flex items-center gap-3">
                 <User size={14} className="text-gold" />
                 Customer Details
               </h4>
@@ -267,13 +262,13 @@ export default function OrderDetailsPage() {
                   JD
                 </div>
                 <div>
-                  <h5 className="text-xs font-black text-black uppercase tracking-tight">John Doe</h5>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Loyal Customer</p>
+                  <h5 className="text-sm font-bold text-black">John Doe</h5>
+                  <p className="text-xs font-bold text-gray-400">Loyal Customer</p>
                 </div>
               </div>
               <button 
                 onClick={() => router.push(`/messages?orderId=${order.id}`)}
-                className="w-full py-3 rounded bg-gold/10 text-gold border border-gold/20 text-[9px] font-black uppercase tracking-widest hover:bg-gold hover:text-black transition-all flex items-center justify-center gap-2"
+                className="w-full py-3.5 rounded bg-gold/10 text-gold border border-gold/20 text-xs font-bold hover:bg-gold hover:text-black transition-all flex items-center justify-center gap-2 active:scale-95"
               >
                 <MessageSquare size={14} />
                 Message Customer
@@ -285,7 +280,7 @@ export default function OrderDetailsPage() {
           <div className="bg-white border border-gray-100 rounded p-6 space-y-6">
              <div className="flex items-center gap-3 text-gold">
                 <MapPin size={16} />
-                <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-black">
+                <h4 className="text-sm font-bold text-black">
                   Delivery Address
                 </h4>
              </div>
@@ -295,12 +290,12 @@ export default function OrderDetailsPage() {
                 </p>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <span className="text-[8px] font-black text-gray-300 uppercase tracking-widest">City</span>
-                    <p className="text-[10px] font-black text-black uppercase tracking-tight">{order.shippingCity || "N/A"}</p>
+                    <span className="text-[10px] font-bold text-gray-400">City</span>
+                    <p className="text-xs font-bold text-black">{order.shippingCity || "N/A"}</p>
                   </div>
                   <div className="space-y-1">
-                    <span className="text-[8px] font-black text-gray-300 uppercase tracking-widest">State</span>
-                    <p className="text-[10px] font-black text-black uppercase tracking-tight">{order.shippingState || "N/A"}</p>
+                    <span className="text-[10px] font-bold text-gray-400">State</span>
+                    <p className="text-xs font-bold text-black">{order.shippingState || "N/A"}</p>
                   </div>
                 </div>
              </div>
@@ -310,18 +305,18 @@ export default function OrderDetailsPage() {
           <div className="bg-white border border-gray-100 rounded p-6 space-y-6">
              <div className="flex items-center gap-3 text-gold">
                 <CreditCard size={16} />
-                <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-black">
+                <h4 className="text-sm font-bold text-black">
                   Payment Meta
                 </h4>
              </div>
              <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Method</span>
-                  <span className="text-[9px] font-black text-black uppercase tracking-tight">{order.paymentMethod}</span>
+                  <span className="text-[10px] font-bold text-gray-400">Method</span>
+                  <span className="text-[10px] font-bold text-black">{order.paymentMethod}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Status</span>
-                   <span className="text-[9px] font-black text-green-500 uppercase tracking-tight">{order.paymentStatus}</span>
+                  <span className="text-[10px] font-bold text-gray-400">Status</span>
+                   <span className="text-[10px] font-bold text-green-500">{order.paymentStatus}</span>
                 </div>
                 {order.trackingNumber && (
                    <div className="pt-4 border-t border-gray-50 space-y-2">

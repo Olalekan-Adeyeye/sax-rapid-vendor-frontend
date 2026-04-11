@@ -48,7 +48,7 @@ export function Input({
 					id={id}
 					ref={ref}
 					required={required}
-					className={`w-full bg-gray-50 border border-gray-200/50 focus:border-gold/50 text-black text-xs font-bold rounded px-5 py-4 placeholder-gray-300 outline-none transition-all 
+					className={`w-full bg-white border border-gray-200 focus:border-gold text-black text-sm font-medium rounded px-5 py-3.5 placeholder-gray-400 outline-none transition-all 
 						${leftSlot ? "pl-12" : ""} 
 						${rightSlot ? "pr-12" : ""} 
 						${className}`}

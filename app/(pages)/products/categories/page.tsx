@@ -2,34 +2,37 @@
 import React, { useEffect, useState, useCallback } from "react";
 import {
   Plus,
-  Search,
   MoreVertical,
   Layers,
   ArrowUpRight,
-  Loader2,
 } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { SearchInput } from "@/components/ui/SearchInput";
 import * as categoriesService from "@/lib/api/services/categories";
 import { CategoryResponseDTO } from "@/lib/api/types/categories.types";
-import { useToast } from "@/lib/context/ToastContext";
 import { getErrorMessage } from "@/lib/utils/errors";
+import { FullPageLoader } from "@/components/common/FullPageLoader";
+import { ErrorComponent } from "@/components/ui/ErrorComponent";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 export default function ProductCategoriesPage() {
   const [categories, setCategories] = useState<CategoryResponseDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const { toast } = useToast();
+  const [error, setError] = useState<string | null>(null);
 
   const fetchCategories = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       const data = await categoriesService.getCategories();
       setCategories(data);
-    } catch (error) {
-      toast("Error", getErrorMessage(error), "error");
+    } catch (err) {
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, []);
 
   useEffect(() => {
     fetchCategories();
@@ -39,47 +42,55 @@ export default function ProductCategoriesPage() {
     cat.name?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
+  if (loading && categories.length === 0) {
+    return (
+      <FullPageLoader label="Loading categories..." icon={Layers} />
+    );
+  }
+
+  if (error && categories.length === 0) {
+    return (
+      <ErrorComponent
+        title="Failed to load categories"
+        message={error}
+        onRetry={fetchCategories}
+      />
+    );
+  }
+
   return (
     <div className="space-y-10">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
-        <div>
-          <h2 className="text-2xl lg:text-4xl font-black tracking-tighter text-black">
-            Product Categories
-          </h2>
-          <p className="text-gray-400 mt-2 uppercase tracking-[0.2em] text-[10px] font-black">
-            Organize your products into marketplace categories
-          </p>
-        </div>
-        <button className="px-8 py-4 rounded bg-gold text-[10px] font-black uppercase tracking-widest text-black hover:bg-black hover:text-white transition-all flex items-center justify-center gap-3">
-          <Plus size={16} />
-          New Category Request
-        </button>
-      </div>
+      <PageHeader
+        title="Product Categories"
+        description="Organize your products into marketplace categories"
+        actions={
+          <Button
+            variant="primary"
+            rounded="full"
+            size="sm"
+            className="font-bold whitespace-nowrap"
+          >
+            <Plus size={16} />
+            New Category Request
+          </Button>
+        }
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         <div className="lg:col-span-2 space-y-8">
           <div className="bg-white border border-gray-100 rounded overflow-hidden">
             <div className="p-6 border-b border-gray-50 bg-gray-50/30">
-              <div className="relative">
-                <Search
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                  size={16}
-                />
-                <input
-                  type="text"
-                  placeholder="Search categories..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-white rounded py-3 pl-12 pr-4 text-[10px] font-black uppercase tracking-widest text-black outline-none border border-gray-100 focus:border-gold/30 transition-all"
-                />
-              </div>
+              <SearchInput
+                placeholder="Search categories..."
+                value={searchQuery}
+                onChange={setSearchQuery}
+                variant="white"
+                focusColor="gold"
+                fullWidth
+              />
             </div>
             <div className="divide-y divide-gray-50">
-              {loading ? (
-                <div className="p-8 flex justify-center">
-                  <Loader2 className="animate-spin text-gold" size={24} />
-                </div>
-              ) : filteredCategories.length === 0 ? (
+              {filteredCategories.length === 0 ? (
                 <div className="p-8 text-center text-gray-400 text-[10px] font-black uppercase tracking-widest">
                   No categories found
                 </div>
@@ -112,9 +123,13 @@ export default function ProductCategoriesPage() {
                       >
                         {cat.isActive ? "Active" : "Draft"}
                       </span>
-                      <button className="text-gray-300 hover:text-black transition-colors">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-gray-300 hover:text-black p-0 h-auto"
+                      >
                         <MoreVertical size={18} />
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 ))
@@ -136,9 +151,15 @@ export default function ProductCategoriesPage() {
               listed, you can request a new category.
             </p>
           </div>
-          <button className="w-full py-4 rounded border border-gray-100 text-[10px] font-black uppercase tracking-widest text-black hover:bg-black hover:text-white transition-all">
+          <Button
+            variant="outline"
+            rounded="full"
+            size="sm"
+            fullWidth
+            className="font-bold"
+          >
             Submit Proposal
-          </button>
+          </Button>
         </div>
       </div>
     </div>

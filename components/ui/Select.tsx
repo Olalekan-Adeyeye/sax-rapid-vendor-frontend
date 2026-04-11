@@ -49,9 +49,9 @@ export function Select({
 					id={id}
 					ref={ref}
 					required={required}
-					className={`w-full bg-gray-50 border border-gray-200/50 focus:border-gold/50 text-black text-xs font-bold rounded ${
+					className={`w-full bg-white border border-gray-300 focus:border-gold text-black text-sm font-medium rounded ${
 						leftSlot ? "pl-12" : "px-5"
-					} pr-12 py-4 appearance-none outline-none transition-all cursor-pointer ${className}`}
+					} pr-12 py-3.5 appearance-none outline-none transition-all cursor-pointer ${className}`}
 					{...props}
 				>
 					<option value="" disabled>

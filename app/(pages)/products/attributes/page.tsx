@@ -1,37 +1,40 @@
 "use client";
 import React from "react";
-import { Plus, Search, Settings2, Trash2, Edit } from "lucide-react";
+import { Plus, Settings2, Trash2, Edit } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { SearchInput } from "@/components/ui/SearchInput";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 export default function ProductAttributesPage() {
 	return (
 		<div className="space-y-10">
-			<div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
-				<div>
-					<h2 className="text-2xl lg:text-4xl font-black tracking-tighter text-black capitalize">
-						Product Features
-					</h2>
-					<p className="text-gray-400 mt-2 uppercase tracking-[0.2em] text-[10px] font-black">
-						Create and manage reusable product attributes
-					</p>
-				</div>
-				<button className="px-8 py-4 rounded bg-gold text-[10px] font-black uppercase tracking-widest text-black hover:bg-black hover:text-white transition-all flex items-center justify-center gap-3">
-					<Plus size={16} />
-					New Attribute
-				</button>
-			</div>
+			<PageHeader
+				title="Product Features"
+				description="Create and manage reusable product attributes"
+				actions={
+					<Button
+						variant="primary"
+						rounded="full"
+						size="sm"
+						className="font-bold whitespace-nowrap"
+					>
+						<Plus size={16} />
+						New Attribute
+					</Button>
+				}
+			/>
 
 			<div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
 				<div className="lg:col-span-2 space-y-8">
 					<div className="bg-white border border-gray-100 rounded overflow-hidden">
 						<div className="p-6 border-b border-gray-50 bg-gray-50/30">
-							<div className="relative">
-								<Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-								<input 
-									type="text" 
-									placeholder="Search attributes..." 
-									className="w-full bg-white rounded py-3 pl-12 pr-4 text-[10px] font-black uppercase tracking-widest text-black outline-none border border-gray-100 focus:border-gold/30 transition-all"
-								/>
-							</div>
+							<SearchInput
+								placeholder="Search attributes..."
+								variant="white"
+								focusColor="gold"
+								fullWidth
+							/>
 						</div>
 						<div className="divide-y divide-gray-50">
 							{[
@@ -54,8 +57,20 @@ export default function ProductAttributesPage() {
 											</div>
 										</div>
 										<div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-											<button className="w-8 h-8 rounded border border-gray-100 flex items-center justify-center text-gray-400 hover:text-black hover:bg-white transition-all"><Edit size={14} /></button>
-											<button className="w-8 h-8 rounded border border-gray-100 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-white transition-all"><Trash2 size={14} /></button>
+											<Button
+												variant="outline"
+												size="sm"
+												className="w-8 h-8 p-0"
+											>
+												<Edit size={14} />
+											</Button>
+											<Button
+												variant="outline"
+												size="sm"
+												className="w-8 h-8 p-0 text-gray-400 hover:text-red-500 hover:border-red-500"
+											>
+												<Trash2 size={14} />
+											</Button>
 										</div>
 									</div>
 									<div className="flex flex-wrap gap-2">
@@ -82,15 +97,21 @@ export default function ProductAttributesPage() {
 					<div className="space-y-4">
 						<div className="space-y-2.5">
 							<label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Rapid Creation</label>
-							<input 
-								type="text" 
+							<Input 
+								id="feature-name"
 								placeholder="Feature Name (e.g. Fabric)" 
-								className="w-full bg-gray-50 border border-transparent focus:border-gold/30 rounded px-5 py-4 text-xs font-black text-black outline-none transition-all placeholder:text-gray-300"
+								className="bg-gray-50 border-transparent focus:border-gold/30 rounded px-5 py-4"
 							/>
 						</div>
-						<button className="w-full py-4 rounded bg-black text-[10px] font-black uppercase tracking-widest text-white hover:bg-gold hover:text-black transition-all">
+						<Button
+							variant="black"
+							rounded="full"
+							size="sm"
+							fullWidth
+							className="font-bold"
+						>
 							Quick Create
-						</button>
+						</Button>
 					</div>
 				</div>
 			</div>
