@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
 import { Rocket, Calendar, Type, Percent } from "lucide-react";
 
 interface CreateCampaignModalProps {
@@ -72,13 +73,14 @@ export function CreateCampaignModal({ isOpen, onClose }: CreateCampaignModalProp
         </div>
 
         <div className="pt-4">
-          <button
+          <Button
             type="submit"
-            disabled={loading}
-            className={`w-full py-4 rounded bg-black text-white text-[10px] font-black uppercase tracking-widest hover:bg-gold hover:text-black transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
+            loading={loading}
+            variant="black"
+            fullWidth   
           >
-            {loading ? "Launching Campaign..." : "Launch Campaign"}
-          </button>
+            Launch Campaign
+          </Button>
         </div>
       </form>
     </Modal>

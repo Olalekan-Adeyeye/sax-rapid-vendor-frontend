@@ -30,7 +30,6 @@ import { FundWalletModal } from "@/components/wallet/FundWalletModal";
 import { WithdrawModal } from "@/components/wallet/WithdrawModal";
 
 export default function WalletPage() {
-
 	const [wallet, setWallet] = useState<WalletResponseDTO | null>(null);
 	const [transactions, setTransactions] = useState<
 		WalletTransactionResponseDTO[]
@@ -145,16 +144,16 @@ export default function WalletPage() {
 									<div className="absolute -top-10 -right-10 w-40 h-40 bg-white/5 rounded group-hover:bg-gold/10 transition-colors" />
 									<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gold/5 blur-3xl rounded" />
 
-									<div className="flex items-center justify-between relative z-10">
+									<div className="flex flex-col justify-between relative z-10 gap-1.5">
 										<p className="text-xs font-bold text-gray-500 group-hover:text-gold transition-colors">
 											Balance Overview
 										</p>
-										<div className="flex bg-white/10 rounded p-1.5 gap-1">
+										<div className="flex justify-between bg-white/10 rounded p-1.5 gap-1">
 											<Button
 												onClick={() => setActiveCurrency("NGN")}
 												variant={activeCurrency === "NGN" ? "primary" : "ghost"}
 												size="sm"
-												className={`px-4 py-1.5 border-none h-auto ${activeCurrency === "NGN" ? "bg-white text-black" : "text-gray-400 hover:text-white bg-transparent"}`}
+												className={`flex w-full px-4 border-none h-8 ${activeCurrency === "NGN" ? "bg-white text-black" : "text-gray-400 hover:text-white bg-transparent"}`}
 											>
 												NGN
 											</Button>
@@ -162,7 +161,7 @@ export default function WalletPage() {
 												onClick={() => setActiveCurrency("USD")}
 												variant={activeCurrency === "USD" ? "primary" : "ghost"}
 												size="sm"
-												className={`px-4 py-1.5 border-none h-auto ${activeCurrency === "USD" ? "bg-white text-black" : "text-gray-400 hover:text-white bg-transparent"}`}
+												className={`flex w-full px-4 border-none h-8 ${activeCurrency === "USD" ? "bg-white text-black" : "text-gray-400 hover:text-white bg-transparent"}`}
 											>
 												USD
 											</Button>
@@ -179,7 +178,7 @@ export default function WalletPage() {
 											Available for Payout
 										</p>
 									</div>
-									<div className="grid grid-cols-2 gap-4 relative z-10">
+									{/* <div className="grid grid-cols-2 gap-4 relative z-10">
 										<div className="bg-white/5 rounded p-4 group-hover:bg-white/10 transition-colors border border-white/5">
 											<p className="text-[10px] font-bold text-gray-500 mb-1">
 												Balance
@@ -199,7 +198,7 @@ export default function WalletPage() {
 												)}
 											</p>
 										</div>
-									</div>
+									</div> */}
 								</div>
 							)}
 

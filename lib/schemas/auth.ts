@@ -111,7 +111,7 @@ export const onboardingSchema = z
 		idFile: z.any().optional(),
 		bizFile: z.any().optional(),
 		regFile: z.any().optional(),
-		businessCategory: z.string().min(1, "Business category is required"),
+		description: z.string().optional(),
 		agreedToTerms: z.boolean().refine((val) => val === true, {
 			message: "You must agree to the terms",
 		}),

@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Modal } from "@/components/ui/Modal";
 import { Star, Search, Check } from "lucide-react";
 import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
 
 interface ConfigureFeaturedModalProps {
   isOpen: boolean;
@@ -101,13 +102,15 @@ export function ConfigureFeaturedModal({ isOpen, onClose }: ConfigureFeaturedMod
           <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 text-center">
             {selectedIds.length} / 5 PRODUCTS SELECTED
           </p>
-          <button
+          <Button
             onClick={handleSubmit}
-            disabled={loading || selectedIds.length === 0}
-            className={`w-full py-4 rounded bg-black text-white text-[10px] font-black uppercase tracking-widest hover:bg-gold hover:text-black transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
+            disabled={selectedIds.length === 0}
+            loading={loading}
+            variant="black"
+            fullWidth
           >
-            {loading ? "Updating Storefront..." : "Save Selection"}
-          </button>
+            Save Selection
+          </Button>
         </div>
       </div>
     </Modal>

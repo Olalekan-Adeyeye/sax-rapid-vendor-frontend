@@ -217,6 +217,7 @@ export default function BoostAdsPage() {
 				description="Promote your products for maximum visibility"
 				actions={
 					<Button
+						size="sm"
 						variant="primary"
 						onClick={() =>
 							toast(
@@ -225,7 +226,7 @@ export default function BoostAdsPage() {
 								"info",
 							)
 						}
-						className="rounded-full px-8 py-3.5 text-sm font-bold active:scale-95"
+						className="rounded-full"
 					>
 						<Plus size={16} />
 						New Promotion
@@ -245,7 +246,7 @@ export default function BoostAdsPage() {
 						<div
 							key={ad.boostType}
 							onClick={() => handleOpenBoostModal(ad)}
-							className={`p-8 lg:p-10 rounded-2xl border border-gray-100 flex flex-col justify-between group hover:shadow-2xl hover:-translate-y-1 transition-all cursor-pointer ${isBlack ? "bg-black text-white shadow-xl shadow-black/10" : "bg-white text-black shadow-sm"}`}
+							className={`p-8 lg:p-10 rounded border border-gray-100 flex flex-col justify-between group hover:-translate-y-1 transition-all cursor-pointer ${isBlack ? "bg-black text-white shadow-black/10" : "bg-white text-black"}`}
 						>
 							<div className="mb-10">
 								<div
@@ -292,9 +293,7 @@ export default function BoostAdsPage() {
 			{/* Active Promotions List */}
 			<div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm shadow-gray-100/50">
 				<div className="p-8 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-6">
-					<h4 className="text-sm font-bold text-black">
-						Active Promotions
-					</h4>
+					<h4 className="text-sm font-bold text-black">Active Promotions</h4>
 					<button className="text-xs font-bold text-gold whitespace-nowrap hover:underline">
 						Full History →
 					</button>

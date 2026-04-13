@@ -18,7 +18,7 @@ export default function InventoryManagementPage() {
 				title="Stock Management"
 				description="Track inventory levels and low stock alerts"
 				actions={
-					<Button rounded="full" className="px-8 py-3.5">
+					<Button rounded="full" className="py-3.5" size="sm">
 						<Database size={16} />
 						Stock Update
 					</Button>

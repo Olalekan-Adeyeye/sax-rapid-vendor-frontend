@@ -54,7 +54,7 @@ export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
 							exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
 							className="pointer-events-auto"
 						>
-							<div className="group relative overflow-hidden bg-white/80 backdrop-blur-xl border border-gray-100 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-4 sm:p-5 flex items-start gap-3 sm:gap-4">
+							<div className="group relative overflow-hidden bg-white/80 backdrop-blur-xl border border-gray-100 rounded shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-4 sm:p-5 flex items-start gap-3 sm:gap-4">
 								{/* Type Accent */}
 								<div
 									className={`absolute left-0 top-0 bottom-0 w-1 ${

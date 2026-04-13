@@ -306,11 +306,11 @@ export default function VendorCenter() {
 								built for serious sellers.
 							</p>
 							<div className="flex flex-wrap gap-4">
-								<Button size="lg" asChild>
+								<Button size="lg" asChild className="hover:bg-white! hover:text-black! border border-transparent hover:border-white! transition-all">
 									<Link href="/signup">Register Free</Link>
 								</Button>
-								<Button variant="ghost" size="lg">
-									Watch Demo <ArrowRight className="ml-2" size={18} />
+								<Button variant="secondary" size="lg" asChild className="border-white/20 text-white hover:bg-white/10 hover:border-white/40 tracking-widest transition-all">
+									<Link href="/login">Vendor Login</Link>
 								</Button>
 							</div>
 						</div>
