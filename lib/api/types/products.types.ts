@@ -1,3 +1,11 @@
+export type ProductStatus =
+	| "Draft"
+	| "Active"
+	| "Pending"
+	| "Rejected"
+	| "Deleted";
+export type ProductType = "Simple" | "Variable";
+
 export interface ProductImageResponseDTO {
 	id: string;
 	imageUrl: string | null;
@@ -14,7 +22,12 @@ export interface ProductVariationResponseDTO {
 	id: string;
 	sku: string | null;
 	price: number;
+	salePrice?: number | null;
+	salePriceStartDate?: string | null;
+	salePriceEndDate?: string | null;
+	effectivePrice: number;
 	stockQuantity: number;
+	isInStock: boolean;
 	attributes: Record<string, string> | null;
 }
 
@@ -23,17 +36,25 @@ export interface ProductResponseDTO {
 	name: string | null;
 	description: string | null;
 	vendorId: string;
-	vendorName: string | null;
+	vendorName?: string | null;
 	categoryId: number;
-	categoryName: string | null;
+	categoryName?: string | null;
 	brandId: number | null;
-	brandName: string | null;
+	brandName?: string | null;
 	basePrice: number;
+	salePrice?: number | null;
+	salePriceStartDate?: string | null;
+	salePriceEndDate?: string | null;
+	effectivePrice: number;
 	sku: string | null;
 	stockQuantity: number;
 	isActive: boolean;
 	isFeatured: boolean;
-	status: string | null;
+	status: ProductStatus | null;
+	weight: number;
+	dimensionLength: number | null;
+	dimensionWidth: number | null;
+	dimensionHeight: number | null;
 	viewCount: number;
 	favoriteCount: number;
 	averageRating: number;
@@ -55,30 +76,44 @@ export interface PagedProductResponseDTO {
 	hasNextPage: boolean;
 }
 
+export interface VariationAttributeDTO {
+	attributeName: string | null;
+	attributeValue: string | null;
+}
+
+export interface CreateVariationDTO {
+	sku: string | null;
+	price: number;
+	salePrice?: number | null;
+	salePriceStartDate?: string | null;
+	salePriceEndDate?: string | null;
+	stockQuantity: number;
+	attributes: VariationAttributeDTO[] | null;
+}
+
+export interface CreateProductImageDTO {
+	imageUrl: string;
+	isPrimary: boolean;
+}
+
 export interface CreateProductDTO {
 	name: string | null;
 	description: string | null;
 	categoryId: number;
 	brandId?: number | null;
+	productType: "Simple" | "Variable";
 	basePrice: number;
 	salePrice?: number | null;
-	saleStartDate?: string | null;
-	saleEndDate?: string | null;
+	salePriceStartDate?: string | null;
+	salePriceEndDate?: string | null;
+	stockQuantity: number;
+	weight: number;
+	dimensionLength: number | null;
+	dimensionWidth: number | null;
+	dimensionHeight: number | null;
 	sku: string | null;
-	weight?: number | null;
-	length?: number | null;
-	width?: number | null;
-	height?: number | null;
-	status?: string | null;
-	attributes?: { name: string; values: string[] }[] | null;
-	variations?: { 
-		name: string; 
-		price: number; 
-		salePrice?: number | null; 
-		saleStartDate?: string | null;
-		saleEndDate?: string | null;
-		stockQuantity: number 
-	}[] | null;
+	variations?: CreateVariationDTO[] | null;
+	images?: CreateProductImageDTO[] | null;
 }
 
 export interface UpdateProductDTO {
@@ -86,18 +121,15 @@ export interface UpdateProductDTO {
 	description: string | null;
 	categoryId: number;
 	brandId?: number | null;
+	productType?: "Simple" | "Variable";
 	basePrice: number;
 	salePrice?: number | null;
-	saleStartDate?: string | null;
-	saleEndDate?: string | null;
+	salePriceStartDate?: string | null;
+	salePriceEndDate?: string | null;
+	stockQuantity?: number;
 	sku: string | null;
-	weight?: number | null;
-	length?: number | null;
-	width?: number | null;
-	height?: number | null;
-	status?: string | null;
-	attributes?: { name: string; values: string[] }[] | null;
-	variations?: { name: string; price: number; salePrice?: number | null; stockQuantity: number }[] | null;
+	variations?: CreateVariationDTO[] | null;
+	images?: CreateProductImageDTO[] | null;
 }
 
 export interface ProductQueryParams {
@@ -109,4 +141,12 @@ export interface ProductQueryParams {
 	SearchTerm?: string;
 	PageIndex?: number;
 	PageSize?: number;
+}
+export interface ProductStatsResponseDTO {
+	totalProducts: number;
+	activeProducts: number;
+	pendingApproval: number;
+	outOfStock: number;
+	totalViews: number;
+	averageRating: number;
 }

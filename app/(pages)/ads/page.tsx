@@ -71,7 +71,11 @@ export default function BoostAdsPage() {
 			setPricing(pricingData || []);
 			setActiveBoosts(boostsData || []);
 			setWallet(walletData);
-			setProducts(productsData.items || []);
+			// Handle paged response
+			const items = Array.isArray(productsData)
+				? productsData
+				: productsData?.items;
+			setProducts(items || []);
 		} catch {
 			console.error("Failed to fetch boost data:");
 			setError("Failed to load boost information. Please try again.");

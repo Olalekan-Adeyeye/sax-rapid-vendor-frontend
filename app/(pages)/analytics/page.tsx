@@ -2,7 +2,6 @@
 import React from "react";
 import {
 	TrendingUp,
-	TrendingDown,
 	Users,
 	ShoppingBag,
 	DollarSign,
@@ -17,13 +16,13 @@ export default function AnalyticsPage() {
 				description="Deep dive into your store sales and performance"
 				actions={
 					<div className="flex bg-white border border-gray-100 rounded p-1">
-						<button className="px-6 py-2 rounded-md hover:bg-gray-50 text-xs font-bold text-gray-400 hover:text-black transition-all">
+						<button className="px-6 py-2 rounded hover:bg-gray-50 text-xs font-bold text-gray-400 hover:text-black transition-all">
 							Today
 						</button>
-						<button className="px-6 py-2 rounded-md bg-black text-xs font-bold text-white transition-all">
+						<button className="px-6 py-2 rounded bg-black text-xs font-bold text-white transition-all">
 							Last 7 Days
 						</button>
-						<button className="px-6 py-2 rounded-md hover:bg-gray-50 text-xs font-bold text-gray-400 hover:text-black transition-all">
+						<button className="px-6 py-2 rounded hover:bg-gray-50 text-xs font-bold text-gray-400 hover:text-black transition-all">
 							Last 30 Days
 						</button>
 					</div>
@@ -63,22 +62,12 @@ export default function AnalyticsPage() {
 				].map((stat, i) => (
 					<div
 						key={i}
-						className="bg-white border border-gray-100 rounded-2xl p-8 hover:border-gold transition-all group shadow-sm"
+						className="bg-white border border-gray-100 rounded p-8 hover:border-gold transition-all group"
 					>
 						<div className="flex items-center justify-between mb-6">
 							<div className="w-10 h-10 rounded bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-gold group-hover:text-black transition-all">
 								<stat.icon size={18} />
 							</div>
-							<span
-								className={`text-[10px] font-black tracking-widest px-2 py-1 rounded-full ${stat.trend === "up" ? "text-green-600 bg-green-50" : "text-red-600 bg-red-50"}`}
-							>
-								{stat.change}{" "}
-								{stat.trend === "up" ? (
-									<TrendingUp size={10} className="inline ml-1" />
-								) : (
-									<TrendingDown size={10} className="inline ml-1" />
-								)}
-							</span>
 						</div>
 						<p className="text-xs font-bold text-gray-500 mb-2">{stat.label}</p>
 						<h3 className="text-3xl font-black text-black tracking-tighter">
@@ -90,7 +79,7 @@ export default function AnalyticsPage() {
 
 			<div className="grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-14">
 				<div className="lg:col-span-2 space-y-10">
-					<div className="bg-white border border-gray-100 rounded-2xl p-10 space-y-10 shadow-sm">
+					<div className="bg-white border border-gray-100 rounded p-10 space-y-10">
 						<div className="flex items-center justify-between">
 							<h4 className="text-sm font-bold text-black">
 								Revenue Statistics
@@ -130,7 +119,7 @@ export default function AnalyticsPage() {
 						</div>
 					</div>
 
-					<div className="bg-white border border-gray-100 rounded-2xl p-10 space-y-10 shadow-sm">
+					<div className="bg-white border border-gray-100 rounded p-10 space-y-10">
 						<h4 className="text-sm font-bold text-black">
 							Product Performance
 						</h4>
@@ -213,7 +202,7 @@ export default function AnalyticsPage() {
 				</div>
 
 				<div className="space-y-10">
-					<div className="bg-white border border-gray-100 rounded-2xl p-10 space-y-10 shadow-sm">
+					<div className="bg-white border border-gray-100 rounded p-10 space-y-10">
 						<h4 className="text-sm font-bold text-black">
 							Promotion Performance
 						</h4>
@@ -240,7 +229,7 @@ export default function AnalyticsPage() {
 						</div>
 					</div>
 
-					<div className="bg-black text-white rounded-2xl p-10 space-y-10 relative overflow-hidden group">
+					<div className="bg-black text-white rounded p-10 space-y-10 relative overflow-hidden group">
 						<div className="absolute -top-10 -right-10 w-40 h-40 bg-white/5 rounded-full group-hover:bg-gold/10 transition-colors" />
 						<h4 className="text-sm font-bold text-gold relative z-10">
 							Audience Location

@@ -25,6 +25,7 @@ export interface ReviewResponseDTO {
   userName: string;
   rating: number;
   comment?: string | null;
+  productName?: string | null;
   createdAt: string;
 }
 

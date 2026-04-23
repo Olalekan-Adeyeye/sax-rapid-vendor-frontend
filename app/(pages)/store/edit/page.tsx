@@ -17,12 +17,19 @@ import Link from "next/link";
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { getErrorMessage } from "@/lib/utils/errors";
-import { getMyVendorProfile, updateVendorProfile } from "@/lib/api/services/vendor";
-import type { VendorProfileResponse, UpdateVendorProfileRequest } from "@/lib/api/types/vendor.types";
+import {
+	getMyVendorProfile,
+	updateVendorProfile,
+} from "@/lib/api/services/vendor";
+import type {
+	VendorProfileResponse,
+	UpdateVendorProfileRequest,
+} from "@/lib/api/types/vendor.types";
 import { useToast } from "@/lib/context/ToastContext";
 import { Input } from "@/components/ui/Input";
 import { TextArea } from "@/components/ui/TextArea";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
+import { ErrorComponent } from "@/components/ui/ErrorComponent";
 
 export default function EditStoreProfile() {
 	const router = useRouter();
@@ -86,7 +93,10 @@ export default function EditStoreProfile() {
 			router.push("/store");
 		} catch (err: unknown) {
 			console.error("Failed to update vendor profile:", err);
-			const message = getErrorMessage(err, "We couldn't save your changes. Please check your connection.");
+			const message = getErrorMessage(
+				err,
+				"We couldn't save your changes. Please check your connection.",
+			);
 			toast("Update Failed", message, "error");
 		} finally {
 			setIsSaving(false);
@@ -102,26 +112,14 @@ export default function EditStoreProfile() {
 
 	if (error || !vendor) {
 		return (
-			<div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6 text-center max-w-md mx-auto">
-				<div className="w-20 h-20 rounded-full bg-red-50 flex items-center justify-center text-red-500">
-					<AlertCircle size={40} />
-				</div>
-				<div>
-					<h3 className="text-xl font-black tracking-tighter text-black">
-						Initialization Failed
-					</h3>
-					<p className="text-gray-400 mt-2 text-sm leading-relaxed">
-						{error || "We couldn't retrieve your store profile at this time."}
-					</p>
-				</div>
-				<Button
-					onClick={fetchVendor}
-					variant="black"
-					size="lg"
-				>
-					Retry Connection
-				</Button>
-			</div>
+			<ErrorComponent
+				title="Failed to Load Store Profile"
+				message={
+					error ||
+					"We couldn't retrieve your store details. Please check your internet connection and try again."
+				}
+				onRetry={fetchVendor}
+			/>
 		);
 	}
 
@@ -327,9 +325,7 @@ export default function EditStoreProfile() {
 
 					{/* Danger Zone */}
 					<div className="bg-red-50 border border-red-100 rounded-xl p-10 space-y-6">
-						<h4 className="text-xs font-bold text-red-500">
-							Danger Zone
-						</h4>
+						<h4 className="text-xs font-bold text-red-500">Danger Zone</h4>
 						<p className="text-xs font-medium text-red-400/80 leading-relaxed">
 							Deleting your business account is permanent and will remove all
 							product listings, sales history, and storefront data.

@@ -87,6 +87,10 @@ export default function OrdersPage() {
 			case OrderStatus.Cancelled:
 			case OrderStatus.Failed:
 				return "bg-red-50 text-red-600";
+			case OrderStatus.OnHold:
+				return "bg-amber-50 text-amber-600";
+			case OrderStatus.Dispute:
+				return "bg-orange-50 text-orange-600";
 			default:
 				return "bg-gray-100 text-gray-400";
 		}
@@ -98,7 +102,7 @@ export default function OrdersPage() {
 				<FullPageLoader label="Loading orders..." icon={Package} />
 			) : error && orders.length === 0 ? (
 				<ErrorComponent
-					title="Orders Synchronizer"
+					title="Failed to load Orders"
 					message={error}
 					onRetry={fetchOrders}
 				/>
@@ -162,15 +166,13 @@ export default function OrdersPage() {
 									onChange={setSearchQuery}
 									variant="muted"
 									fullWidth
+									focusColor="gold"
 								/>
 							</div>
 							<div className="flex items-center gap-3">
-								<button
-									onClick={fetchOrders}
-									className="px-6 py-3 rounded-full border border-gray-100 text-xs font-bold text-gray-400 hover:text-black flex items-center gap-2"
-								>
+								<button className="px-6 py-3 rounded-full border border-gray-100 text-xs font-bold text-gray-400 hover:text-black flex items-center gap-2">
 									<Filter size={14} />
-									Refresh
+									Filter
 								</button>
 							</div>
 						</div>
@@ -222,10 +224,13 @@ export default function OrdersPage() {
 												<td className="px-8 py-5">
 													<div className="flex flex-col">
 														<span className="text-xs font-black text-black uppercase tracking-tighter">
-															Customer
+															{order.user
+																? `${order.user.firstName || ""} ${order.user.lastName || ""}`
+																: "Customer"}
 														</span>
 														<span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
-															ID: {order.id.slice(0, 6)}...
+															{order.user?.email ||
+																`ID: ${order.id.slice(0, 6)}...`}
 														</span>
 													</div>
 												</td>
@@ -247,7 +252,7 @@ export default function OrdersPage() {
 													{formatDate(order.createdAt)}
 												</td>
 												<td className="px-8 py-5 text-right">
-													<div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+													<div className="flex items-center justify-end gap-2">
 														<Link
 															href={`/orders/${order.id}`}
 															className="w-9 h-9 rounded bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-black hover:border-black transition-all"

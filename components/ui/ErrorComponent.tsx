@@ -18,9 +18,9 @@ export const ErrorComponent: React.FC<ErrorComponentProps> = ({
 		<div className="flex flex-col items-center justify-center p-8 lg:p-12 text-center min-h-100 animate-in fade-in duration-700">
 			<div className="relative mb-8">
 				<div className="absolute inset-0 bg-red-500/10 blur-[100px] rounded-full" />
-				<div className="relative w-24 h-24 rounded-3xl bg-white border border-red-50 flex items-center justify-center shadow-[0_20px_50px_rgba(239,68,68,0.05)]">
-					<div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center">
-						<AlertCircle size={36} className="text-red-500" />
+				<div className="relative w-20 h-20 rounded-3xl bg-white border border-red-50 flex items-center justify-center shadow-[0_20px_50px_rgba(239,68,68,0.05)]">
+					<div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center">
+						<AlertCircle size={28} className="text-red-500" />
 					</div>
 				</div>
 				<div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-white border border-red-100 flex items-center justify-center animate-bounce">
@@ -40,9 +40,9 @@ export const ErrorComponent: React.FC<ErrorComponentProps> = ({
 
 			<Button
 				variant="black"
-				size="lg"
+				size="md"
 				onClick={onRetry}
-				className="group px-12!"
+				className="group px-8! rounded-full"
 			>
 				<RefreshCw
 					size={16}

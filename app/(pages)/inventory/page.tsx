@@ -71,7 +71,7 @@ export default function InventoryManagementPage() {
 					<SearchInput
 						placeholder="Search inventory..."
 						variant="white"
-						focusColor="black"
+						focusColor="gold"
 						fullWidth
 						className="max-w-md"
 					/>

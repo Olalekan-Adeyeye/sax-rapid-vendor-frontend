@@ -1,12 +1,8 @@
-/**
- * Orders Services
- * All endpoints under the "Orders" tag — /api/Orders/*
- */
-
 import apiClient from "../apiClient";
 import type { 
   OrderResponseDTO, 
-  UpdateOrderStatusRequest 
+  UpdateOrderStatusRequest,
+  OrderStatsDTO
 } from "../types/orders.types";
 import type { ApiResponse } from "../types/auth.types";
 
@@ -36,13 +32,22 @@ export async function getOrderById(orderId: string): Promise<OrderResponseDTO> {
 }
 
 /**
- * PUT /api/Orders/{orderId}/status
+ * PATCH /api/Orders/{orderId}/status
  * Updates the status of an order (e.g., shipped, delivered).
  */
 export async function updateOrderStatus(
   orderId: string, 
   request: UpdateOrderStatusRequest
 ): Promise<OrderResponseDTO> {
-  const response = await apiClient.put<ApiResponse<OrderResponseDTO>>(`${BASE}/${orderId}/status`, request);
+  const response = await apiClient.patch<ApiResponse<OrderResponseDTO>>(`${BASE}/${orderId}/status`, request);
+  return response.data.data;
+}
+
+/**
+ * GET /api/Orders/admin/stats
+ * Retrieves order statistics.
+ */
+export async function getOrderStats(): Promise<OrderStatsDTO> {
+  const response = await apiClient.get<ApiResponse<OrderStatsDTO>>(`${BASE}/admin/stats`);
   return response.data.data;
 }

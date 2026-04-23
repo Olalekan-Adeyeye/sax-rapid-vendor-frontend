@@ -9,9 +9,6 @@ import {
 	Package,
 	Plus,
 	Tags,
-	Settings2,
-	Layers,
-	Database,
 	Star,
 	Wallet,
 	ArrowDownCircle,
@@ -43,13 +40,13 @@ const navGroups = [
 			{ name: "All Products", href: "/products", icon: Package },
 			{ name: "Add Product", href: "/products/add", icon: Plus },
 			{ name: "Categories", href: "/products/categories", icon: Tags },
-			{
-				name: "Product Features",
-				href: "/products/attributes",
-				icon: Settings2,
-			},
-			{ name: "Variations", href: "/products/variations", icon: Layers },
-			{ name: "Stock", href: "/inventory", icon: Database },
+			// {
+			// 	name: "Product Features",
+			// 	href: "/products/attributes",
+			// 	icon: Settings2,
+			// },
+			// { name: "Variations", href: "/products/variations", icon: Layers },
+			// { name: "Stock", href: "/inventory", icon: Database },
 		],
 	},
 	{
@@ -137,10 +134,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 										<Link
 											key={item.href}
 											href={item.href}
-											className={`flex items-center gap-4 px-4 py-3 rounded text-sm font-medium transition-all duration-200 ${
+											className={`flex items-center gap-4 px-4 py-3 rounded text-[13px] transition-all duration-200 ${
 												isActive
-													? "bg-gold text-black"
-													: "text-gray-400 hover:text-white hover:bg-white/5"
+													? "bg-gold text-black font-bold"
+													: "text-gray-400 font-medium hover:text-white hover:bg-white/5"
 											}`}
 											onClick={onClose}
 										>
@@ -148,7 +145,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 												size={16}
 												className={
 													isActive
-														? "text-black"
+														? "text-black font-bold"
 														: "text-gray-500 group-hover:text-white transition-colors"
 												}
 											/>

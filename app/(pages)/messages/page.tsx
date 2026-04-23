@@ -160,6 +160,7 @@ export default function MessagesPage() {
 									placeholder="Search messages..."
 									variant="muted"
 									fullWidth
+									focusColor="gold"
 								/>
 							</div>
 							<div className="flex-1 overflow-y-auto no-scrollbar">

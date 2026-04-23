@@ -239,7 +239,11 @@ export default function PromotionsPage() {
 						Coupon History & Campaigns
 					</h4>
 					<div className="flex flex-wrap items-center gap-3">
-						<SearchInput placeholder="Search promotions..." variant="muted" />
+						<SearchInput
+							placeholder="Search promotions..."
+							variant="muted"
+							focusColor="gold"
+						/>
 					</div>
 				</div>
 				<div className="overflow-x-auto text-black">

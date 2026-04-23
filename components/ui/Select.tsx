@@ -11,6 +11,7 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
 	hideAsterisk?: boolean;
 	options: { label: string; value: string | number }[];
 	leftSlot?: React.ReactNode;
+	rightSlot?: React.ReactNode;
 	outerClassName?: string;
 	ref?: React.Ref<HTMLSelectElement>;
 }
@@ -24,6 +25,7 @@ export function Select({
 	hideAsterisk,
 	options,
 	leftSlot,
+	rightSlot,
 	className = "",
 	outerClassName = "",
 	ref,
@@ -67,8 +69,9 @@ export function Select({
 						</option>
 					))}
 				</select>
-				<div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-					<ChevronDown size={14} />
+				<div className="absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-2 text-gray-400">
+					{rightSlot}
+					<ChevronDown size={14} className={rightSlot ? "text-gray-300" : ""} />
 				</div>
 			</div>
 		</FormField>

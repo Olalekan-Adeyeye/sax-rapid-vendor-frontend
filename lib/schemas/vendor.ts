@@ -24,6 +24,7 @@ const baseProductSchema = z.object({
   width: z.string().optional(),
   height: z.string().optional(),
   status: z.enum(["In stock", "Out of Stock", "Pre-order"]),
+  images: z.array(z.string()).optional(),
 });
 
 export const simpleProductSchema = baseProductSchema.extend({

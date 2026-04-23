@@ -11,6 +11,8 @@ export enum OrderStatus {
   Cancelled = "Cancelled",
   Refunded = "Refunded",
   Failed = "Failed",
+  OnHold = "OnHold",
+  Dispute = "Dispute",
 }
 
 export enum PaymentStatus {
@@ -31,6 +33,14 @@ export enum PaymentMethod {
   PayOnDelivery = "PayOnDelivery",
   Paystack = "Paystack",
   Flutterwave = "Flutterwave",
+}
+
+export interface OrderUserResponseDTO {
+  id: string; // uuid
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+  phoneNumber: string | null;
 }
 
 export interface OrderItemResponseDTO {
@@ -62,7 +72,15 @@ export interface OrderResponseDTO {
   trackingNumber: string | null;
   createdAt: string; // ISO 8601 date-time
   deliveredAt: string | null; // ISO 8601 date-time
+  user: OrderUserResponseDTO | null;
   items: OrderItemResponseDTO[] | null;
+}
+
+export interface OrderStatsDTO {
+  allOrders: number;
+  processing: number;
+  completed: number;
+  disputes: number;
 }
 
 export interface UpdateOrderStatusRequest {

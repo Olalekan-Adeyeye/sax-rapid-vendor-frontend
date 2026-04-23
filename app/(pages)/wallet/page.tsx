@@ -247,6 +247,7 @@ export default function WalletPage() {
 										<SearchInput
 											placeholder="Search transactions..."
 											variant="muted"
+											focusColor="gold"
 										/>
 										<Button
 											variant="outline"

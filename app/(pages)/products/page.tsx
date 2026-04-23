@@ -1,19 +1,19 @@
 "use client";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, Suspense } from "react";
 import {
 	Plus,
-	Filter,
 	MoreVertical,
 	Edit,
 	Trash2,
 	Loader2,
 	ShoppingBag,
+	ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import Image from "next/image";
 import * as productsService from "@/lib/api/services/products";
-import { getMyVendorProfile } from "@/lib/api/services/vendor";
+import { useAuth } from "@/lib/context/AuthContext";
 import { ProductResponseDTO } from "@/lib/api/types/products.types";
 import { useToast } from "@/lib/context/ToastContext";
 import { getErrorMessage } from "@/lib/utils/errors";
@@ -21,56 +21,140 @@ import { ErrorComponent } from "@/components/ui/ErrorComponent";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Pagination } from "@/components/ui/Pagination";
+import { Select } from "@/components/ui/Select";
+import { useSearchParams, useRouter } from "next/navigation";
+import * as categoriesService from "@/lib/api/services/categories";
+import { CategoryResponseDTO } from "@/lib/api/types/categories.types";
+import {
+	Dropdown,
+	DropdownItem,
+	DropdownDivider,
+} from "@/components/ui/Dropdown";
+import { ProductDeleteModal } from "@/components/products/ProductDeleteModal";
 
-export default function ProductsPage() {
+function ProductsPageContent() {
+	const { user } = useAuth();
 	const [products, setProducts] = useState<ProductResponseDTO[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [deletingId, setDeletingId] = useState<string | null>(null);
+	const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+	const [productToDelete, setProductToDelete] =
+		useState<ProductResponseDTO | null>(null);
 	const [error, setError] = useState<string | null>(null);
+	const [categories, setCategories] = useState<CategoryResponseDTO[]>([]);
+	const [currentPage, setCurrentPage] = useState(1);
+	const [totalPages, setTotalPages] = useState(1);
 	const { toast } = useToast();
+	const searchParams = useSearchParams();
+	const router = useRouter();
+
+	const categoryIdFilter = searchParams.get("categoryId");
+	const sortFilter = searchParams.get("sort") || "newest";
+
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [searchQuery, categoryIdFilter, sortFilter]);
+
+	const confirmDelete = (product: ProductResponseDTO) => {
+		setProductToDelete(product);
+		setIsDeleteModalOpen(true);
+	};
+
+	const fetchCategories = useCallback(async () => {
+		try {
+			const data = await categoriesService.getCategories();
+			setCategories(data);
+		} catch (error) {
+			console.error("Failed to fetch categories", error);
+		}
+	}, []);
 
 	const fetchProducts = useCallback(async () => {
 		try {
 			setLoading(true);
 			setError(null);
-			const vendorProfile = await getMyVendorProfile();
-			if (vendorProfile && vendorProfile.id) {
-				const data = await productsService.getProductsByVendor(
-					vendorProfile.id,
-				);
-				setProducts(data.items || []);
+			if (user && user.userId) {
+				const response = await productsService.getProducts({
+					VendorId: user.userId,
+					SearchTerm: searchQuery || undefined,
+					CategoryId: categoryIdFilter ? Number(categoryIdFilter) : undefined,
+					PageSize: 1000, // Fetch all for manual pagination
+					PageIndex: 1,
+				});
+				// Be resilient to different response structures
+				const items = Array.isArray(response) ? response : response?.items;
+				const itemsList = items || [];
+				setProducts(itemsList);
+				setTotalPages(Math.ceil(itemsList.length / 9) || 1);
 			}
 		} catch (error) {
 			setError(getErrorMessage(error));
 		} finally {
 			setLoading(false);
 		}
-	}, []);
+	}, [user, searchQuery, categoryIdFilter]);
+
+	useEffect(() => {
+		fetchCategories();
+	}, [fetchCategories]);
 
 	useEffect(() => {
 		fetchProducts();
 	}, [fetchProducts]);
 
-	const handleDelete = async (id: string) => {
-		if (!confirm("Are you sure you want to delete this product?")) return;
+	const handleDelete = async () => {
+		if (!productToDelete) return;
+
 		try {
-			setDeletingId(id);
-			await productsService.deleteProduct(id);
-			toast("Success", "Product deleted successfully.", "success");
-			fetchProducts();
+			setDeletingId(productToDelete.id);
+			await productsService.deleteProduct(productToDelete.id);
+			toast(
+				"Product Deleted",
+				"The product has been permanently removed.",
+				"success",
+			);
+			setIsDeleteModalOpen(false);
+			setProductToDelete(null);
+			fetchProducts(); // Refresh data from server
 		} catch (error) {
-			toast("Error", getErrorMessage(error), "error");
+			toast("Deletion Failed", getErrorMessage(error), "error");
 		} finally {
 			setDeletingId(null);
 		}
 	};
 
-	const filteredProducts = products.filter(
-		(p) =>
-			p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			p.sku?.toLowerCase().includes(searchQuery.toLowerCase()),
+	const ITEMS_PER_PAGE = 9;
+
+	const sortedProducts = [...products].sort((a, b) => {
+		if (sortFilter === "price_asc") return a.effectivePrice - b.effectivePrice;
+		if (sortFilter === "price_desc") return b.effectivePrice - a.effectivePrice;
+		if (sortFilter === "name_asc")
+			return (a.name || "").localeCompare(b.name || "");
+		if (sortFilter === "name_desc")
+			return (b.name || "").localeCompare(a.name || "");
+		if (sortFilter === "oldest")
+			return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+		// default newest
+		return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+	});
+
+	const filteredProducts = sortedProducts.slice(
+		(currentPage - 1) * ITEMS_PER_PAGE,
+		currentPage * ITEMS_PER_PAGE,
 	);
+
+	// Debugging: Log if results are empty despite having products
+	useEffect(() => {
+		if (products.length > 0 && filteredProducts.length === 0) {
+			console.warn("Product filtering issue detected:", {
+				totalProducts: products.length,
+				paginatedCount: filteredProducts.length,
+				activeSearch: searchQuery,
+			});
+		}
+	}, [products, filteredProducts, categoryIdFilter, searchQuery]);
 
 	return (
 		<div className="space-y-10">
@@ -106,21 +190,51 @@ export default function ProductsPage() {
 									onChange={setSearchQuery}
 									variant="muted"
 									fullWidth
+									focusColor="gold"
 								/>
 							</div>
 							<div className="flex items-center gap-3">
-								<Button
-									variant="outline"
-									rounded="full"
-									size="sm"
-									className="px-6 py-3 text-gray-400 hover:text-black border-gray-100"
-								>
-									<Filter size={14} />
-									Filter
-								</Button>
-								<select className="px-6 py-3 rounded-full border border-gray-100 text-xs font-bold text-gray-400 outline-none bg-white">
-									<option>All Categories</option>
-								</select>
+								<Select
+									id="sortFilter"
+									value={sortFilter}
+									onChange={(e) => {
+										const val = e.target.value;
+										const params = new URLSearchParams(searchParams.toString());
+										if (val && val !== "newest") params.set("sort", val);
+										else params.delete("sort");
+										router.push(`/products?${params.toString()}`);
+									}}
+									options={[
+										{ label: "Sort: Newest", value: "newest" },
+										{ label: "Sort: Oldest", value: "oldest" },
+										{ label: "Price: Low to High", value: "price_asc" },
+										{ label: "Price: High to Low", value: "price_desc" },
+										{ label: "Name: A to Z", value: "name_asc" },
+										{ label: "Name: Z to A", value: "name_desc" },
+									]}
+									outerClassName="w-44 mb-0"
+									className="text-xs! transition-colors py-2.5! pl-5! pr-10! rounded-full border border-gray-100 hover:border-gold shadow-none"
+								/>
+								<Select
+									id="categoryFilter"
+									value={categoryIdFilter || "all"}
+									onChange={(e) => {
+										const val = e.target.value;
+										const params = new URLSearchParams(searchParams.toString());
+										if (val && val !== "all") params.set("categoryId", val);
+										else params.delete("categoryId");
+										router.push(`/products?${params.toString()}`);
+									}}
+									options={[
+										{ label: "All Categories", value: "all" },
+										...categories.map((cat) => ({
+											label: cat.name || "Unnamed Category",
+											value: String(cat.id),
+										})),
+									]}
+									outerClassName="w-48 mb-0"
+									className="text-xs! transition-colors py-2.5! pl-5! pr-10! rounded-full border border-gray-100 hover:border-gold shadow-none"
+								/>
 							</div>
 						</div>
 
@@ -131,7 +245,7 @@ export default function ProductsPage() {
 										{[
 											"Product",
 											"Category",
-											"Base Price",
+											"Price",
 											"SKU",
 											"Stock",
 											"Status",
@@ -195,16 +309,62 @@ export default function ProductsPage() {
 																</div>
 															)}
 														</div>
-														<span className="text-sm font-bold text-black">
-															{product.name}
-														</span>
+														<div className="flex flex-col gap-1 items-start">
+															<Link
+																href={`/products/${product.id}`}
+																className="text-sm font-bold text-black hover:text-gold transition-colors"
+															>
+																{product.name}
+															</Link>
+															{product.variations && product.variations.length > 0 && (
+																<span className="text-[9px] font-black uppercase tracking-[0.2em] bg-black text-white px-1.5 py-0.5 rounded">
+																	Variable
+																</span>
+															)}
+														</div>
 													</div>
 												</td>
 												<td className="px-8 py-5 text-xs font-bold text-gray-500 uppercase">
-													{product.categoryName || "Uncategorized"}
+													{(() => {
+														const findCategory = (
+															cats: CategoryResponseDTO[],
+															id: number,
+														): string | null => {
+															for (const cat of cats) {
+																if (cat.id === id) return cat.name;
+																if (cat.subCategories) {
+																	const sub = findCategory(
+																		cat.subCategories,
+																		id,
+																	);
+																	if (sub) return sub;
+																}
+															}
+															return null;
+														};
+														return (
+															findCategory(categories, product.categoryId) ||
+															product.categoryName ||
+															"Uncategorized"
+														);
+													})()}
 												</td>
-												<td className="px-8 py-5 text-sm font-bold text-black">
-													₦{product.basePrice.toLocaleString()}
+												<td className="px-8 py-5">
+													<div className="flex flex-col items-start gap-0.5">
+														<span className="text-sm font-black text-black">
+															₦{product.effectivePrice.toLocaleString()}
+														</span>
+														{product.effectivePrice < product.basePrice && (
+															<div className="flex items-center gap-2">
+																<span className="text-[10px] text-gray-400 line-through font-bold">
+																	₦{product.basePrice.toLocaleString()}
+																</span>
+																<span className="text-[8px] font-black bg-black text-white px-1.5 py-0.5 rounded uppercase tracking-[0.2em]">
+																	Sale
+																</span>
+															</div>
+														)}
+													</div>
 												</td>
 												<td className="px-8 py-5 text-xs font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">
 													{product.sku || "N/A"}
@@ -219,15 +379,21 @@ export default function ProductsPage() {
 																		: "text-black"
 																}
 															>
-																{product.stockQuantity} left
+																{product.stockQuantity} in stock
 															</span>
-															<span className="text-gray-300">/ 200</span>
 														</div>
 														<div className="h-1.5 bg-gray-50 rounded-full overflow-hidden">
 															<div
-																className={`h-full rounded-full ${product.stockQuantity === 0 ? "bg-red-500" : "bg-gold"}`}
+																className={`h-full rounded-full ${
+																	product.stockQuantity === 0
+																		? "bg-red-500"
+																		: product.stockQuantity < 10
+																			? "bg-amber-400"
+																			: "bg-gold"
+																}`}
 																style={{
-																	width: `${Math.min((product.stockQuantity / 200) * 100, 100)}%`,
+																	width:
+																		product.stockQuantity === 0 ? "0%" : "100%",
 																}}
 															/>
 														</div>
@@ -236,40 +402,102 @@ export default function ProductsPage() {
 												<td className="px-8 py-5">
 													<span
 														className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full ${
-															product.isActive
+															product.status === "Active"
 																? "bg-green-50 text-green-600"
-																: "bg-gray-100 text-gray-400"
+																: product.status === "Draft"
+																	? "bg-black text-white"
+																	: product.status === "Pending"
+																		? "bg-amber-50 text-amber-600"
+																		: product.status === "Rejected"
+																			? "bg-red-50 text-red-600"
+																			: "bg-gray-100 text-gray-400"
 														}`}
 													>
-														{product.isActive ? "Active" : "Draft"}
+														{product.status || "Unknown"}
 													</span>
 												</td>
-												<td className="px-8 py-5 text-right">
+												<td className="px-8 py-5 text-right w-40">
 													<div className="flex items-center justify-end gap-2">
-														<Button
-															variant="outline"
-															size="sm"
-															className="w-9 h-9 p-0 bg-white border-gray-100 text-gray-400 hover:text-black hover:border-black"
+														<Link
+															href={`/products/edit/${product.id}`}
+															passHref
 														>
-															<Edit size={14} />
-														</Button>
+															<Button
+																variant="outline"
+																className="w-8 h-8 p-0! bg-white border-gray-100 text-black hover:border-black rounded-none flex items-center justify-center transition-all"
+																title="Edit Product"
+															>
+																<Edit size={14} />
+															</Button>
+														</Link>
 														<Button
-															onClick={() => handleDelete(product.id)}
+															onClick={() => confirmDelete(product)}
 															disabled={deletingId === product.id}
 															variant="outline"
-															size="sm"
-															className="w-9 h-9 p-0 bg-white border-gray-100 text-gray-400 hover:text-red-500 hover:border-red-500"
+															className="w-8 h-8 p-0! bg-white border-gray-100 text-black hover:text-red-600 hover:border-red-600 rounded-none flex items-center justify-center transition-all"
 															loading={deletingId === product.id}
+															title="Delete Product"
 														>
 															<Trash2 size={14} />
 														</Button>
-														<Button
-															variant="outline"
-															size="sm"
-															className="w-9 h-9 p-0 bg-white border-gray-100 text-gray-400 hover:text-gold"
+														<Dropdown
+															trigger={
+																<Button
+																	variant="outline"
+																	className="w-8 h-8 p-0! bg-white border-gray-100 text-black hover:text-gold hover:border-gold rounded-none flex items-center justify-center transition-all"
+																>
+																	<MoreVertical size={14} />
+																</Button>
+															}
 														>
-															<MoreVertical size={14} />
-														</Button>
+															<DropdownItem
+																icon={
+																	<ExternalLink
+																		size={14}
+																		className="text-gray-400"
+																	/>
+																}
+																onClick={() =>
+																	router.push(`/products/${product.id}`)
+																}
+															>
+																View Details
+															</DropdownItem>
+															<DropdownItem
+																icon={
+																	<Edit size={14} className="text-gray-400" />
+																}
+																onClick={() =>
+																	router.push(`/products/edit/${product.id}`)
+																}
+															>
+																Detailed Edit
+															</DropdownItem>
+															<DropdownItem
+																icon={
+																	<ShoppingBag
+																		size={14}
+																		className="text-gray-400"
+																	/>
+																}
+																onClick={() =>
+																	router.push(
+																		`/reviews?productId=${product.id}`,
+																	)
+																}
+															>
+																View Reviews
+															</DropdownItem>
+															<DropdownDivider />
+															<DropdownItem
+																variant="danger"
+																icon={<Trash2 size={14} />}
+																onClick={() => confirmDelete(product)}
+																disabled={deletingId === product.id}
+															>
+																Delete Product
+															</DropdownItem>
+														</Dropdown>
 													</div>
 												</td>
 											</tr>
@@ -278,9 +506,36 @@ export default function ProductsPage() {
 								</tbody>
 							</table>
 						</div>
+						<div className="p-6 border-t border-gray-50 flex justify-end bg-gray-50/20">
+							<Pagination
+								currentPage={currentPage}
+								totalPages={totalPages}
+								onPageChange={setCurrentPage}
+							/>
+						</div>
 					</div>
 				</>
 			)}
+			{/* Delete Confirmation Modal */}
+			<ProductDeleteModal
+				isOpen={isDeleteModalOpen}
+				onClose={() => setIsDeleteModalOpen(false)}
+				onConfirm={handleDelete}
+				productName={productToDelete?.name}
+				loading={deletingId !== null}
+			/>
 		</div>
+	);
+}
+
+export default function ProductsPage() {
+	return (
+		<Suspense
+			fallback={
+				<FullPageLoader label="Initializing products..." icon={ShoppingBag} />
+			}
+		>
+			<ProductsPageContent />
+		</Suspense>
 	);
 }
