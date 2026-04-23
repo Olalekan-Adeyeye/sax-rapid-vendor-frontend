@@ -51,6 +51,10 @@ export const variableProductSchema = baseProductSchema.extend({
     saleStartDate: z.string().optional(),
     saleEndDate: z.string().optional(),
     stock: z.string().min(1, "Stock is required"),
+    attributes: z.array(z.object({
+      attributeName: z.string(),
+      attributeValue: z.string(),
+    })).optional(),
   })),
 });
 

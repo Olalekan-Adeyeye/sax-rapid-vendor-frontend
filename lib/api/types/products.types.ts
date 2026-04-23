@@ -41,6 +41,7 @@ export interface ProductResponseDTO {
 	categoryName?: string | null;
 	brandId: number | null;
 	brandName?: string | null;
+	productType: "Simple" | "Variable";
 	basePrice: number;
 	salePrice?: number | null;
 	salePriceStartDate?: string | null;

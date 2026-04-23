@@ -102,7 +102,7 @@ export default function SingleProductPage() {
 		);
 	}
 
-	const isVariable = product.variations && product.variations.length > 0;
+	const isVariable = product.productType === "Variable";
 
 	return (
 		<div className="max-w-6xl mx-auto space-y-12 pb-24">
@@ -452,7 +452,7 @@ export default function SingleProductPage() {
 							<thead>
 								<tr className="bg-gray-50/50">
 									<th className="px-10 py-6 text-[10px] font-black uppercase tracking-widest text-gray-500 border-b border-gray-100">
-										Variation (SKU)
+										Variation
 									</th>
 									<th className="px-10 py-6 text-[10px] font-black uppercase tracking-widest text-gray-500 border-b border-gray-100">
 										Price Override
@@ -473,12 +473,18 @@ export default function SingleProductPage() {
 									>
 										<td className="px-10 py-8">
 											<div className="flex flex-col gap-1">
+												{/* Primary label: derive name from attributes (e.g. "Red / M") */}
 												<span className="text-xs font-black text-black group-hover:text-gold transition-colors">
-													{v.sku || "VAR-" + v.id.substring(0, 4)}
+													{v.attributes && Object.keys(v.attributes).length > 0
+														? Object.values(v.attributes).join(" / ")
+														: v.sku || `VAR-${v.id.substring(0, 6)}`}
 												</span>
-												<span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-													Unique Item ID: {v.id}
-												</span>
+												{/* Secondary label: SKU */}
+												{v.sku && (
+													<span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+														SKU: {v.sku}
+													</span>
+												)}
 											</div>
 										</td>
 										<td className="px-10 py-8">
@@ -501,18 +507,18 @@ export default function SingleProductPage() {
 										</td>
 										<td className="px-10 py-8">
 											<div className="flex flex-wrap gap-2">
-												{v.attributes &&
-													Object.entries(v.attributes).map(([key, val]) => (
-														<span
-															key={key}
-															className="text-[10px] font-bold text-gray-500 bg-gray-100 px-3 py-1 rounded"
-														>
-															<span className="text-gray-500 font-black mr-1">
-																{key}:
-															</span>{" "}
-															{val}
-														</span>
-													))}
+												{v.attributes && Object.keys(v.attributes).length > 0
+													? Object.entries(v.attributes).map(([key, val]) => (
+															<span
+																key={key}
+																className="text-[10px] font-bold text-gray-600 bg-gray-100 px-3 py-1 rounded"
+															>
+																<span className="text-gray-400 font-black mr-1">{key}:</span>
+																{val}
+															</span>
+														))
+													: <span className="text-[10px] text-gray-300 font-bold">—</span>
+												}
 											</div>
 										</td>
 									</tr>
