@@ -12,16 +12,13 @@ import {
 	Loader2,
 	Inbox,
 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
 	getConversations,
 	getMessages,
 	markAsRead,
 	sendMessage,
 } from "@/lib/api/services/chat";
-import type {
-	ConversationResponseDTO,
-	MessageResponseDTO,
-} from "@/lib/api/types/chat.types";
 import { getRelativeTime } from "@/lib/utils/date";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useToast } from "@/lib/context/ToastContext";
@@ -35,98 +32,63 @@ import { PageHeader } from "@/components/ui/PageHeader";
 export default function MessagesPage() {
 	const { user } = useAuth();
 	const { toast } = useToast();
-	const [selectedChatId, setSelectedChatId] = React.useState<string | null>(
-		null,
-	);
-	const [conversations, setConversations] = React.useState<
-		ConversationResponseDTO[]
-	>([]);
-	const [messages, setMessages] = React.useState<MessageResponseDTO[]>([]);
-	const [loadingConversations, setLoadingConversations] = React.useState(true);
-	const [loadingMessages, setLoadingMessages] = React.useState(false);
-	const [sendingMessage, setSendingMessage] = React.useState(false);
+	const queryClient = useQueryClient();
+	const [selectedChatId, setSelectedChatId] = React.useState<string | null>(null);
 	const [newMessage, setNewMessage] = React.useState("");
-	const [error, setError] = React.useState<string | null>(null);
 
-	const fetchConversations = React.useCallback(async () => {
-		try {
-			setLoadingConversations(true);
-			setError(null);
-			const data = await getConversations();
-			setConversations(data || []);
-		} catch (_error) {
-			console.error("Failed to fetch conversations:", _error);
-			setError(getErrorMessage(_error));
-		} finally {
-			setLoadingConversations(false);
-		}
-	}, []);
+	// Queries
+	const { data: conversationsData, isLoading: loadingConversations, error: conversationsError } = useQuery({
+		queryKey: ["conversations"],
+		queryFn: getConversations,
+	});
 
-	const fetchMessages = React.useCallback(
-		async (id: string) => {
-			try {
-				setLoadingMessages(true);
-				const data = await getMessages(id, 1, 100);
-				setMessages(data.items || []);
+	const { data: messagesData, isLoading: loadingMessages } = useQuery({
+		queryKey: ["messages", selectedChatId],
+		queryFn: () => (selectedChatId ? getMessages(selectedChatId, 1, 100) : null),
+		enabled: !!selectedChatId,
+	});
 
-				// Mark as read after fetching
-				const convo = conversations.find((c) => c.id === id);
-				if (convo && convo.unreadCount > 0) {
-					await markAsRead(id);
-					setConversations((prev) =>
-						prev.map((c) => (c.id === id ? { ...c, unreadCount: 0 } : c)),
-					);
-				}
-			} catch (_error) {
-				console.error("Failed to fetch messages:", _error);
-				toast("Error", "Could not load conversation history", "error");
-			} finally {
-				setLoadingMessages(false);
-			}
+	const conversations = React.useMemo(() => conversationsData || [], [conversationsData]);
+	const messages = messagesData?.items || [];
+	const error = conversationsError ? getErrorMessage(conversationsError) : null;
+
+	// Mutations
+	const markAsReadMutation = useMutation({
+		mutationFn: markAsRead,
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["conversations"] });
 		},
-		[conversations, toast],
-	);
+	});
 
-	React.useEffect(() => {
-		fetchConversations();
-	}, [fetchConversations]);
+	const sendMutation = useMutation({
+		mutationFn: sendMessage,
+		onSuccess: () => {
+			setNewMessage("");
+			queryClient.invalidateQueries({ queryKey: ["messages", selectedChatId] });
+			queryClient.invalidateQueries({ queryKey: ["conversations"] });
+		},
+		onError: () => {
+			toast("Error", "Failed to send message", "error");
+		},
+	});
 
 	React.useEffect(() => {
 		if (selectedChatId) {
-			fetchMessages(selectedChatId);
+			const convo = conversations.find(c => c.id === selectedChatId);
+			if (convo && convo.unreadCount > 0) {
+				markAsReadMutation.mutate(selectedChatId);
+			}
 		}
-	}, [selectedChatId, fetchMessages]);
+	}, [selectedChatId, conversations, markAsReadMutation]);
 
 	const handleSendMessage = async (e?: React.FormEvent) => {
 		if (e) e.preventDefault();
-		if (!selectedChatId || !newMessage.trim() || sendingMessage) return;
+		if (!selectedChatId || !newMessage.trim() || sendMutation.isPending) return;
 
-		try {
-			setSendingMessage(true);
-			const sentMsg = await sendMessage({
-				conversationId: selectedChatId,
-				content: newMessage.trim(),
-			});
-			setMessages((prev) => [...prev, sentMsg]);
-			setNewMessage("");
-
-			// Update last message in conversations list
-			setConversations((prev) =>
-				prev.map((c) =>
-					c.id === selectedChatId
-						? {
-								...c,
-								lastMessage: sentMsg.content,
-								lastMessageAt: sentMsg.createdAt,
-							}
-						: c,
-				),
-			);
-		} catch {
-			toast("Error", "Failed to send message", "error");
-		} finally {
-			setSendingMessage(false);
-		}
+		sendMutation.mutate({
+			conversationId: selectedChatId,
+			content: newMessage.trim(),
+		});
 	};
 
 	const selectedConversation = conversations.find(
@@ -139,7 +101,7 @@ export default function MessagesPage() {
 				<ErrorComponent
 					title="Failed to load messages"
 					message={error!}
-					onRetry={fetchConversations}
+					onRetry={() => queryClient.invalidateQueries({ queryKey: ["conversations"] })}
 				/>
 			) : (
 				<>
@@ -373,7 +335,7 @@ export default function MessagesPage() {
 												onChange={(e) => setNewMessage(e.target.value)}
 												placeholder="Type your message..."
 												className="flex-1 bg-transparent border-none outline-none text-sm font-medium text-black py-2 md:py-3"
-												disabled={sendingMessage}
+												disabled={sendMutation.isPending}
 											/>
 											<button
 												type="button"
@@ -383,10 +345,10 @@ export default function MessagesPage() {
 											</button>
 											<button
 												type="submit"
-												disabled={!newMessage.trim() || sendingMessage}
+												disabled={!newMessage.trim() || sendMutation.isPending}
 												className="bg-gold text-black p-2 md:p-3 rounded hover:bg-black hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
 											>
-												{sendingMessage ? (
+												{sendMutation.isPending ? (
 													<Loader2 className="animate-spin" size={18} />
 												) : (
 													<Send size={18} />
@@ -412,7 +374,7 @@ export default function MessagesPage() {
 											variant="outline"
 											size="sm"
 											className="mt-4 rounded-full mx-auto"
-											onClick={fetchConversations}
+											onClick={() => queryClient.invalidateQueries({ queryKey: ["conversations"] })}
 											loading={loadingConversations}
 										>
 											Refresh Conversations

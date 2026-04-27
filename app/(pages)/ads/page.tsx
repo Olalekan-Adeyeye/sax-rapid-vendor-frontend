@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
 	Rocket,
 	Star,
@@ -10,6 +10,7 @@ import {
 	CheckCircle,
 	ShoppingBag,
 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
 	getBoostPricing,
 	getMyBoosts,
@@ -17,14 +18,11 @@ import {
 } from "@/lib/api/services/boost";
 import { getMyWallet } from "@/lib/api/services/wallet";
 import { getMyVendorProfile } from "@/lib/api/services/vendor";
-import { getProductsByVendor } from "@/lib/api/services/products";
+import { getProducts } from "@/lib/api/services/products";
 import type {
 	BoostPricingResponseDTO,
-	BoostRecordResponseDTO,
 	BoostType,
 } from "@/lib/api/types/boost.types";
-import type { WalletResponseDTO } from "@/lib/api/types/wallet.types";
-import type { ProductResponseDTO } from "@/lib/api/types/products.types";
 import { formatCurrency } from "@/lib/utils/currency";
 import { useToast } from "@/lib/context/ToastContext";
 import { ErrorComponent } from "@/components/ui/ErrorComponent";
@@ -33,60 +31,70 @@ import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { getErrorMessage } from "@/lib/utils/errors";
 
 export default function BoostAdsPage() {
-	const [selectedDays, setSelectedDays] = useState(7);
-	const [pricing, setPricing] = useState<BoostPricingResponseDTO[]>([]);
-	const [activeBoosts, setActiveBoosts] = useState<BoostRecordResponseDTO[]>(
-		[],
-	);
-	const [wallet, setWallet] = useState<WalletResponseDTO | null>(null);
-	const [products, setProducts] = useState<ProductResponseDTO[]>([]);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
-
-	// Modal states
-	const [isModalOpen, setIsModalOpen] = useState(false);
-	const [selectedBoost, setSelectedBoost] =
-		useState<BoostPricingResponseDTO | null>(null);
-	const [selectedProductId, setSelectedProductId] = useState<string>("");
-	const [isSubmitting, setIsSubmitting] = useState(false);
-
 	const { toast } = useToast();
+	const queryClient = useQueryClient();
+	const [selectedDays, setSelectedDays] = useState(7);
+	const [isModalOpen, setIsModalOpen] = useState(false);
+	const [selectedBoost, setSelectedBoost] = useState<BoostPricingResponseDTO | null>(null);
+	const [selectedProductId, setSelectedProductId] = useState<string>("");
 
-	const fetchInitialData = async () => {
-		try {
-			setLoading(true);
-			setError(null);
+	// Queries
+	const { data: vendor } = useQuery({
+		queryKey: ["vendor-profile"],
+		queryFn: getMyVendorProfile,
+	});
 
-			const profile = await getMyVendorProfile();
-			const [pricingData, boostsData, walletData, productsData] =
-				await Promise.all([
-					getBoostPricing(),
-					getMyBoosts(),
-					getMyWallet(),
-					getProductsByVendor(profile.id, 1, 100),
-				]);
+	const { data: pricingData, isLoading: loadingPricing } = useQuery({
+		queryKey: ["boost-pricing"],
+		queryFn: getBoostPricing,
+	});
 
-			setPricing(pricingData || []);
-			setActiveBoosts(boostsData || []);
-			setWallet(walletData);
-			// Handle paged response
-			const items = Array.isArray(productsData)
-				? productsData
-				: productsData?.items;
-			setProducts(items || []);
-		} catch {
-			console.error("Failed to fetch boost data:");
-			setError("Failed to load boost information. Please try again.");
-		} finally {
-			setLoading(false);
-		}
-	};
+	const { data: activeBoostsData, isLoading: loadingBoosts } = useQuery({
+		queryKey: ["my-boosts"],
+		queryFn: () => getMyBoosts(),
+	});
 
-	useEffect(() => {
-		fetchInitialData();
-	}, []);
+	const { data: wallet, isLoading: loadingWallet } = useQuery({
+		queryKey: ["my-wallet"],
+		queryFn: getMyWallet,
+	});
+
+	const { data: productsData, isLoading: loadingProducts } = useQuery({
+		queryKey: ["vendor-products", vendor?.userId],
+		queryFn: () => (vendor ? getProducts({ VendorId: vendor.userId, PageIndex: 1, PageSize: 100 }) : null),
+		enabled: !!vendor?.userId,
+	});
+
+	const pricing = pricingData || [];
+	const products = productsData?.items || [];
+	const activeBoosts = activeBoostsData || [];
+	
+	const errors = [
+		loadingPricing ? null : pricingData === undefined ? "Pricing failed" : null,
+		loadingBoosts ? null : activeBoostsData === undefined ? "Boosts failed" : null,
+		loadingWallet ? null : wallet === undefined ? "Wallet failed" : null,
+		loadingProducts ? null : productsData === undefined ? "Products failed" : null
+	].filter(Boolean);
+
+	const error = errors.length > 0 ? "Failed to load all promotion data. Please refresh." : null;
+	const loading = loadingPricing || loadingBoosts || loadingWallet || loadingProducts;
+
+	// Mutation
+	const boostMutation = useMutation({
+		mutationFn: boostProduct,
+		onSuccess: () => {
+			toast("Success", "Product boost activated successfully!", "success");
+			setIsModalOpen(false);
+			queryClient.invalidateQueries({ queryKey: ["my-boosts"] });
+			queryClient.invalidateQueries({ queryKey: ["my-wallet"] });
+		},
+		onError: (error) => {
+			toast("Error", getErrorMessage(error), "error");
+		},
+	});
 
 	const handleOpenBoostModal = (boost: BoostPricingResponseDTO) => {
 		setSelectedBoost(boost);
@@ -100,43 +108,22 @@ export default function BoostAdsPage() {
 
 	const handleConfirmBoost = async () => {
 		if (!selectedProductId) {
-			toast(
-				"Selection Required",
-				"Please select a product to boost",
-				"warning",
-			);
+			toast("Selection Required", "Please select a product to boost", "warning");
 			return;
 		}
-
 		if (!selectedBoost) return;
 
 		const totalCost = calculateCost();
-
-		if (wallet && wallet.balance < totalCost) {
-			toast(
-				"Insufficient Funds",
-				"Please fund your wallet to continue",
-				"error",
-			);
+		if (wallet && wallet.availableBalance < totalCost) {
+			toast("Insufficient Funds", "Please fund your wallet to continue", "error");
 			return;
 		}
 
-		try {
-			setIsSubmitting(true);
-			await boostProduct({
-				productId: selectedProductId,
-				boostType: selectedBoost.boostType,
-				durationDays: selectedDays,
-			});
-
-			toast("Success", "Product boost activated successfully!", "success");
-			setIsModalOpen(false);
-			fetchInitialData(); // Refresh data
-		} catch {
-			toast("Error", "Failed to activate boost. Please try again.", "error");
-		} finally {
-			setIsSubmitting(false);
-		}
+		boostMutation.mutate({
+			productId: selectedProductId,
+			boostType: selectedBoost.boostType,
+			durationDays: selectedDays,
+		});
 	};
 
 	const getBoostIcon = (type: BoostType) => {
@@ -187,7 +174,7 @@ export default function BoostAdsPage() {
 			<ErrorComponent
 				title="Oops! Something went wrong"
 				message={error}
-				onRetry={fetchInitialData}
+				onRetry={() => queryClient.invalidateQueries()}
 			/>
 		);
 	}
@@ -426,14 +413,14 @@ export default function BoostAdsPage() {
 						</div>
 						<div className="flex flex-col items-end gap-1">
 							<span
-								className={`text-[8px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full ${wallet && wallet.balance >= calculateCost() ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"}`}
+								className={`text-[8px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full ${wallet && wallet.availableBalance >= calculateCost() ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"}`}
 							>
-								{wallet && wallet.balance >= calculateCost()
+								{wallet && wallet.availableBalance >= calculateCost()
 									? "Wallet Sufficient"
 									: "Insufficient Funds"}
 							</span>
 							<p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">
-								Balance: {formatCurrency(wallet?.balance || 0)}
+								Balance: {formatCurrency(wallet?.availableBalance || 0)}
 							</p>
 						</div>
 					</div>
@@ -451,9 +438,9 @@ export default function BoostAdsPage() {
 							variant="primary"
 							className="flex-1"
 							onClick={handleConfirmBoost}
-							loading={isSubmitting}
+							loading={boostMutation.isPending}
 							disabled={
-								!wallet || !selectedBoost || wallet.balance < calculateCost()
+								!wallet || !selectedBoost || wallet.availableBalance < calculateCost()
 							}
 						>
 							<CheckCircle size={16} />

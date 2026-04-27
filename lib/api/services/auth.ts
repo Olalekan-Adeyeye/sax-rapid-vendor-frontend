@@ -15,6 +15,9 @@ import type {
   ResendOtpRequest,
   AuthResponse,
   ApiResponse,
+  TwoFactorResponse,
+  Verify2faRequest,
+  Disable2faRequest,
 } from "../types/auth.types";
 
 const BASE = "/Auth";
@@ -94,4 +97,29 @@ export async function resendOtp(data: ResendOtpRequest): Promise<void> {
  */
 export function logout(): void {
 	// Pure function, side effects moved to components/pages
+}
+
+/**
+ * POST /api/Auth/2fa/setup
+ * Generates a TOTP secret and QR code URI for the current user.
+ */
+export async function setupTwoFactor(): Promise<TwoFactorResponse> {
+	const response = await apiClient.post<ApiResponse<TwoFactorResponse>>(`${BASE}/2fa/setup`);
+	return response.data.data;
+}
+
+/**
+ * POST /api/Auth/2fa/verify
+ * Verifies the TOTP code and enables 2FA.
+ */
+export async function verifyTwoFactor(data: Verify2faRequest): Promise<void> {
+	await apiClient.post(`${BASE}/2fa/verify`, data);
+}
+
+/**
+ * POST /api/Auth/2fa/disable
+ * Disables 2FA for the current user.
+ */
+export async function disableTwoFactor(data: Disable2faRequest): Promise<void> {
+	await apiClient.post(`${BASE}/2fa/disable`, data);
 }

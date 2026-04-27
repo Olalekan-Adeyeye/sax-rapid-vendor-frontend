@@ -8,11 +8,64 @@ import {
 	Clock,
 	CheckCircle,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { getMyWallet, getTransactionHistory } from "@/lib/api/services/wallet";
+import { formatCurrency } from "@/lib/utils/currency";
+import { formatDate } from "@/lib/utils/date";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SearchInput } from "@/components/ui/SearchInput";
+import { Loader2 } from "lucide-react";
+
+import { WithdrawModal } from "@/components/wallet/WithdrawModal";
 
 export default function PayoutsPage() {
+	const [isWithdrawModalOpen, setIsWithdrawModalOpen] = React.useState(false);
+	const [searchQuery, setSearchQuery] = React.useState("");
+
+	const { data: wallet, isLoading: loadingWallet } = useQuery({
+		queryKey: ["my-wallet"],
+		queryFn: getMyWallet,
+	});
+
+	const { data: transactionsData, isLoading: loadingTransactions } = useQuery({
+		queryKey: ["wallet-transactions"],
+		queryFn: () => getTransactionHistory(1, 100),
+	});
+
+	const withdrawals = (transactionsData?.items || []).filter(
+		(t) => t.transactionType?.toLowerCase() === "withdrawal" || t.transactionType?.toLowerCase() === "payout"
+	);
+
+	const filteredWithdrawals = withdrawals.filter((w) => 
+		w.transactionReference?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+		(w.id && w.id.toLowerCase().includes(searchQuery.toLowerCase()))
+	);
+
+	const stats = [
+		{
+			label: "Available Balance",
+			value: wallet?.availableBalance || 0,
+			detail: "Ready for payout",
+			icon: Banknote,
+			color: "text-gold",
+		},
+		{
+			label: "Pending Balance",
+			value: wallet?.pendingBalance || 0,
+			detail: "Awaiting settlement",
+			icon: Clock,
+			color: "text-gray-400",
+		},
+		{
+			label: "Total Balance",
+			value: wallet?.balance || 0,
+			detail: "Lifetime earnings",
+			icon: CheckCircle,
+			color: "text-green-500",
+		},
+	];
+
 	return (
 		<div className="space-y-10">
 			<PageHeader
@@ -20,9 +73,10 @@ export default function PayoutsPage() {
 				description="Request and track your payouts to your bank account"
 				actions={
 					<Button
+						onClick={() => setIsWithdrawModalOpen(true)}
 						rounded="full"
 						size="sm"
-						className="px-8 py-3.5 active:scale-95"
+						className="px-8 py-3.5"
 					>
 						<ArrowDownCircle size={16} />
 						Request Withdrawal
@@ -31,29 +85,7 @@ export default function PayoutsPage() {
 			/>
 
 			<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-				{[
-					{
-						label: "Available Balance",
-						value: "₦12,850,000",
-						detail: "Ready for payout",
-						icon: Banknote,
-						color: "text-gold",
-					},
-					{
-						label: "Pending Balance",
-						value: "₦1,397,500",
-						detail: "Awaiting settlement",
-						icon: Clock,
-						color: "text-gray-400",
-					},
-					{
-						label: "Last Payout",
-						value: "₦450,000",
-						detail: "Paid Mar 18, 2026",
-						icon: CheckCircle,
-						color: "text-green-500",
-					},
-				].map((stat, i) => (
+				{stats.map((stat, i) => (
 					<div
 						key={i}
 						className="bg-white border border-gray-100 rounded p-6 lg:p-8 hover:border-gold transition-all group"
@@ -69,7 +101,7 @@ export default function PayoutsPage() {
 						<h3
 							className={`text-2xl lg:text-3xl font-black tracking-tighter mb-2 ${stat.color}`}
 						>
-							{stat.value}
+							{loadingWallet ? "..." : formatCurrency(stat.value)}
 						</h3>
 						<p className="text-[10px] font-bold text-gray-400">{stat.detail}</p>
 					</div>
@@ -90,12 +122,6 @@ export default function PayoutsPage() {
 							account: "**** 8291",
 							holder: "TechWorld Enterprise",
 							status: "Primary",
-						},
-						{
-							bank: "Zenith Bank PLC",
-							account: "**** 3810",
-							holder: "TechWorld Enterprise",
-							status: "Secondary",
 						},
 					].map((method, i) => (
 						<div
@@ -130,12 +156,14 @@ export default function PayoutsPage() {
 
 			<div className="bg-white border border-gray-100 rounded overflow-hidden">
 				<div className="p-8 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-6">
-					<h4 className="text-sm font-bold text-black">Payout History</h4>
+					<h4 className="text-sm font-bold text-black uppercase tracking-widest">Payout History</h4>
 					<div className="flex flex-wrap items-center gap-3">
 						<SearchInput
 							placeholder="Search payouts..."
 							variant="muted"
 							focusColor="gold"
+							value={searchQuery}
+							onChange={setSearchQuery}
 						/>
 					</div>
 				</div>
@@ -145,7 +173,6 @@ export default function PayoutsPage() {
 							<tr>
 								{[
 									"Payout ID",
-									"Method",
 									"Amount",
 									"Reference",
 									"Status",
@@ -153,7 +180,7 @@ export default function PayoutsPage() {
 								].map((th) => (
 									<th
 										key={th}
-										className="px-8 py-5 text-xs font-bold text-gray-400"
+										className="px-8 py-5 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400"
 									>
 										{th}
 									</th>
@@ -161,65 +188,67 @@ export default function PayoutsPage() {
 							</tr>
 						</thead>
 						<tbody className="divide-y divide-gray-50">
-							{[
-								{
-									id: "#PO-4921",
-									bank: "GTBank · **** 8291",
-									amount: "₦450,000",
-									ref: "RAPID-PAY-9821-X",
-									status: "Completed",
-									date: "Mar 18, 2026",
-								},
-								{
-									id: "#PO-4918",
-									bank: "GTBank · **** 8291",
-									amount: "₦1,250,500",
-									ref: "RAPID-PAY-9812-Y",
-									status: "Completed",
-									date: "Mar 11, 2026",
-								},
-								{
-									id: "#PO-4915",
-									bank: "Zenith Bank · **** 3810",
-									amount: "₦680,200",
-									ref: "RAPID-PAY-9801-Z",
-									status: "Processing",
-									date: "Mar 04, 2026",
-								},
-							].map((p, i) => (
-								<tr key={i} className="hover:bg-gray-50/50 transition-colors">
-									<td className="px-8 py-5 text-sm font-black text-black">
-										{p.id}
-									</td>
-									<td className="px-8 py-5 text-xs font-bold text-black">
-										{p.bank}
-									</td>
-									<td className="px-8 py-5 text-xs font-bold text-black">
-										{p.amount}
-									</td>
-									<td className="px-8 py-5 text-sm font-bold text-gray-400">
-										{p.ref}
-									</td>
-									<td className="px-8 py-5">
-										<span
-											className={`text-xs font-bold px-3 py-1.5 rounded ${
-												p.status === "Completed"
-													? "bg-green-50 text-green-600"
-													: "bg-blue-50 text-blue-600"
-											}`}
-										>
-											{p.status}
-										</span>
-									</td>
-									<td className="px-8 py-5 text-sm font-bold text-gray-400">
-										{p.date}
+							{loadingTransactions ? (
+								<tr>
+									<td colSpan={5} className="px-8 py-20 text-center">
+										<Loader2 className="animate-spin text-gold mx-auto mb-4" size={40} />
+										<p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Loading History...</p>
 									</td>
 								</tr>
-							))}
+							) : filteredWithdrawals.length > 0 ? (
+								filteredWithdrawals.map((p, index) => (
+									<tr key={p.id || `payout-${index}`} className="hover:bg-gray-50/50 transition-colors group">
+										<td className="px-8 py-5 text-xs font-black text-black">
+											#{p.id ? p.id.slice(0, 8) : "N/A"}
+										</td>
+										<td className="px-8 py-5 text-xs font-black text-black">
+											{formatCurrency(p.amount)}
+										</td>
+										<td className="px-8 py-5 text-xs font-bold text-gray-400">
+											{p.transactionReference || "SYSTEM-PAY"}
+										</td>
+										<td className="px-8 py-5">
+											<span
+												className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded ${
+													p.status === "Completed"
+														? "bg-green-50 text-green-600"
+														: "bg-blue-50 text-blue-600"
+												}`}
+											>
+												{p.status}
+											</span>
+										</td>
+										<td className="px-8 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+											{formatDate(p.transactionDate)}
+										</td>
+									</tr>
+								))
+							) : (
+								<tr>
+									<td colSpan={5} className="px-8 py-20 text-center">
+										<div className="w-16 h-16 rounded bg-gray-50 flex items-center justify-center text-gray-200 border border-gray-100 mx-auto mb-4">
+											<Banknote size={32} />
+										</div>
+										<p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+											No payout records found
+										</p>
+									</td>
+								</tr>
+							)}
 						</tbody>
 					</table>
 				</div>
 			</div>
+
+			<WithdrawModal 
+				isOpen={isWithdrawModalOpen}
+				onClose={() => setIsWithdrawModalOpen(false)}
+				onSuccess={() => {
+					// Invalidate queries
+				}}
+				availableBalance={wallet?.availableBalance || 0}
+				currency={wallet?.currency || "NGN"}
+			/>
 		</div>
 	);
 }

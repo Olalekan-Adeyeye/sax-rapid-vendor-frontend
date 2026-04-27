@@ -70,7 +70,7 @@ export interface ProductResponseDTO {
 export interface PagedProductResponseDTO {
 	items: ProductResponseDTO[] | null;
 	totalCount: number;
-	pageIndex: number;
+	pageNumber: number;
 	pageSize: number;
 	totalPages: number;
 	hasPreviousPage: boolean;

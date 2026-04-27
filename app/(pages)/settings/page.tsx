@@ -1,21 +1,45 @@
 "use client";
 import React, { useEffect } from "react";
-import { UserCog, Bell, Shield, Lock, ChevronRight } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+	UserCog,
+	Bell,
+	Shield,
+	ShieldCheck,
+	Lock,
+	ChevronRight,
+	Loader2,
+} from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import Image from "next/image";
 import { Input } from "@/components/ui/Input";
+import { Switch } from "@/components/ui/Switch";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { profileSchema, ProfileFormValues } from "@/lib/schemas/vendor";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useToast } from "@/lib/context/ToastContext";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { updateUserProfile } from "@/lib/api/services/user";
+import { setupTwoFactor } from "@/lib/api/services/auth";
+import { getErrorMessage } from "@/lib/utils/errors";
+import { UserProfile } from "@/lib/api/types/auth.types";
+import { ChangePasswordModal } from "@/components/auth/ChangePasswordModal";
+import { TwoFactorSetupModal } from "@/components/auth/TwoFactorSetupModal";
+import { Disable2faModal } from "@/components/auth/Disable2faModal";
 
 export default function AccountSettingsPage() {
 	const { user, updateUser } = useAuth();
 	const { toast } = useToast();
+	const queryClient = useQueryClient();
 	const [activeTab, setActiveTab] = React.useState("Profile");
-	const [isSubmitting, setIsSubmitting] = React.useState(false);
+	const [isPasswordModalOpen, setIsPasswordModalOpen] = React.useState(false);
+	const [isDisableModalOpen, setIsDisableModalOpen] = React.useState(false);
+	const [twoFactorData, setTwoFactorData] = React.useState<{
+		isOpen: boolean;
+		qrCode: string;
+		key: string;
+	}>({ isOpen: false, qrCode: "", key: "" });
 
 	const {
 		register,
@@ -41,37 +65,49 @@ export default function AccountSettingsPage() {
 		}
 	}, [user, reset]);
 
-	const onSubmit = async (data: ProfileFormValues) => {
-		try {
-			setIsSubmitting(true);
-			// Simulate API call
-			await new Promise((resolve) => setTimeout(resolve, 1000));
-
-			updateUser(data);
+	const updateMutation = useMutation({
+		mutationFn: updateUserProfile,
+		onSuccess: (_, variables) => {
+			updateUser(variables as unknown as Partial<UserProfile>);
 			toast("Success", "Profile updated successfully.", "success");
-		} catch {
-			toast("Error", "Failed to update profile.", "error");
-		} finally {
-			setIsSubmitting(false);
+			queryClient.invalidateQueries({ queryKey: ["user-profile"] });
+		},
+		onError: (error) => {
+			toast("Error", getErrorMessage(error), "error");
+		},
+	});
+
+	const setup2FAMutation = useMutation({
+		mutationFn: setupTwoFactor,
+		onSuccess: (data) => {
+			setTwoFactorData({
+				isOpen: true,
+				qrCode: data.qrCodeUri || "",
+				key: data.manualEntryKey || "",
+			});
+		},
+		onError: (error) => {
+			toast("Error", getErrorMessage(error), "error");
+		},
+	});
+
+	const handle2FAToggle = () => {
+		if (user?.isTwoFactorEnabled) {
+			setIsDisableModalOpen(true);
+		} else {
+			setup2FAMutation.mutate();
 		}
 	};
 
+	const onSubmit = (data: ProfileFormValues) => {
+		updateMutation.mutate(data);
+	};
+
 	return (
-		<div className="max-w-4xl mx-auto space-y-12">
+		<div className="space-y-12">
 			<PageHeader
 				title="Account Settings"
 				description="Manage your security and preferences"
-				actions={
-					<Button
-						onClick={handleSubmit(onSubmit)}
-						disabled={isSubmitting || !isDirty}
-						rounded="full"
-						size="sm"
-						loading={isSubmitting}
-					>
-						Save Changes
-					</Button>
-				}
 			/>
 
 			<div className="flex bg-white border border-gray-100 rounded p-1.5 overflow-x-auto no-scrollbar">
@@ -97,7 +133,10 @@ export default function AccountSettingsPage() {
 					<div className="bg-white border border-gray-100 rounded p-8 flex flex-col items-center text-center space-y-4">
 						<div className="w-24 h-24 rounded-full bg-gold/20 border-4 border-white flex items-center justify-center text-gold overflow-hidden relative">
 							<Image
-								src="https://images.unsplash.com/photo-1541167760496-1628856ab772?w=400&h=400&fit=crop"
+								src={
+									user?.avatarUrl ||
+									"https://images.unsplash.com/photo-1541167760496-1628856ab772?w=400&h=400&fit=crop"
+								}
 								alt="Profile"
 								fill
 								className="object-cover"
@@ -109,21 +148,37 @@ export default function AccountSettingsPage() {
 									? `${user.firstName} ${user.lastName}`
 									: "TechWorld Enterprise"}
 							</h4>
-							<p className="text-xs font-bold text-gray-400 mt-1">
-								Managed by Admin
-							</p>
+							<div className="flex flex-col items-center gap-2 mt-2">
+								<span className="px-2 py-0.5 rounded-full bg-gold/10 text-gold text-[9px] font-black uppercase tracking-tighter border border-gold/20">
+									{user?.role || "Vendor"}
+								</span>
+								{user?.isVerified && (
+									<span className="flex items-center gap-1 text-[9px] font-bold text-green-500 uppercase tracking-widest">
+										<ShieldCheck size={10} />
+										Verified Account
+									</span>
+								)}
+							</div>
 						</div>
 					</div>
 					<div className="bg-black text-white rounded p-8 space-y-6">
 						<h5 className="text-[10px] font-bold text-gold">Security Score</h5>
 						<div className="flex items-end gap-2">
-							<span className="text-3xl font-black tracking-tighter">92%</span>
-							<span className="text-[10px] font-bold text-green-500 mb-1.5">
-								Elite Level
+							<span className="text-3xl font-black tracking-tighter">
+								{user?.isTwoFactorEnabled ? "92%" : "65%"}
+							</span>
+							<span
+								className={`text-[10px] font-bold ${user?.isTwoFactorEnabled ? "text-green-500" : "text-amber-500"} mb-1.5`}
+							>
+								{user?.isTwoFactorEnabled
+									? "Elite Level"
+									: "Standard Protection"}
 							</span>
 						</div>
 						<div className="h-1 bg-white/10 rounded-full overflow-hidden">
-							<div className="h-full bg-gold rounded-full w-[92%]" />
+							<div
+								className={`h-full bg-gold rounded-full transition-all duration-1000 ${user?.isTwoFactorEnabled ? "w-[92%]" : "w-[65%]"}`}
+							/>
 						</div>
 					</div>
 				</div>
@@ -157,6 +212,17 @@ export default function AccountSettingsPage() {
 									outerClassName="md:col-span-2"
 								/>
 							</div>
+
+							<div className="flex justify-end pt-8 mt-10 border-t border-gray-100">
+								<Button
+									onClick={handleSubmit(onSubmit)}
+									disabled={updateMutation.isPending || !isDirty}
+									className="px-10 h-12"
+									loading={updateMutation.isPending}
+								>
+									Save Profile Changes
+								</Button>
+							</div>
 						</div>
 					)}
 
@@ -168,7 +234,9 @@ export default function AccountSettingsPage() {
 									Security Protocol
 								</h4>
 								<div className="space-y-6">
-									<div className="flex items-center justify-between p-6 rounded bg-gray-50 group hover:border-black border border-transparent transition-all cursor-pointer">
+									<div
+										className={`flex items-center justify-between p-6 rounded bg-gray-50 group hover:border-black border border-transparent transition-all ${setup2FAMutation.isPending ? "pointer-events-none opacity-70" : ""}`}
+									>
 										<div className="flex items-center gap-6">
 											<div className="w-12 h-12 rounded bg-white flex items-center justify-center text-gray-400 group-hover:bg-black group-hover:text-gold transition-all">
 												<Shield size={20} />
@@ -177,19 +245,30 @@ export default function AccountSettingsPage() {
 												<h5 className="text-sm font-bold text-black">
 													Two-Factor Authentication
 												</h5>
-												<p className="text-xs font-bold text-gray-400 mt-1">
-													Recommended for high volume sellers
+												<p
+													className={`text-[10px] font-bold mt-1 uppercase tracking-widest ${user?.isTwoFactorEnabled ? "text-green-500" : "text-red-500"}`}
+												>
+													{user?.isTwoFactorEnabled
+														? "Active & Secured"
+														: "Disabled / At Risk"}
 												</p>
 											</div>
 										</div>
 										<div className="flex items-center gap-4">
-											<span className="text-[10px] font-bold text-green-600 bg-green-50 px-3 py-1.5 rounded-full">
-												ENABLED
-											</span>
-											<ChevronRight size={16} className="text-gray-300" />
+											{setup2FAMutation.isPending ? (
+												<Loader2 className="w-4 h-4 animate-spin text-gold" />
+											) : (
+												<Switch
+													checked={!!user?.isTwoFactorEnabled}
+													onChange={handle2FAToggle}
+												/>
+											)}
 										</div>
 									</div>
-									<div className="flex items-center justify-between p-6 rounded bg-gray-50 group hover:border-black border border-transparent transition-all cursor-pointer">
+									<div
+										onClick={() => setIsPasswordModalOpen(true)}
+										className="flex items-center justify-between p-6 rounded bg-gray-50 group hover:border-black border border-transparent transition-all cursor-pointer"
+									>
 										<div className="flex items-center gap-6">
 											<div className="w-12 h-12 rounded bg-white flex items-center justify-center text-gray-400 group-hover:bg-black group-hover:text-gold transition-all">
 												<Lock size={20} />
@@ -198,7 +277,7 @@ export default function AccountSettingsPage() {
 												<h5 className="text-sm font-bold text-black">
 													Change Management Password
 												</h5>
-												<p className="text-xs font-bold text-gray-400 mt-1">
+												<p className="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-widest">
 													Last changed 4 months ago
 												</p>
 											</div>
@@ -209,6 +288,33 @@ export default function AccountSettingsPage() {
 							</div>
 						</div>
 					)}
+
+					<ChangePasswordModal
+						isOpen={isPasswordModalOpen}
+						onClose={() => setIsPasswordModalOpen(false)}
+					/>
+
+					<TwoFactorSetupModal
+						isOpen={twoFactorData.isOpen}
+						onClose={() =>
+							setTwoFactorData((prev) => ({ ...prev, isOpen: false }))
+						}
+						qrCodeUri={twoFactorData.qrCode}
+						manualEntryKey={twoFactorData.key}
+						onSuccess={() => {
+							updateUser({ isTwoFactorEnabled: true });
+							queryClient.invalidateQueries({ queryKey: ["user-profile"] });
+						}}
+					/>
+
+					<Disable2faModal
+						isOpen={isDisableModalOpen}
+						onClose={() => setIsDisableModalOpen(false)}
+						onSuccess={() => {
+							updateUser({ isTwoFactorEnabled: false });
+							queryClient.invalidateQueries({ queryKey: ["user-profile"] });
+						}}
+					/>
 
 					{activeTab === "Notifications" && (
 						<div className="bg-white border border-gray-100 rounded p-10 space-y-10">

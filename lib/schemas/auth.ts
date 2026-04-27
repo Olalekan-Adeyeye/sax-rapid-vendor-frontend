@@ -90,6 +90,22 @@ export const twoFactorSchema = z.object({
 export type TwoFactorFormValues = z.infer<typeof twoFactorSchema>;
 
 /**
+ * Change Password Schema
+ */
+export const changePasswordSchema = z
+	.object({
+		oldPassword: z.string().min(1, "Old password is required"),
+		newPassword: passwordRules,
+		confirmPassword: z.string().min(1, "Confirm password is required"),
+	})
+	.refine((data) => data.newPassword === data.confirmPassword, {
+		message: "Passwords do not match",
+		path: ["confirmPassword"],
+	});
+
+export type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>;
+
+/**
  * Onboarding Schema
  */
 export const onboardingSchema = z

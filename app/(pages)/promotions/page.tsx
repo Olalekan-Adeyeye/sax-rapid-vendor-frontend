@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import {
 	Plus,
@@ -19,6 +19,7 @@ import { SearchInput } from "@/components/ui/SearchInput";
 import { CreateCouponModal } from "@/components/promotions/CreateCouponModal";
 import { CreateCampaignModal } from "@/components/promotions/CreateCampaignModal";
 import { ConfigureFeaturedModal } from "@/components/promotions/ConfigureFeaturedModal";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
 	getCoupons,
 	getCouponStats,
@@ -26,55 +27,55 @@ import {
 } from "@/lib/api/services/coupons";
 import type {
 	CouponListItemDTO,
-	CouponStatsDTO,
 } from "@/lib/api/types/coupons.types";
 import { useToast } from "@/lib/context/ToastContext";
 import { formatDate } from "@/lib/utils/date";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
+import { getErrorMessage } from "@/lib/utils/errors";
 
 export default function PromotionsPage() {
 	const { toast } = useToast();
+	const queryClient = useQueryClient();
 	const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
 	const [isCampaignModalOpen, setIsCampaignModalOpen] = useState(false);
 	const [isFeaturedModalOpen, setIsFeaturedModalOpen] = useState(false);
+	const [editingCoupon, setEditingCoupon] = useState<CouponListItemDTO | null>(null);
 
-	const [coupons, setCoupons] = useState<CouponListItemDTO[]>([]);
-	const [stats, setStats] = useState<CouponStatsDTO | null>(null);
-	const [loading, setLoading] = useState(true);
-	const [editingCoupon, setEditingCoupon] = useState<CouponListItemDTO | null>(
-		null,
-	);
+	// Queries
+	const { data: couponsData, isLoading: loadingCoupons } = useQuery({
+		queryKey: ["vendor-coupons"],
+		queryFn: () => getCoupons(),
+	});
 
-	const fetchData = useCallback(async () => {
-		try {
-			setLoading(true);
-			const [couponsData, statsData] = await Promise.all([
-				getCoupons(),
-				getCouponStats(),
-			]);
-			setCoupons(couponsData);
-			setStats(statsData);
-		} catch (err) {
-			console.error("Failed to fetch promotions data:", err);
-			toast("Error", "Failed to load promotions data", "error");
-		} finally {
-			setLoading(false);
-		}
-	}, [toast]);
+	const { data: stats, isLoading: loadingStats } = useQuery({
+		queryKey: ["coupon-stats"],
+		queryFn: getCouponStats,
+	});
 
-	useEffect(() => {
-		fetchData();
-	}, [fetchData]);
+	const coupons: CouponListItemDTO[] = couponsData || [];
+	const loading = loadingCoupons || loadingStats;
+
+	// Mutation
+	const deleteMutation = useMutation({
+		mutationFn: deleteCoupon,
+		onSuccess: () => {
+			toast("Success", "Coupon deleted successfully", "success");
+			queryClient.invalidateQueries({ queryKey: ["vendor-coupons"] });
+			queryClient.invalidateQueries({ queryKey: ["coupon-stats"] });
+		},
+		onError: (error) => {
+			toast("Error", getErrorMessage(error), "error");
+		},
+	});
 
 	const handleDeleteCoupon = async (id: string) => {
 		if (!confirm("Are you sure you want to delete this coupon?")) return;
-		try {
-			await deleteCoupon(id);
-			toast("Success", "Coupon deleted successfully", "success");
-			fetchData();
-		} catch {
-			toast("Error", "Failed to delete coupon", "error");
-		}
+		deleteMutation.mutate(id);
+	};
+
+	const handleRefresh = () => {
+		queryClient.invalidateQueries({ queryKey: ["vendor-coupons"] });
+		queryClient.invalidateQueries({ queryKey: ["coupon-stats"] });
 	};
 
 	const handleEditCoupon = (coupon: CouponListItemDTO) => {
@@ -351,7 +352,7 @@ export default function PromotionsPage() {
 					setIsCouponModalOpen(false);
 					setEditingCoupon(null);
 				}}
-				onSuccess={fetchData}
+				onSuccess={handleRefresh}
 				initialData={editingCoupon}
 			/>
 			<CreateCampaignModal

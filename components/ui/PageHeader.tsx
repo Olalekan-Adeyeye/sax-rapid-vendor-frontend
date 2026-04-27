@@ -30,7 +30,7 @@ export function PageHeader({
 		>
 			<div className="min-w-0">
 				<h2
-					className={`text-2xl lg:text-4xl font-black tracking-tighter text-black truncate sm:whitespace-normal ${titleClassName}`}
+					className={`text-2xl lg:text-4xl font-black tracking-tighter text-black flex items-center flex-wrap gap-3 ${titleClassName}`}
 				>
 					{title}
 				</h2>

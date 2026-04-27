@@ -12,9 +12,15 @@ interface FundWalletModalProps {
 	onClose: () => void;
 	onSuccess: () => void;
 	currency: string;
+	userEmail: string;
 }
 
-const PROVIDERS = [
+const PROVIDERS: {
+	id: "Paystack" | "PayFast" | "Manual";
+	name: string;
+	region: string;
+	logo: string;
+}[] = [
 	{ id: "Paystack", name: "Paystack", region: "Nigeria & Africa", logo: "PS" },
 	{ id: "PayFast", name: "PayFast", region: "South Africa", logo: "PF" },
 ];
@@ -24,10 +30,11 @@ export function FundWalletModal({
 	onClose,
 	onSuccess,
 	currency,
+	userEmail,
 }: FundWalletModalProps) {
 	const { toast } = useToast();
 	const [amount, setAmount] = useState("");
-	const [provider, setProvider] = useState("Paystack");
+	const [provider, setProvider] = useState<"Paystack" | "PayFast" | "Manual">("Paystack");
 	const [loading, setLoading] = useState(false);
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -40,22 +47,39 @@ export function FundWalletModal({
 
 		try {
 			setLoading(true);
-			// Simulating gateway interaction
-			const mockReference = `SK-FUND-${provider.toUpperCase()}-${Date.now()}`;
 
-			await walletService.fundWallet({
+			// 1. Initialize funding through the backend
+			const initData = await walletService.initializeFund({
 				amount: numAmount,
-				paymentReference: mockReference,
-				paymentGateway: provider,
+				email: userEmail,
+				gateway: provider,
+				callbackUrl: `${window.location.origin}/wallet`, // Redirect back to wallet page
 			});
 
-			toast(
-				"Payment Successful",
-				`${currency} ${numAmount.toLocaleString()} added via ${provider}`,
-				"success",
-			);
-			onSuccess();
-			onClose();
+			// 2. Call fund endpoint to credit the wallet as per swagger design
+			await walletService.fundWallet({
+				amount: numAmount,
+				paymentReference: initData.reference,
+				provider: provider,
+			});
+
+			if (initData.authorizationUrl) {
+				toast(
+					"Redirecting",
+					"You are being redirected to complete your payment.",
+					"success",
+				);
+				// Redirect to gateway
+				window.location.href = initData.authorizationUrl;
+			} else {
+				toast(
+					"Payment Successful",
+					`${currency} ${numAmount.toLocaleString()} added via ${provider}`,
+					"success",
+				);
+				onSuccess();
+				onClose();
+			}
 		} catch (err) {
 			console.error("Fund error:", err);
 			toast("Funding Error", "Could not complete the transaction", "error");

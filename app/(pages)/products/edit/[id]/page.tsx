@@ -163,6 +163,7 @@ export default function EditProductPage() {
 	const [fetchError, setFetchError] = useState<string | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isFetching, setIsFetching] = useState(true);
+	const [isSchedulingSale, setIsSchedulingSale] = useState(false);
 
 	const form = useForm<ProductFormValues>({
 		resolver: zodResolver(productSchema),
@@ -296,9 +297,9 @@ export default function EditProductPage() {
 				saleEndDate: product.salePriceEndDate ? product.salePriceEndDate.split("T")[0] : "",
 				status: (product.status as unknown as string) || "In stock",
 				weight: product.weight?.toString() || "",
-				dimensionLength: product.dimensionLength?.toString() || "",
-				dimensionWidth: product.dimensionWidth?.toString() || "",
-				dimensionHeight: product.dimensionHeight?.toString() || "",
+				length: product.dimensionLength?.toString() || "",
+				width: product.dimensionWidth?.toString() || "",
+				height: product.dimensionHeight?.toString() || "",
 				attributes: [],
 				variations: [],
 				images: [],
@@ -320,7 +321,9 @@ export default function EditProductPage() {
 
 					return {
 						id: v.id,
-						name: v.sku || "Variation",
+						name: attrsList.length > 0
+							? attrsList.map((a) => a.attributeValue).join(" / ")
+							: v.sku || "Variation",
 						price: v.price?.toString() || "",
 						stock: v.stockQuantity?.toString() || "0",
 						salePrice: v.salePrice?.toString() || "",
@@ -672,7 +675,7 @@ export default function EditProductPage() {
 					placeholder="PROD-8291-BL"
 					{...register("sku")}
 					error={errors.sku?.message}
-					helpText="Product identification number"
+					helpText="Leave empty to auto-generate"
 				/>
 			</div>
 		</div>
@@ -698,14 +701,14 @@ export default function EditProductPage() {
 		<div className="max-w-5xl mx-auto space-y-12 pb-24">
 			<PageHeader
 				title="Edit Product"
-				description="Update your product information"
+				description="Update your product information and marketplace listings"
 				actions={
 					<>
 						<Button
 							variant="outline"
 							rounded="full"
 							size="sm"
-							className="px-8"
+							className="px-8 border-gray-100 text-black hover:border-black"
 							onClick={() => router.back()}
 						>
 							Cancel
@@ -736,6 +739,7 @@ export default function EditProductPage() {
 								id="product-name"
 								label="Product Name"
 								required
+								placeholder="e.g. Premium Wireless Headphones"
 								{...register("name")}
 								error={errors.name?.message}
 							/>
@@ -744,6 +748,7 @@ export default function EditProductPage() {
 								label="Product Description"
 								required
 								rows={6}
+								placeholder="Describe your product details..."
 								{...register("description")}
 								error={errors.description?.message}
 							/>
@@ -758,7 +763,7 @@ export default function EditProductPage() {
 						<h4 className="text-sm font-bold text-gold pb-6 border-b border-gray-100 flex justify-between items-center">
 							<span>Product Gallery</span>
 							<span className="text-gray-400 text-xs font-bold">
-								Max 10 images
+								Max 10 images (5MB each)
 							</span>
 						</h4>
 						<div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -808,9 +813,9 @@ export default function EditProductPage() {
 										<>
 											<Upload
 												size={24}
-												className="mb-2 transition-transform group-hover:-translate-y-1"
+												className="mb-2 group-hover:-translate-y-1 transition-transform"
 											/>
-											<span className="text-[10px] font-bold">
+											<span className="text-[10px] font-bold text-center px-2">
 												{galleryItems.length === 0 ? "Main Image" : "Add Image"}
 											</span>
 										</>
@@ -829,81 +834,121 @@ export default function EditProductPage() {
 							<Button
 								onClick={() => handleTypeSwitch("simple")}
 								variant={productType === "simple" ? "primary" : "ghost"}
-								className={`flex-1 border-none h-10 ${productType === "simple" ? "bg-white text-black" : "text-gray-400 bg-transparent"}`}
+								className={`flex-1 border-none h-10 ${
+									productType === "simple"
+										? "bg-white text-black"
+										: "text-gray-400 hover:text-black bg-transparent"
+								}`}
 							>
 								Simple Product
 							</Button>
 							<Button
 								onClick={() => handleTypeSwitch("variable")}
 								variant={productType === "variable" ? "primary" : "ghost"}
-								className={`flex-1 border-none h-10 ${productType === "variable" ? "bg-white text-black" : "text-gray-400 bg-transparent"}`}
+								className={`flex-1 border-none h-10 ${
+									productType === "variable"
+										? "bg-white text-black"
+										: "text-gray-400 hover:text-black bg-transparent"
+								}`}
 							>
 								Variable Product
 							</Button>
 						</div>
 
+						{/* Simple Product Fields */}
 						{productType === "simple" && (
-							<div className="space-y-6">
+							<div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
 								<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 									<Input
 										id="regular-price"
 										label={`Regular Price (${currencySymbol})`}
 										required
 										type="number"
+										min="0"
+										step="0.01"
+										placeholder="0.00"
 										{...registerField("regularPrice")}
 										error={fieldErrors.regularPrice?.message}
 									/>
-									<Input
-										id="sale-price"
-										label={`Sale Price (${currencySymbol})`}
-										type="number"
-										{...registerField("salePrice")}
-										rightSlot={
-											<button
-												type="button"
-												className="text-gray-300 hover:text-gold transition-colors"
-											>
-												<Calendar size={14} />
-											</button>
-										}
-									/>
+									<div className="space-y-2">
+										<label className="text-xs font-bold text-gray-500">
+											Sale Price ({currencySymbol})
+										</label>
+										<Input
+											id="sale-price"
+											type="number"
+											min="0"
+											step="0.01"
+											placeholder="0.00"
+											{...registerField("salePrice")}
+											error={fieldErrors.salePrice?.message}
+											outerClassName="!mt-0"
+											rightSlot={
+												<button
+													type="button"
+													onClick={() => setIsSchedulingSale(!isSchedulingSale)}
+													title="Schedule Sale Dates"
+													className={`transition-colors ${isSchedulingSale ? "text-gold" : "text-gray-300 hover:text-gold"}`}
+												>
+													<Calendar size={14} />
+												</button>
+											}
+										/>
+									</div>
 								</div>
-								<div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-gray-50/50 rounded border border-gray-100 animate-in zoom-in-95 duration-200">
-									<Input
-										id="sale-start-date"
-										label="Sale Start Date"
-										type="date"
-										{...registerField("saleStartDate")}
-									/>
-									<Input
-										id="sale-end-date"
-										label="Sale End Date"
-										type="date"
-										{...registerField("saleEndDate")}
-									/>
-								</div>
+
+								{isSchedulingSale && (
+									<div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-gray-50/50 rounded border border-gray-100 animate-in zoom-in-95 duration-200">
+										<Input
+											id="sale-start-date"
+											label="Sale Start Date"
+											type="date"
+											{...registerField("saleStartDate")}
+										/>
+										<Input
+											id="sale-end-date"
+											label="Sale End Date"
+											type="date"
+											{...registerField("saleEndDate")}
+										/>
+									</div>
+								)}
+
 								<Input
 									id="stock-quantity"
 									label="Stock Quantity"
 									required
 									type="number"
+									min="0"
+									placeholder="0"
 									{...registerField("stockQuantity")}
+									error={fieldErrors.stockQuantity?.message}
 								/>
 							</div>
 						)}
 
+						{/* Variable Product Fields */}
 						{productType === "variable" && (
-							<div className="space-y-10">
-								{/* Attributes */}
+							<div className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
+								{/* Attribute Builder */}
 								<div className="space-y-6">
-									<h5 className="text-sm font-bold text-black">
-										Product Attributes
-									</h5>
+									<div className="flex items-center justify-between">
+										<div>
+											<h5 className="text-sm font-bold text-black">
+												Product Attributes
+											</h5>
+											<p className="text-xs text-gray-400 font-medium mt-1">
+												Add attributes like Size or Color, and specify their
+												options.
+											</p>
+										</div>
+									</div>
+
 									<div className="space-y-4">
 										{attributes.map((attr: Attribute) => (
 											<div
 												key={attr.id}
-												className="p-5 border border-gray-100 rounded bg-gray-50/30 space-y-4 relative"
+												className="p-5 border border-gray-100 rounded bg-gray-50/30 space-y-4 relative group"
 											>
 												<Button
 													variant="ghost"
@@ -921,16 +966,19 @@ export default function EditProductPage() {
 														onChange={(e) =>
 															updateAttribute(attr.id, "name", e.target.value)
 														}
+														placeholder="e.g. Size"
+														outerClassName="w-full"
 													/>
-													<div className="md:col-span-2">
-														<label className="block text-xs font-bold text-gray-500 mb-2">
-															Values
+													<div className="md:col-span-2 space-y-2.5">
+														<label className="block text-xs font-bold text-gray-500">
+															Values (Press enter to add)
 														</label>
 														<ChipInput
 															values={attr.values}
 															onChange={(newValues) =>
 																updateAttribute(attr.id, "values", newValues)
 															}
+															placeholder="Type options like 'Small', 'Red'..."
 														/>
 													</div>
 												</div>
@@ -938,60 +986,79 @@ export default function EditProductPage() {
 										))}
 									</div>
 
-									{/* Restore Presets to mirror add page */}
-									{displayedPresets.length > 0 && (
-										<div className="pt-4 border-t border-gray-50">
-											<h6 className="text-xs font-black text-gray-400 mb-4 uppercase tracking-widest">
-												Quick Add Presets
+									{/* Quick Add and Custom Add Actions */}
+									<div className="space-y-6 pt-4 border-t border-gray-50">
+										<div>
+											<h6 className="text-sm font-bold text-black flex items-center flex-wrap gap-3 justify-between mb-4">
+												<span>Quick Add Presets</span>
+												<Button
+													onClick={() => addAttribute()}
+													variant="black"
+													size="sm"
+													rounded="full"
+													className="hover:bg-gold hover:text-black"
+												>
+													<Plus size={12} />
+													Custom Attribute
+												</Button>
 											</h6>
-											<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+											<div className="grid grid-cols-1 sm:grid-cols-3 gap-6 relative">
 												{displayedPresets.map((category) => (
-													<div key={category.label} className="space-y-2">
-														{category.attributes.map((attr) => (
-															<Button
-																key={attr.name}
-																onClick={() =>
-																	addAttribute(attr.name, attr.defaultValues)
-																}
-																variant="ghost"
-																className="bg-gray-50 hover:bg-gold/10 hover:text-gold text-gray-500 text-[10px] font-bold px-3 py-2 w-full justify-start h-auto"
-															>
-																<PlusCircle size={10} className="mr-2" />{" "}
-																{attr.name}
-															</Button>
-														))}
+													<div key={category.label} className="space-y-2.5">
+														<span className="text-xs font-bold text-gray-400 mb-2 block border-l-2 border-gold pl-2">
+															{category.label}
+														</span>
+														<div className="flex flex-col gap-2">
+															{category.attributes.map((attr) => (
+																<Button
+																	key={attr.name}
+																	onClick={() =>
+																		addAttribute(attr.name, attr.defaultValues)
+																	}
+																	variant="ghost"
+																	rounded="none"
+																	className="rounded! bg-gray-50 hover:bg-gold/10 hover:text-gold text-gray-500 text-[10px] font-bold px-5! py-2.5! flex justify-between transition-all border border-transparent hover:border-gold/30 text-left w-fit h-auto"
+																>
+																	<span className="flex items-center gap-1.5">
+																		<PlusCircle
+																			size={12}
+																			className="text-gray-300 group-hover:text-gold"
+																		/>
+																		{attr.name}
+																	</span>
+																	<span className="text-[9px] font-medium text-gray-300 group-hover:text-gold/60 truncate max-w-20">
+																		{attr.example}
+																	</span>
+																</Button>
+															))}
+														</div>
 													</div>
 												))}
 											</div>
 										</div>
-									)}
+									</div>
+								</div>
 
+								{/* Generate Variations Button */}
+								<div className="pt-6 border-t border-gray-50">
 									<Button
-										onClick={() => addAttribute()}
+										onClick={generateVariations}
 										variant="black"
-										size="sm"
 										rounded="full"
+										size="sm"
+										fullWidth
+										className="py-4 flex flex-col items-center justify-center h-auto"
 									>
-										<Plus size={12} /> Add Custom Attribute
+										<span className="text-[11px] font-black uppercase tracking-widest">
+											Regenerate Variations
+										</span>
 									</Button>
 								</div>
 
-								<Button
-									onClick={generateVariations}
-									variant="black"
-									rounded="full"
-									size="sm"
-									fullWidth
-									className="py-4 h-auto"
-								>
-									<span className="text-[11px] font-black uppercase tracking-widest">
-										Regenerate Variations
-									</span>
-								</Button>
-
 								{/* Variations Table */}
-								<div className="pt-4 border-t border-gray-50">
-									<div className="flex items-center justify-between mb-4">
+								<div className="pt-4 space-y-4">
+									<div className="flex items-center justify-between">
 										<h5 className="text-xs font-black text-black">
 											Variations ({variations.length})
 										</h5>
@@ -999,59 +1066,111 @@ export default function EditProductPage() {
 											<Button
 												variant="ghost"
 												size="sm"
-												onClick={() => setValue("variations", [])}
-												className="text-gray-300 hover:text-red-500 text-[10px] h-auto p-0 border-none"
+												onClick={() => {
+													setValue("variations", []);
+													setHasGeneratedVariations(false);
+													toast(
+														"Cleared",
+														"All variations have been cleared.",
+														"info",
+													);
+												}}
+												className="text-gray-400 hover:text-red-500 border-none p-0 h-auto"
 											>
-												Clear All
+												Clear Variations
 											</Button>
 										)}
 									</div>
 
 									{!hasGeneratedVariations ? (
-										<div className="py-12 border border-dashed border-gray-100 rounded flex flex-col items-center justify-center text-center space-y-3 bg-gray-50/50">
-											<Settings2 size={24} className="text-gray-200" />
-											<p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-												No variations generated
-											</p>
+										<div className="py-12 border border-dashed border-gray-200 rounded flex flex-col items-center justify-center text-center space-y-3 bg-gray-50/50">
+											<div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-gray-300 border border-gray-100">
+												<Settings2 size={24} />
+											</div>
+											<div>
+												<p className="text-sm font-black text-gray-400">
+													No variations generated yet
+												</p>
+												<p className="text-[10px] font-bold text-gray-300 mt-1">
+													Add attributes and click generate above
+												</p>
+											</div>
+										</div>
+									) : variations.length === 0 ? (
+										<div className="py-8 border border-dashed border-gray-200 rounded flex items-center justify-center text-gray-400 text-xs font-bold">
+											No valid combinations. Ensure attributes have values.
 										</div>
 									) : (
 										<div className="border border-gray-100 rounded overflow-hidden">
-											<table className="w-full text-left">
-												<thead>
-													<tr className="bg-gray-50 border-b border-gray-100">
-														<th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">
-															Variation
-														</th>
-														<th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">
-															Price
-														</th>
-														<th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">
-															Stock
-														</th>
-													</tr>
-												</thead>
-												<tbody className="divide-y divide-gray-50">
-													{variations.map((v: Variation) => (
-														<React.Fragment key={v.id}>
-															<tr className="hover:bg-gray-50/30 transition-colors">
-																<td className="px-5 py-4 text-xs font-black">
-																	{v.name}
-																</td>
-																<td className="px-5 py-3">
-																	<Input
-																		id={`var-price-${v.id}`}
-																		value={v.price}
-																		onChange={(e) =>
-																			updateVariation(
-																				v.id,
-																				"price",
-																				e.target.value,
-																			)
-																		}
-																	/>
-																</td>
-																<td className="px-5 py-3">
-																	<div className="flex items-center gap-2">
+											<div className="overflow-x-auto">
+												<table className="w-full text-left border-collapse">
+													<thead>
+														<tr className="bg-gray-50 border-b border-gray-100">
+															<th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 w-1/3">
+																Variation Focus
+															</th>
+															<th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 w-1/4">
+																Price ({currencySymbol})
+															</th>
+															<th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 w-1/4">
+																Sale ({currencySymbol})
+															</th>
+															<th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 w-1/6">
+																Stock
+															</th>
+														</tr>
+													</thead>
+													<tbody className="divide-y divide-gray-50">
+														{variations.map((v: Variation) => (
+															<React.Fragment key={v.id}>
+																<tr className="hover:bg-gray-50/50 transition-colors border-b border-gray-50">
+																	<td className="px-5 py-4 text-xs font-black text-black">
+																		{v.name}
+																	</td>
+																	<td className="p-3">
+																		<Input
+																			id={`var-price-${v.id}`}
+																			value={v.price}
+																			onChange={(e) =>
+																				updateVariation(
+																					v.id,
+																					"price",
+																					e.target.value,
+																				)
+																			}
+																			placeholder="0.00"
+																			className="bg-white border-gray-200 focus:border-gold/50 py-2.5! px-4!"
+																		/>
+																	</td>
+																	<td className="p-3">
+																		<Input
+																			id={`var-sale-price-${v.id}`}
+																			value={v.salePrice}
+																			onChange={(e) =>
+																				updateVariation(
+																					v.id,
+																					"salePrice",
+																					e.target.value,
+																				)
+																			}
+																			placeholder="0.00"
+																			className="bg-white border-gray-200 focus:border-gold/50 py-2.5! px-4!"
+																			rightSlot={
+																				<Button
+																					type="button"
+																					variant="ghost"
+																					onClick={() =>
+																						toggleVariationSchedule(v.id)
+																					}
+																					title="Schedule Sale Dates"
+																					className={`p-0! h-auto hover:bg-transparent ${expandedVariationSchedules.has(v.id) ? "text-gold" : "text-gray-200"}`}
+																				>
+																					<Calendar size={12} />
+																				</Button>
+																			}
+																		/>
+																	</td>
+																	<td className="p-3">
 																		<Input
 																			id={`var-stock-${v.id}`}
 																			type="number"
@@ -1063,58 +1182,60 @@ export default function EditProductPage() {
 																					e.target.value,
 																				)
 																			}
+																			placeholder="0"
+																			className="bg-white border-gray-200 focus:border-gold/50 py-2.5! px-4!"
 																		/>
-																		<Button
-																			variant="ghost"
-																			size="sm"
-																			onClick={() =>
-																				toggleVariationSchedule(v.id)
-																			}
-																			className={`p-0 h-auto border-none ${expandedVariationSchedules.has(v.id) ? "text-gold" : "text-gray-200"}`}
-																		>
-																			<Calendar size={12} />
-																		</Button>
-																	</div>
-																</td>
-															</tr>
-															{expandedVariationSchedules.has(v.id) && (
-																<tr className="bg-gray-50/30">
-																	<td colSpan={3} className="px-5 py-4">
-																		<div className="grid grid-cols-2 gap-4">
-																			<Input
-																				id={`var-start-${v.id}`}
-																				label="Sale Start"
-																				type="date"
-																				value={v.saleStartDate}
-																				onChange={(e) =>
-																					updateVariation(
-																						v.id,
-																						"saleStartDate",
-																						e.target.value,
-																					)
-																				}
-																			/>
-																			<Input
-																				id={`var-end-${v.id}`}
-																				label="Sale End"
-																				type="date"
-																				value={v.saleEndDate}
-																				onChange={(e) =>
-																					updateVariation(
-																						v.id,
-																						"saleEndDate",
-																						e.target.value,
-																					)
-																				}
-																			/>
-																		</div>
 																	</td>
 																</tr>
-															)}
-														</React.Fragment>
-													))}
-												</tbody>
-											</table>
+																{expandedVariationSchedules.has(v.id) && (
+																	<tr className="bg-gray-50/30">
+																		<td colSpan={4} className="px-5 py-4">
+																			<div className="grid grid-cols-2 gap-4 animate-in slide-in-from-top-1 duration-200">
+																				<div className="space-y-1.5">
+																					<label className="text-[8px] font-black uppercase tracking-widest text-gray-400 ml-1">
+																						Start Date
+																					</label>
+																					<Input
+																						id={`var-sale-start-${v.id}`}
+																						type="date"
+																						value={v.saleStartDate}
+																						onChange={(e) =>
+																							updateVariation(
+																								v.id,
+																								"saleStartDate",
+																								e.target.value,
+																							)
+																						}
+																						className="bg-white border-gray-100 py-2! px-3!"
+																					/>
+																				</div>
+																				<div className="space-y-1.5">
+																					<label className="text-[8px] font-black uppercase tracking-widest text-gray-400 ml-1">
+																						End Date
+																					</label>
+																					<Input
+																						id={`var-sale-end-${v.id}`}
+																						type="date"
+																						value={v.saleEndDate}
+																						onChange={(e) =>
+																							updateVariation(
+																								v.id,
+																								"saleEndDate",
+																								e.target.value,
+																							)
+																						}
+																						className="bg-white border-gray-100 py-2! px-3!"
+																					/>
+																				</div>
+																			</div>
+																		</td>
+																	</tr>
+																)}
+															</React.Fragment>
+														))}
+													</tbody>
+												</table>
+											</div>
 										</div>
 									)}
 								</div>
@@ -1122,7 +1243,7 @@ export default function EditProductPage() {
 						)}
 					</div>
 
-					{/* Shipping & Inventory mirroring add page */}
+					{/* Shipping & Inventory */}
 					<div className="bg-white border border-gray-100 rounded p-8 space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
 						<h4 className="text-sm font-bold text-gold pb-6 border-b border-gray-100">
 							Shipping & Inventory
@@ -1133,8 +1254,16 @@ export default function EditProductPage() {
 								label="Weight (kg)"
 								required
 								type="number"
+								step="0.01"
+								min="0"
+								placeholder="0.00"
 								{...registerField("weight")}
 								error={fieldErrors.weight?.message}
+								rightSlot={
+									<span className="text-[10px] font-black text-gray-300 pr-5">
+										KG
+									</span>
+								}
 							/>
 							<Select
 								id="inventory-status"
@@ -1146,17 +1275,42 @@ export default function EditProductPage() {
 									{ label: "Pre-order", value: "Pre-order" },
 								]}
 								{...registerField("status")}
+								error={fieldErrors.status?.message}
 							/>
 						</div>
-						<div className="grid grid-cols-3 gap-4">
-							<Input id="dim-l" label="Length" {...registerField("length")} />
-							<Input id="dim-w" label="Width" {...registerField("width")} />
-							<Input id="dim-h" label="Height" {...registerField("height")} />
+
+						<div className="pt-4 space-y-4">
+							<label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-2">
+								Dimensions (L x W x H) cm
+							</label>
+							<div className="grid grid-cols-3 gap-4">
+								<Input
+									id="dim-length"
+									placeholder="L"
+									type="number"
+									min="0"
+									{...registerField("length")}
+								/>
+								<Input
+									id="dim-width"
+									placeholder="W"
+									type="number"
+									min="0"
+									{...registerField("width")}
+								/>
+								<Input
+									id="dim-height"
+									placeholder="H"
+									type="number"
+									min="0"
+									{...registerField("height")}
+								/>
+							</div>
 						</div>
 					</div>
 				</div>
 
-				{/* Right Sidebar - Organization mirroring add page */}
+				{/* Right Sidebar - Organization */}
 				<div className="hidden lg:block space-y-10">{organizationCard}</div>
 			</div>
 		</div>

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
 	Store,
 	Save,
@@ -12,38 +12,23 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getMyVendorProfile } from "@/lib/api/services/vendor";
 import { getErrorMessage } from "@/lib/utils/errors";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { getMyVendorProfile } from "@/lib/api/services/vendor";
-import type { VendorProfileResponse } from "@/lib/api/types/vendor.types";
 import { Button } from "@/components/ui/Button";
 import { ErrorComponent } from "@/components/ui/ErrorComponent";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
 
 export default function StoreProfile() {
-	const [vendor, setVendor] = useState<VendorProfileResponse | null>(null);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
+	const queryClient = useQueryClient();
 
-	const fetchVendor = useCallback(async () => {
-		try {
-			setLoading(true);
-			setError(null);
-			const data = await getMyVendorProfile();
-			setVendor(data);
-		} catch (err: unknown) {
-			console.error("Failed to fetch vendor profile:", err);
-			const message = getErrorMessage(err, "Failed to load store profile. Please try again later.");
-			setError(message);
-		} finally {
-			setLoading(false);
-		}
-	}, []);
+	const { data: vendor, isLoading: loading, error: queryError } = useQuery({
+		queryKey: ["vendor-profile"],
+		queryFn: getMyVendorProfile,
+	});
 
-	useEffect(() => {
-		fetchVendor();
-	}, [fetchVendor]);
+	const error = queryError ? getErrorMessage(queryError) : null;
 
 	const GENERIC_BANNER = "/assets/images/signup_bg.png";
 	const DEFAULT_LOGO = "/assets/icons/SaxRapid-Logo.png";
@@ -57,7 +42,7 @@ export default function StoreProfile() {
 			<ErrorComponent
 				title="Store Identity Sync"
 				message={error}
-				onRetry={fetchVendor}
+				onRetry={() => queryClient.invalidateQueries({ queryKey: ["vendor-profile"] })}
 			/>
 		);
 	}
@@ -275,5 +260,4 @@ export default function StoreProfile() {
 			</div>
 		</div>
 	);
-
 }

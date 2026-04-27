@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import {
 	ShoppingBag,
 	Filter,
@@ -7,11 +7,11 @@ import {
 	Eye,
 	Truck,
 	Loader2,
-	Package,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import * as ordersService from "@/lib/api/services/orders";
-import { OrderResponseDTO, OrderStatus } from "@/lib/api/types/orders.types";
-import { formatCurrency } from "../../../lib/utils/currency";
+import { OrderStatus } from "@/lib/api/types/orders.types";
+import { formatCurrency } from "@/lib/utils/currency";
 import { formatDate } from "@/lib/utils/date";
 import { useToast } from "@/lib/context/ToastContext";
 import { ErrorComponent } from "@/components/ui/ErrorComponent";
@@ -24,29 +24,20 @@ import { Button } from "@/components/ui/Button";
 
 export default function OrdersPage() {
 	const [activeTab, setActiveTab] = useState("All Orders");
-	const [orders, setOrders] = useState<OrderResponseDTO[]>([]);
-	const [loading, setLoading] = useState(true);
 	const [searchQuery, setSearchQuery] = useState("");
-	const [error, setError] = useState<string | null>(null);
 	const { toast } = useToast();
 
-	const fetchOrders = useCallback(async () => {
-		try {
-			setLoading(true);
-			setError(null);
-			const data = await ordersService.getVendorOrders(1, 100);
-			setOrders(data || []);
-		} catch (error) {
-			console.error("Failed to fetch orders:", error);
-			setError(getErrorMessage(error));
-		} finally {
-			setLoading(false);
-		}
-	}, []);
+	const {
+		data: ordersData,
+		isLoading: loading,
+		error: ordersError,
+		refetch,
+	} = useQuery({
+		queryKey: ["vendor-orders", 1, 100],
+		queryFn: () => ordersService.getVendorOrders(1, 100),
+	});
 
-	useEffect(() => {
-		fetchOrders();
-	}, [fetchOrders]);
+	const orders = ordersData || [];
 
 	const filteredOrders = orders.filter((order) => {
 		// Tab Filter
@@ -76,7 +67,7 @@ export default function OrdersPage() {
 	const getStatusStyle = (status: OrderStatus) => {
 		switch (status) {
 			case OrderStatus.Pending:
-				return "bg-gold/20 text-gold";
+				return "bg-gold/10 text-gold";
 			case OrderStatus.Confirmed:
 			case OrderStatus.Processing:
 				return "bg-blue-50 text-blue-600";
@@ -92,19 +83,19 @@ export default function OrdersPage() {
 			case OrderStatus.Dispute:
 				return "bg-orange-50 text-orange-600";
 			default:
-				return "bg-gray-100 text-gray-400";
+				return "bg-gray-50 text-gray-400";
 		}
 	};
 
 	return (
 		<div className="space-y-10">
 			{loading && orders.length === 0 ? (
-				<FullPageLoader label="Loading orders..." icon={Package} />
-			) : error && orders.length === 0 ? (
+				<FullPageLoader label="Loading orders..." icon={ShoppingBag} />
+			) : ordersError && orders.length === 0 ? (
 				<ErrorComponent
 					title="Failed to load Orders"
-					message={error}
-					onRetry={fetchOrders}
+					message={getErrorMessage(ordersError)}
+					onRetry={() => refetch()}
 				/>
 			) : (
 				<>
@@ -272,10 +263,10 @@ export default function OrdersPage() {
 									) : (
 										<tr>
 											<td colSpan={7} className="px-8 py-20 text-center">
-												<div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center text-gray-200 border border-gray-100 mx-auto mb-4">
-													<Package size={32} />
+												<div className="w-16 h-16 rounded bg-gray-50 flex items-center justify-center text-gray-200 border border-gray-100 mx-auto mb-4">
+													<ShoppingBag size={32} />
 												</div>
-												<p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+												<p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
 													No orders found
 												</p>
 											</td>

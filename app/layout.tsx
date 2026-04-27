@@ -5,6 +5,7 @@ import { PageLoaderSimulation } from "@/components/common/PageLoaderSimulation";
 import { ToastProvider } from "@/lib/context/ToastContext";
 import { AuthProvider } from "@/lib/context/AuthContext";
 import { AuthGuard } from "@/components/auth/AuthGuard";
+import { QueryProvider } from "@/lib/context/QueryProvider";
 
 const inter = Inter({
 	variable: "--font-inter",
@@ -105,13 +106,15 @@ export default function RootLayout({
 	return (
 		<html lang="en" className={`${inter.variable} ${jakarta.variable}`}>
 			<body className="font-sans antialiased bg-white text-black">
-				<AuthProvider>
-					<ToastProvider>
-						<AuthGuard>
-							<PageLoaderSimulation>{children}</PageLoaderSimulation>
-						</AuthGuard>
-					</ToastProvider>
-				</AuthProvider>
+				<QueryProvider>
+					<AuthProvider>
+						<ToastProvider>
+							<AuthGuard>
+								<PageLoaderSimulation>{children}</PageLoaderSimulation>
+							</AuthGuard>
+						</ToastProvider>
+					</AuthProvider>
+				</QueryProvider>
 			</body>
 		</html>
 	);

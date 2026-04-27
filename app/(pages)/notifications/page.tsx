@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
 	Bell,
 	CheckCircle,
@@ -19,7 +19,6 @@ import {
 	deleteNotification,
 	getNotificationCount,
 } from "@/lib/api/services/notifications";
-import type { NotificationResponse } from "@/lib/api/types/notifications.types";
 import { getRelativeTime } from "@/lib/utils/date";
 import { useToast } from "@/lib/context/ToastContext";
 import { ErrorComponent } from "@/components/ui/ErrorComponent";
@@ -38,90 +37,74 @@ const typeConfig: Record<string, { icon: React.ElementType; color: string }> = {
 
 export default function NotificationsPage() {
 	const { toast } = useToast();
-	const [notifications, setNotifications] = useState<NotificationResponse[]>(
-		[],
-	);
-	const [loading, setLoading] = useState(true);
-	const [counts, setCounts] = useState({ total: 0, unread: 0 });
-	const [error, setError] = useState<string | null>(null);
-	const [markingAll, setMarkingAll] = useState(false);
+	const queryClient = useQueryClient();
 
-	const fetchNotifications = useCallback(async () => {
-		try {
-			setLoading(true);
-			setError(null);
-			const data = await getNotifications(1, 100);
-			setNotifications(data?.items || []);
+	// Queries
+	const { data: notificationsData, isLoading: loadingNotifications, error: queryError } = useQuery({
+		queryKey: ["notifications"],
+		queryFn: () => getNotifications(1, 100),
+	});
 
-			const countData = await getNotificationCount();
-			setCounts({
-				total: countData?.totalCount || 0,
-				unread: countData?.unreadCount || 0,
-			});
-		} catch (error) {
-			console.error("Failed to fetch notifications:", error);
-			setError(getErrorMessage(error));
-		} finally {
-			setLoading(false);
-		}
-	}, []);
+	const { data: countData } = useQuery({
+		queryKey: ["notification-count"],
+		queryFn: getNotificationCount,
+	});
 
-	useEffect(() => {
-		fetchNotifications();
-	}, [fetchNotifications]);
+	const notifications = notificationsData?.items || [];
+	const counts = {
+		total: countData?.totalCount || 0,
+		unread: countData?.unreadCount || 0,
+	};
+	const loading = loadingNotifications;
+	const error = queryError ? getErrorMessage(queryError) : null;
 
-	const handleMarkAllRead = async () => {
-		if (counts.unread === 0) return;
-		try {
-			setMarkingAll(true);
-			await markAllAsRead();
-			setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-			setCounts((prev) => ({ ...prev, unread: 0 }));
+	// Mutations
+	const markAllReadMutation = useMutation({
+		mutationFn: markAllAsRead,
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["notifications"] });
+			queryClient.invalidateQueries({ queryKey: ["notification-count"] });
 			toast("Success", "All notifications marked as read", "success");
-		} catch {
-			toast("Error", "Failed to mark notifications as read", "error");
-		} finally {
-			setMarkingAll(false);
-		}
+		},
+		onError: (error) => {
+			toast("Error", getErrorMessage(error), "error");
+		},
+	});
+
+	const markReadMutation = useMutation({
+		mutationFn: markAsRead,
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["notifications"] });
+			queryClient.invalidateQueries({ queryKey: ["notification-count"] });
+		},
+	});
+
+	const deleteMutation = useMutation({
+		mutationFn: deleteNotification,
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["notifications"] });
+			queryClient.invalidateQueries({ queryKey: ["notification-count"] });
+			toast("Deleted", "Notification deleted", "success");
+		},
+		onError: (error) => {
+			toast("Error", getErrorMessage(error), "error");
+		},
+	});
+
+	const handleMarkAllRead = () => {
+		if (counts.unread === 0) return;
+		markAllReadMutation.mutate();
 	};
 
-	const handleMarkOneRead = async (id: string) => {
+	const handleMarkOneRead = (id: string) => {
 		const notification = notifications.find((n) => n.id === id);
 		if (!notification || notification.isRead) return;
-
-		try {
-			await markAsRead(id);
-			setNotifications((prev) =>
-				prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
-			);
-			setCounts((prev) => ({ ...prev, unread: Math.max(0, prev.unread - 1) }));
-		} catch (error) {
-			console.error("Failed to mark notification as read:", error);
-		}
+		markReadMutation.mutate(id);
 	};
 
-	const handleDelete = async (e: React.MouseEvent, id: string) => {
+	const handleDelete = (e: React.MouseEvent, id: string) => {
 		e.stopPropagation();
-		try {
-			await deleteNotification(id);
-			setNotifications((prev) => {
-				const filtered = prev.filter((n) => n.id !== id);
-				const deleted = prev.find((n) => n.id === id);
-				if (deleted && !deleted.isRead) {
-					setCounts((c) => ({
-						...c,
-						unread: Math.max(0, c.unread - 1),
-						total: c.total - 1,
-					}));
-				} else {
-					setCounts((c) => ({ ...c, total: c.total - 1 }));
-				}
-				return filtered;
-			});
-			toast("Deleted", "Notification deleted", "success");
-		} catch {
-			toast("Error", "Failed to delete notification", "error");
-		}
+		deleteMutation.mutate(id);
 	};
 
 	return (
@@ -132,7 +115,7 @@ export default function NotificationsPage() {
 				<ErrorComponent
 					title="Failed to load notifications"
 					message={error!}
-					onRetry={fetchNotifications}
+					onRetry={() => queryClient.invalidateQueries({ queryKey: ["notifications"] })}
 				/>
 			) : (
 				<>
@@ -154,7 +137,7 @@ export default function NotificationsPage() {
 									variant="outline"
 									size="sm"
 									onClick={handleMarkAllRead}
-									loading={markingAll}
+									loading={markAllReadMutation.isPending}
 									disabled={counts.unread === 0 || loading}
 									className="px-6 rounded-full text-xs font-bold"
 								>
@@ -266,7 +249,7 @@ export default function NotificationsPage() {
 									variant="outline"
 									size="sm"
 									className="mt-8 rounded-full px-8"
-									onClick={fetchNotifications}
+									onClick={() => queryClient.invalidateQueries({ queryKey: ["notifications"] })}
 								>
 									Refresh List
 								</Button>

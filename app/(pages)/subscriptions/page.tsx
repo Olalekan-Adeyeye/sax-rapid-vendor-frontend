@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
 	Zap,
 	Check,
@@ -11,6 +11,7 @@ import {
 	XCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
 	getSubscriptionPlans,
 	getMySubscription,
@@ -20,8 +21,6 @@ import {
 } from "@/lib/api/services/subscriptions";
 import {
 	SubscriptionPlanResponse,
-	VendorSubscriptionResponse,
-	SubscriptionHistoryItem,
 } from "@/lib/api/types/subscriptions.types";
 import { useToast } from "@/lib/context/ToastContext";
 import axios from "axios";
@@ -36,60 +35,37 @@ type TabType = "plans" | "history";
 export default function SubscriptionPlansPage() {
 	const [activeTab, setActiveTab] = useState<TabType>("plans");
 	const [isYearly, setIsYearly] = useState(false);
-	const [plans, setPlans] = useState<SubscriptionPlanResponse[]>([]);
-	const [mySub, setMySub] = useState<VendorSubscriptionResponse | null>(null);
-	const [history, setHistory] = useState<SubscriptionHistoryItem[]>([]);
-	const [loading, setLoading] = useState(true);
-	const [subscribingId, setSubscribingId] = useState<string | null>(null);
-	const [cancelling, setCancelling] = useState(false);
-	const [confirmPlan, setConfirmPlan] =
-		useState<SubscriptionPlanResponse | null>(null);
+	const [confirmPlan, setConfirmPlan] = useState<SubscriptionPlanResponse | null>(null);
 	const [showCancelModal, setShowCancelModal] = useState(false);
 	const { toast } = useToast();
+	const queryClient = useQueryClient();
 
-	const fetchData = React.useCallback(async () => {
-		setLoading(true);
-		try {
-			const [plansData, subData, historyData] = await Promise.allSettled([
-				getSubscriptionPlans(),
-				getMySubscription(),
-				getSubscriptionHistory(),
-			]);
+	// Queries
+	const { data: plansData, isLoading: loadingPlans } = useQuery({
+		queryKey: ["subscription-plans"],
+		queryFn: () => getSubscriptionPlans(),
+	});
 
-			const plansList = plansData.status === "fulfilled" ? plansData.value : [];
-			const currentSub = subData.status === "fulfilled" ? subData.value : null;
-			const historyList =
-				historyData.status === "fulfilled" ? historyData.value : [];
+	const { data: mySub, isLoading: loadingSub } = useQuery({
+		queryKey: ["my-subscription"],
+		queryFn: getMySubscription,
+	});
 
-			setPlans(
-				plansList.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0)),
-			);
-			setMySub(currentSub);
-			setHistory(historyList);
-		} catch (error) {
-			console.error("Failed to fetch subscription data:", error);
-			toast("Error", "Could not load subscription details", "error");
-		} finally {
-			setLoading(false);
-		}
-	}, [toast]);
+	const { data: historyData } = useQuery({
+		queryKey: ["subscription-history"],
+		queryFn: getSubscriptionHistory,
+	});
 
-	useEffect(() => {
-		fetchData();
-	}, [fetchData]);
-
-	const handleSubscribe = async () => {
-		if (!confirmPlan) return;
-		setSubscribingId(confirmPlan.id);
-		try {
-			await subscribeToPlan({
-				planId: confirmPlan.id,
-				billingCycle: isYearly ? "Yearly" : "Monthly",
-			});
+	// Mutations
+	const subscribeMutation = useMutation({
+		mutationFn: subscribeToPlan,
+		onSuccess: () => {
 			toast("Success", "Successfully subscribed!", "success");
 			setConfirmPlan(null);
-			await fetchData(); // Refresh data
-		} catch (error: unknown) {
+			queryClient.invalidateQueries({ queryKey: ["my-subscription"] });
+			queryClient.invalidateQueries({ queryKey: ["subscription-history"] });
+		},
+		onError: (error: unknown) => {
 			let errorMessage = "Something went wrong";
 			if (axios.isAxiosError<ApiError>(error)) {
 				errorMessage = error.response?.data?.message || errorMessage;
@@ -97,27 +73,40 @@ export default function SubscriptionPlansPage() {
 				errorMessage = error.message;
 			}
 			toast("Subscription Failed", errorMessage, "error");
-		} finally {
-			setSubscribingId(null);
-		}
-	};
+		},
+	});
 
-	const handleCancel = async () => {
-		setCancelling(true);
-		try {
-			await cancelSubscription();
+	const cancelMutation = useMutation({
+		mutationFn: cancelSubscription,
+		onSuccess: () => {
 			toast("Success", "Subscription cancelled successfully", "success");
 			setShowCancelModal(false);
-			await fetchData();
-		} catch (error: unknown) {
+			queryClient.invalidateQueries({ queryKey: ["my-subscription"] });
+			queryClient.invalidateQueries({ queryKey: ["subscription-history"] });
+		},
+		onError: (error: unknown) => {
 			let errorMessage = "Failed to cancel subscription";
 			if (axios.isAxiosError<ApiError>(error)) {
 				errorMessage = error.response?.data?.message || errorMessage;
 			}
 			toast("Action Failed", errorMessage, "error");
-		} finally {
-			setCancelling(false);
-		}
+		},
+	});
+
+	const plans = (plansData || []).sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+	const history = historyData || [];
+	const loading = loadingPlans || loadingSub;
+
+	const handleSubscribe = async () => {
+		if (!confirmPlan) return;
+		subscribeMutation.mutate({
+			planId: confirmPlan.id,
+			billingCycle: isYearly ? "Yearly" : "Monthly",
+		});
+	};
+
+	const handleCancel = async () => {
+		cancelMutation.mutate();
 	};
 
 	const getPlanIcon = (name: string) => {
@@ -159,7 +148,7 @@ export default function SubscriptionPlansPage() {
 							variant="outline"
 							fullWidth
 							onClick={() => setShowCancelModal(false)}
-							disabled={cancelling}
+							disabled={cancelMutation.isPending}
 						>
 							Keep Plan
 						</Button>
@@ -167,7 +156,7 @@ export default function SubscriptionPlansPage() {
 							variant="black"
 							fullWidth
 							onClick={handleCancel}
-							loading={cancelling}
+							loading={cancelMutation.isPending}
 							className="bg-red-500! text-white! border-red-500! hover:bg-black! hover:border-black!"
 						>
 							Cancel
@@ -221,7 +210,7 @@ export default function SubscriptionPlansPage() {
 								variant="outline"
 								fullWidth
 								onClick={() => setConfirmPlan(null)}
-								disabled={subscribingId !== null}
+								disabled={subscribeMutation.isPending}
 							>
 								Cancel
 							</Button>
@@ -229,8 +218,8 @@ export default function SubscriptionPlansPage() {
 								variant="primary"
 								fullWidth
 								onClick={handleSubscribe}
-								loading={subscribingId === confirmPlan.id}
-								disabled={subscribingId !== null}
+								loading={subscribeMutation.isPending}
+								disabled={subscribeMutation.isPending}
 							>
 								Confirm
 							</Button>
@@ -449,11 +438,11 @@ export default function SubscriptionPlansPage() {
 												))}
 											</div>
 											<Button
-												disabled={isCurrentPlan || subscribingId !== null}
+												disabled={isCurrentPlan || subscribeMutation.isPending}
 												onClick={() => setConfirmPlan(plan)}
 												rounded="full"
 												size="sm"
-												loading={subscribingId === plan.id}
+												loading={subscribeMutation.isPending && confirmPlan?.id === plan.id}
 												variant={isCurrentPlan ? "outline" : isBlack ? "outline" : "outline"}
 												className={`w-full py-4 border-2 ${isCurrentPlan ? "bg-gray-100 text-gray-400 border-gray-100 cursor-not-allowed" : isBlack ? "bg-white text-black border-white hover:bg-gold hover:border-gold" : "bg-white text-black border-gray-100 hover:border-black hover:text-black"}`}
 											>

@@ -1,5 +1,6 @@
 "use client";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import {
 	MoreVertical,
@@ -14,7 +15,6 @@ import { useToast } from "@/lib/context/ToastContext";
 import { Button } from "@/components/ui/Button";
 import { SearchInput } from "@/components/ui/SearchInput";
 import * as categoriesService from "@/lib/api/services/categories";
-import { CategoryResponseDTO } from "@/lib/api/types/categories.types";
 import { getErrorMessage } from "@/lib/utils/errors";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
 import { ErrorComponent } from "@/components/ui/ErrorComponent";
@@ -22,46 +22,49 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Dropdown, DropdownItem } from "@/components/ui/Dropdown";
 
 export default function ProductCategoriesPage() {
-	const [categories, setCategories] = useState<CategoryResponseDTO[]>([]);
-	const [loading, setLoading] = useState(true);
+	const queryClient = useQueryClient();
 	const [searchQuery, setSearchQuery] = useState("");
-	const [error, setError] = useState<string | null>(null);
 	const { toast } = useToast();
 	const router = useRouter();
-
 	const [expandedCategories, setExpandedCategories] = useState<number[]>([]);
 
-	const fetchCategories = useCallback(async () => {
-		try {
-			setLoading(true);
-			setError(null);
-			const data = await categoriesService.getCategoryTree();
-			setCategories(data);
-		} catch (err) {
-			setError(getErrorMessage(err));
-		} finally {
-			setLoading(false);
-		}
-	}, []);
+	// Queries
+	const {
+		data: categoriesData,
+		isLoading: loading,
+		error: queryError,
+	} = useQuery({
+		queryKey: ["category-tree"],
+		queryFn: categoriesService.getCategoryTree,
+	});
 
-	useEffect(() => {
-		fetchCategories();
-	}, [fetchCategories]);
+	const categories = React.useMemo(
+		() => categoriesData || [],
+		[categoriesData],
+	);
+	const error = queryError ? getErrorMessage(queryError) : null;
 
-	useEffect(() => {
-		if (searchQuery) {
-			const matchIds = categories
-				.filter((cat) =>
-					cat.subCategories?.some((sub) =>
-						sub.name?.toLowerCase().includes(searchQuery.toLowerCase()),
-					),
-				)
-				.map((cat) => cat.id);
-			if (matchIds.length > 0) {
-				setExpandedCategories((prev) => [...new Set([...prev, ...matchIds])]);
-			}
+	const [lastExpandKey, setLastExpandKey] = React.useState("");
+	const currentExpandKey = `${searchQuery}-${categories.length}`;
+
+	if (searchQuery && currentExpandKey !== lastExpandKey) {
+		setLastExpandKey(currentExpandKey);
+		const matchIds = categories
+			.filter((cat) =>
+				cat.subCategories?.some((sub) =>
+					sub.name?.toLowerCase().includes(searchQuery.toLowerCase()),
+				),
+			)
+			.map((cat) => cat.id);
+
+		if (matchIds.length > 0) {
+			setExpandedCategories((prev) => {
+				const needsUpdate = matchIds.some((id) => !prev.includes(id));
+				if (!needsUpdate) return prev;
+				return [...new Set([...prev, ...matchIds])];
+			});
 		}
-	}, [searchQuery, categories]);
+	}
 
 	const toggleExpand = (id: number) => {
 		setExpandedCategories((prev) =>
@@ -69,13 +72,15 @@ export default function ProductCategoriesPage() {
 		);
 	};
 
-	const filteredCategories = categories.filter(
-		(cat) =>
-			cat.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			cat.subCategories?.some((sub) =>
-				sub.name?.toLowerCase().includes(searchQuery.toLowerCase()),
-			),
-	);
+	const filteredCategories = React.useMemo(() => {
+		return categories.filter(
+			(cat) =>
+				cat.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+				cat.subCategories?.some((sub) =>
+					sub.name?.toLowerCase().includes(searchQuery.toLowerCase()),
+				),
+		);
+	}, [categories, searchQuery]);
 
 	if (loading && categories.length === 0) {
 		return <FullPageLoader label="Loading categories..." icon={Layers} />;
@@ -86,7 +91,9 @@ export default function ProductCategoriesPage() {
 			<ErrorComponent
 				title="Failed to load categories"
 				message={error}
-				onRetry={fetchCategories}
+				onRetry={() =>
+					queryClient.invalidateQueries({ queryKey: ["category-tree"] })
+				}
 			/>
 		);
 	}
@@ -196,7 +203,9 @@ export default function ProductCategoriesPage() {
 															View Products
 														</DropdownItem>
 														<DropdownItem
-															icon={<Copy size={14} className="text-gray-400" />}
+															icon={
+																<Copy size={14} className="text-gray-400" />
+															}
 															onClick={() => {
 																navigator.clipboard.writeText(
 																	cat.id.toString(),

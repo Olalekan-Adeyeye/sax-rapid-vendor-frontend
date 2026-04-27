@@ -26,7 +26,20 @@ export interface WalletTransactionResponseDTO {
 export interface FundWalletRequestDTO {
   amount: number;
   paymentReference: string;
-  paymentGateway: string; // Paystack, PayFast, Manual
+  provider: string; // Paystack, PayFast, Manual
+}
+
+export interface WalletFundRequestDTO {
+  email: string;
+  amount: number;
+  gateway: "Paystack" | "PayFast" | "Manual";
+  callbackUrl?: string | null;
+}
+
+export interface WalletFundResponseDTO {
+  authorizationUrl: string;
+  accessCode: string;
+  reference: string;
 }
 
 export interface WithdrawRequestDTO {

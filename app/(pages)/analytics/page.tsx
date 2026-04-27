@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
 	TrendingUp,
 	Users,
@@ -7,8 +8,32 @@ import {
 	DollarSign,
 } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { getProductStats } from "@/lib/api/services/products";
+import { getMyWallet } from "@/lib/api/services/wallet";
+import { getVendorOrders } from "@/lib/api/services/orders";
+import { formatCurrency } from "@/lib/utils/currency";
 
 export default function AnalyticsPage() {
+	const { data: productStats, isLoading: loadingStats } = useQuery({
+		queryKey: ["product-stats"],
+		queryFn: getProductStats,
+	});
+
+	const { data: wallet, isLoading: loadingWallet } = useQuery({
+		queryKey: ["my-wallet"],
+		queryFn: getMyWallet,
+	});
+
+	const { data: ordersData, isLoading: loadingOrders } = useQuery({
+		queryKey: ["vendor-orders", 1, 100],
+		queryFn: () => getVendorOrders(1, 100),
+	});
+
+	const orders = ordersData || [];
+	const totalRevenue = wallet?.balance || 0;
+	const totalOrders = orders.length;
+	const totalViews = productStats?.totalViews || 0;
+	
 	return (
 		<div className="space-y-12">
 			<PageHeader
@@ -33,29 +58,29 @@ export default function AnalyticsPage() {
 				{[
 					{
 						label: "Total Revenue",
-						val: "₦14.2M",
-						change: "+12.5%",
+						val: loadingWallet ? "..." : formatCurrency(totalRevenue),
+						change: "Active Balance",
 						icon: DollarSign,
 						trend: "up",
 					},
 					{
 						label: "Total Orders",
-						val: "1,284",
-						change: "+8.2%",
+						val: loadingOrders ? "..." : totalOrders.toLocaleString(),
+						change: "Processed",
 						icon: ShoppingBag,
 						trend: "up",
 					},
 					{
-						label: "Unique Visitors",
-						val: "42.8K",
-						change: "-2.1%",
+						label: "Total Views",
+						val: loadingStats ? "..." : totalViews.toLocaleString(),
+						change: "Visibility",
 						icon: Users,
-						trend: "down",
+						trend: "up",
 					},
 					{
-						label: "Conversion Rate",
-						val: "3.2%",
-						change: "+0.5%",
+						label: "Active Listings",
+						val: loadingStats ? "..." : (productStats?.activeProducts || 0).toLocaleString(),
+						change: "Products",
 						icon: TrendingUp,
 						trend: "up",
 					},

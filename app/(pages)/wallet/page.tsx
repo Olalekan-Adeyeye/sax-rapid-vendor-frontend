@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useState } from "react";
 import {
 	Plus,
 	CreditCard,
@@ -11,12 +11,10 @@ import {
 	Loader2,
 	AlertTriangle,
 } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/Button";
 import * as walletService from "@/lib/api/services/wallet";
-import {
-	WalletResponseDTO,
-	WalletTransactionResponseDTO,
-} from "@/lib/api/types/wallet.types";
+import * as vendorService from "@/lib/api/services/vendor";
 import { formatCurrency } from "@/lib/utils/currency";
 import { getRelativeTime } from "@/lib/utils/date";
 import { ErrorComponent } from "@/components/ui/ErrorComponent";
@@ -30,60 +28,44 @@ import { FundWalletModal } from "@/components/wallet/FundWalletModal";
 import { WithdrawModal } from "@/components/wallet/WithdrawModal";
 
 export default function WalletPage() {
-	const [wallet, setWallet] = useState<WalletResponseDTO | null>(null);
-	const [transactions, setTransactions] = useState<
-		WalletTransactionResponseDTO[]
-	>([]);
-
-	const [loadingWallet, setLoadingWallet] = useState(true);
-	const [loadingTransactions, setLoadingTransactions] = useState(true);
-
-	const [error, setError] = useState<string | null>(null);
-	const [transactionError, setTransactionError] = useState(false);
-
-	const [activeCurrency, setActiveCurrency] = useState("NGN");
+	const queryClient = useQueryClient();
 
 	// Modal States
 	const [isFundModalOpen, setIsFundModalOpen] = useState(false);
 	const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
 
-	const fetchWallet = useCallback(async () => {
-		try {
-			setLoadingWallet(true);
-			setError(null);
-			const data = await walletService.getMyWallet();
-			setWallet(data);
-			if (data.currency) setActiveCurrency(data.currency);
-		} catch (err) {
-			console.error("Failed to fetch wallet:", err);
-			setError(getErrorMessage(err));
-		} finally {
-			setLoadingWallet(false);
-		}
-	}, []);
+	// Queries
+	const {
+		data: wallet,
+		isLoading: loadingWallet,
+		error: walletError,
+	} = useQuery({
+		queryKey: ["my-wallet"],
+		queryFn: walletService.getMyWallet,
+	});
 
-	const fetchTransactions = useCallback(async () => {
-		try {
-			setLoadingTransactions(true);
-			setTransactionError(false);
-			const data = await walletService.getTransactionHistory(1, 10);
-			setTransactions(data.items || []);
-		} catch (err) {
-			console.error("Failed to fetch transactions:", err);
-			setTransactionError(true);
-		} finally {
-			setLoadingTransactions(false);
-		}
-	}, []);
+	const {
+		data: transactionsData,
+		isLoading: loadingTransactions,
+		error: transactionsError,
+	} = useQuery({
+		queryKey: ["wallet-transactions"],
+		queryFn: () => walletService.getTransactionHistory(1, 10),
+	});
 
-	useEffect(() => {
-		fetchWallet();
-		fetchTransactions();
-	}, [fetchWallet, fetchTransactions]);
+	const { data: vendor } = useQuery({
+		queryKey: ["vendor-profile"],
+		queryFn: vendorService.getMyVendorProfile,
+	});
+
+	const activeCurrency = wallet?.currency || "";
+	const transactions = transactionsData?.items || [];
+	const error = walletError ? getErrorMessage(walletError) : null;
+	const transactionError = !!transactionsError;
 
 	const handleActionSuccess = () => {
-		fetchWallet();
-		fetchTransactions();
+		queryClient.invalidateQueries({ queryKey: ["my-wallet"] });
+		queryClient.invalidateQueries({ queryKey: ["wallet-transactions"] });
 	};
 
 	return (
@@ -93,11 +75,8 @@ export default function WalletPage() {
 			) : error ? (
 				<ErrorComponent
 					title="Failed to load wallet"
-					message={error!}
-					onRetry={() => {
-						fetchWallet();
-						fetchTransactions();
-					}}
+					message={error}
+					onRetry={handleActionSuccess}
 				/>
 			) : (
 				<>
@@ -148,23 +127,10 @@ export default function WalletPage() {
 										<p className="text-xs font-bold text-gray-500 group-hover:text-gold transition-colors">
 											Balance Overview
 										</p>
-										<div className="flex justify-between bg-white/10 rounded p-1.5 gap-1">
-											<Button
-												onClick={() => setActiveCurrency("NGN")}
-												variant={activeCurrency === "NGN" ? "primary" : "ghost"}
-												size="sm"
-												className={`flex w-full px-4 border-none h-8 ${activeCurrency === "NGN" ? "bg-white text-black" : "text-gray-400 hover:text-white bg-transparent"}`}
-											>
-												NGN
-											</Button>
-											<Button
-												onClick={() => setActiveCurrency("USD")}
-												variant={activeCurrency === "USD" ? "primary" : "ghost"}
-												size="sm"
-												className={`flex w-full px-4 border-none h-8 ${activeCurrency === "USD" ? "bg-white text-black" : "text-gray-400 hover:text-white bg-transparent"}`}
-											>
-												USD
-											</Button>
+										<div className="flex bg-white/10 rounded p-2 px-4 w-fit border border-white/5">
+											<span className="text-sm font-black text-white">
+												{activeCurrency}
+											</span>
 										</div>
 									</div>
 									<div className="relative z-10">
@@ -279,7 +245,11 @@ export default function WalletPage() {
 												</p>
 											</div>
 											<Button
-												onClick={fetchTransactions}
+												onClick={() =>
+													queryClient.invalidateQueries({
+														queryKey: ["wallet-transactions"],
+													})
+												}
 												variant="black"
 												size="md"
 												className="px-8 mt-4"
@@ -372,6 +342,7 @@ export default function WalletPage() {
 				onClose={() => setIsFundModalOpen(false)}
 				onSuccess={handleActionSuccess}
 				currency={activeCurrency}
+				userEmail={vendor?.ownerEmail || ""}
 			/>
 
 			<WithdrawModal

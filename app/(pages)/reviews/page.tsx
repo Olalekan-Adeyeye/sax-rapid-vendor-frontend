@@ -1,6 +1,7 @@
 "use client";
-import React, { useState, useEffect, useCallback, Suspense } from "react";
+import React, { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { 
     MessageSquare, 
@@ -15,50 +16,33 @@ import { Button } from "@/components/ui/Button";
 import { SearchInput } from "@/components/ui/SearchInput";
 import * as reviewsService from "@/lib/api/services/reviews";
 import * as productsService from "@/lib/api/services/products";
-import { PagedReviewResponseDTO, ReviewSummaryDTO, ReviewResponseDTO } from "@/lib/api/types/reviews.types";
-import { ProductResponseDTO } from "@/lib/api/types/products.types";
 import { formatDate } from "@/lib/utils/date";
-import { useToast } from "@/lib/context/ToastContext";
 
 function ReviewsContent() {
     const searchParams = useSearchParams();
     const productId = searchParams.get("productId");
-    const { toast } = useToast();
-
-    const [loading, setLoading] = useState(true);
-    const [reviews, setReviews] = useState<PagedReviewResponseDTO | null>(null);
-    const [summary, setSummary] = useState<ReviewSummaryDTO | null>(null);
-    const [product, setProduct] = useState<ProductResponseDTO | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
 
-    const fetchData = useCallback(async () => {
-        try {
-            setLoading(true);
-            if (productId) {
-                const [reviewsData, summaryData, productData] = await Promise.all([
-                    reviewsService.getProductReviews(productId),
-                    reviewsService.getProductReviewSummary(productId),
-                    productsService.getProductById(productId)
-                ]);
-                setReviews(reviewsData);
-                setSummary(summaryData);
-                setProduct(productData);
-            } else {
-                const reviewsData = await reviewsService.getMyReviews();
-                setReviews(reviewsData);
-                // For all reviews, we might want a global summary but API usually provides per product
-            }
-        } catch (error) {
-            console.error("Failed to fetch reviews:", error);
-            toast("Error", "Failed to load reviews data", "error");
-        } finally {
-            setLoading(false);
-        }
-    }, [productId, toast]);
+    // Queries
+    const { data: reviewsData, isLoading: loadingReviews } = useQuery({
+        queryKey: ["reviews", productId],
+        queryFn: () => productId ? reviewsService.getProductReviews(productId) : reviewsService.getMyReviews(),
+    });
 
-    useEffect(() => {
-        fetchData();
-    }, [fetchData]);
+    const { data: summary, isLoading: loadingSummary } = useQuery({
+        queryKey: ["review-summary", productId],
+        queryFn: () => productId ? reviewsService.getProductReviewSummary(productId) : null,
+        enabled: !!productId,
+    });
+
+    const { data: product, isLoading: loadingProduct } = useQuery({
+        queryKey: ["product", productId],
+        queryFn: () => productId ? productsService.getProductById(productId) : null,
+        enabled: !!productId,
+    });
+
+    const reviews = reviewsData?.items || [];
+    const loading = loadingReviews || loadingSummary || loadingProduct;
 
     if (loading) {
         return (
@@ -122,7 +106,7 @@ function ReviewsContent() {
                             <Filter size={14} className="text-gold" /> Filter
                         </Button>
                         <span className="text-[10px] font-black uppercase tracking-widest text-gray-300">
-                            Showing {reviews?.items?.length || 0} relative responses
+                            Showing {reviews.length} relative responses
                         </span>
                     </div>
                     <SearchInput 
@@ -135,8 +119,8 @@ function ReviewsContent() {
                 </div>
 
                 <div className="divide-y divide-gray-50">
-                    {reviews?.items && reviews.items.length > 0 ? (
-                        reviews.items.map((review: ReviewResponseDTO) => (
+                    {reviews.length > 0 ? (
+                        reviews.map((review) => (
                             <div key={review.id} className="p-8 hover:bg-gray-50/30 transition-all flex flex-col md:flex-row gap-8">
                                 <div className="md:w-64 shrink-0 space-y-4">
                                     <div className="flex items-center gap-3">

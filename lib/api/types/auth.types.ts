@@ -99,6 +99,20 @@ export interface AuthResponse {
 	isTwoFactorEnabled: boolean;
 }
 
+export interface TwoFactorResponse {
+	isTwoFactorEnabled: boolean;
+	qrCodeUri?: string | null;
+	manualEntryKey?: string | null;
+}
+
+export interface Verify2faRequest {
+	code: string;
+}
+
+export interface Disable2faRequest {
+	password: string;
+}
+
 // ─── Error shape ──────────────────────────────────────────────────────────────
 
 export interface ApiErrorDetails {
