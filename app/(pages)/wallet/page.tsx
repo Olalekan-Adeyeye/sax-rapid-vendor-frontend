@@ -251,8 +251,9 @@ export default function WalletPage() {
 													})
 												}
 												variant="black"
-												size="md"
+												size="sm"
 												className="px-8 mt-4"
+												rounded="full"
 											>
 												Retry Refresh
 											</Button>

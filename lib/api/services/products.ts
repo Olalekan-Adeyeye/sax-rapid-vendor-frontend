@@ -73,3 +73,11 @@ export async function getProductStats(): Promise<ProductStatsResponseDTO> {
 	return response.data.data;
 }
 
+export async function approveProduct(id: string): Promise<void> {
+	await apiClient.patch(`${BASE_PATH}/${id}/approve`);
+}
+
+export async function rejectProduct(id: string): Promise<void> {
+	await apiClient.patch(`${BASE_PATH}/${id}/reject`);
+}
+

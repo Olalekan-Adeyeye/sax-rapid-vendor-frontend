@@ -14,6 +14,8 @@ import {
 	Activity,
 	Settings2,
 	Calendar,
+	CheckCircle,
+	XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -39,6 +41,8 @@ export default function SingleProductPage() {
 	const [activeImage, setActiveImage] = useState<string | null>(null);
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+	const [isApproving, setIsApproving] = useState(false);
+	const [isRejecting, setIsRejecting] = useState(false);
 
 	const fetchProduct = useCallback(async () => {
 		try {
@@ -73,6 +77,32 @@ export default function SingleProductPage() {
 		} finally {
 			setIsDeleting(false);
 			setIsDeleteModalOpen(false);
+		}
+	};
+	
+	const handleApprove = async () => {
+		try {
+			setIsApproving(true);
+			await productsService.approveProduct(productId);
+			toast("Success", "Product approved successfully", "success");
+			fetchProduct();
+		} catch (err) {
+			toast("Error", getErrorMessage(err), "error");
+		} finally {
+			setIsApproving(false);
+		}
+	};
+
+	const handleReject = async () => {
+		try {
+			setIsRejecting(true);
+			await productsService.rejectProduct(productId);
+			toast("Success", "Product rejected successfully", "success");
+			fetchProduct();
+		} catch (err) {
+			toast("Error", getErrorMessage(err), "error");
+		} finally {
+			setIsRejecting(false);
 		}
 	};
 
@@ -126,6 +156,34 @@ export default function SingleProductPage() {
 					description={`Last updated on ${new Date(product.updatedAt || product.createdAt).toLocaleDateString()}`}
 					actions={
 						<div className="flex items-center gap-3">
+							{(user?.role === "Admin" || user?.role === "SuperAdmin") && (
+								<>
+									<Button
+										variant="outline"
+										rounded="full"
+										size="sm"
+										className="px-6 border-green-100 text-green-600 hover:bg-green-50"
+										onClick={handleApprove}
+										loading={isApproving}
+										disabled={product.status === "Active"}
+									>
+										<CheckCircle size={14} className="mr-2" />
+										Approve
+									</Button>
+									<Button
+										variant="outline"
+										rounded="full"
+										size="sm"
+										className="px-6 border-red-100 text-red-600 hover:bg-red-50"
+										onClick={handleReject}
+										loading={isRejecting}
+										disabled={product.status === "Rejected"}
+									>
+										<XCircle size={14} className="mr-2" />
+										Reject
+									</Button>
+								</>
+							)}
 							<Button
 								variant="outline"
 								rounded="full"

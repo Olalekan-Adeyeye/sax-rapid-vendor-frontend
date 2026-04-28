@@ -158,7 +158,7 @@ export function Dropdown({
 									...(actualAlign === "right" ? { right } : { left }),
 									transform: isFlipped ? "translateY(-100%)" : "none",
 								}}
-								className="z-99999 mt-2 min-w-48 bg-white border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-sm py-2"
+								className="z-99999 mt-2 min-w-48 bg-white border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-sm"
 								onClick={() => setIsOpen(false)}
 							>
 								{children}

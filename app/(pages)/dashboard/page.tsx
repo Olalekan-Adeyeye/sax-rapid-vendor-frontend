@@ -277,9 +277,12 @@ export default function DashboardOverview() {
 								Top Product Views
 							</h4>
 						</div>
-						<Button variant="link" className="text-gray-400 hover:text-gold">
+						<Link
+							href="/notifications"
+							className="text-xs font-bold text-gray-400 hover:text-gold transition-colors"
+						>
 							View Analytics
-						</Button>
+						</Link>
 					</div>
 
 					<div className="grid grid-cols-2 md:grid-cols-4 gap-4">

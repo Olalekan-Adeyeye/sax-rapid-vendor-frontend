@@ -50,7 +50,7 @@ export function TwoFactorSetupModal({
 			);
 			onSuccess();
 			onClose();
-			setStep("SCAN")
+			setStep("SCAN");
 		},
 		onError: (error) => {
 			toast("Error", getErrorMessage(error), "error");
@@ -70,7 +70,11 @@ export function TwoFactorSetupModal({
 			isOpen={isOpen}
 			onClose={onClose}
 			title={step === "SCAN" ? "MFA Configuration" : "MFA Verification"}
-			subtitle={step === "SCAN" ? "Scan the QR code to sync your authenticator app" : "Confirm setup with your 6-digit verification code"}
+			subtitle={
+				step === "SCAN"
+					? "Scan the QR code to sync your authenticator app"
+					: "Confirm setup with your 6-digit verification code"
+			}
 			icon={ShieldCheck}
 			size="lg"
 		>
@@ -92,7 +96,8 @@ export function TwoFactorSetupModal({
 
 							<div className="max-w-xs space-y-3 text-center">
 								<p className="text-[11px] font-bold text-gray-400 leading-relaxed uppercase tracking-widest">
-									Compatible with Google Authenticator, Authy, and other TOTP applications.
+									Compatible with Google Authenticator, Authy, and other TOTP
+									applications.
 								</p>
 							</div>
 						</div>
@@ -110,26 +115,26 @@ export function TwoFactorSetupModal({
 										onClick={copyToClipboard}
 										className="text-gray-400 hover:text-black transition-colors shrink-0"
 									>
-										{copied ? <Check size={18} className="text-green-500" /> : <Copy size={18} />}
+										{copied ? (
+											<Check size={18} className="text-green-500" />
+										) : (
+											<Copy size={18} />
+										)}
 									</button>
 								</div>
 							</div>
 						)}
 
 						<div className="flex gap-4">
-							<Button
-								onClick={onClose}
-								variant="outline"
-								className="flex-1"
-							>
+							<Button onClick={onClose} variant="outline" className="flex-1">
 								Cancel
 							</Button>
 							<Button
 								onClick={() => setStep("VERIFY")}
-								className="flex-1"
+								className="flex-3"
 								variant="primary"
 							>
-								Next Step <ArrowRight size={16} className="ml-2" />
+								I have scanned it <ArrowRight size={16} className="ml-2" />
 							</Button>
 						</div>
 					</>
@@ -143,14 +148,16 @@ export function TwoFactorSetupModal({
 									disabled={verifyMutation.isPending}
 								/>
 							</div>
-							
+
 							<div className="bg-green-50 p-6 rounded border border-green-100 flex gap-4">
 								<ShieldCheck className="text-green-500 shrink-0" size={20} />
 								<div className="space-y-1 text-left">
-									<h6 className="text-[10px] font-bold text-green-900 uppercase">Verification Note</h6>
+									<h6 className="text-[10px] font-bold text-green-900 uppercase">
+										Verification Note
+									</h6>
 									<p className="text-[10px] font-medium text-green-700 leading-relaxed">
-										Enter the current 6-digit code from your authenticator app to permanently 
-										activate MFA protection for this account.
+										Enter the current 6-digit code from your authenticator app
+										to permanently activate MFA protection for this account.
 									</p>
 								</div>
 							</div>

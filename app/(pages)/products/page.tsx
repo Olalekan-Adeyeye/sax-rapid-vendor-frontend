@@ -8,6 +8,8 @@ import {
 	Loader2,
 	ShoppingBag,
 	ExternalLink,
+	CheckCircle,
+	XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
@@ -34,7 +36,7 @@ import {
 import { ProductDeleteModal } from "@/components/products/ProductDeleteModal";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-const PAGE_SIZE = 25;
+const PAGE_SIZE = 20;
 
 function ProductsPageContent() {
 	const { user } = useAuth();
@@ -104,6 +106,28 @@ function ProductsPageContent() {
 		},
 		onError: (error) => {
 			toast("Deletion Failed", getErrorMessage(error), "error");
+		},
+	});
+	
+	const approveMutation = useMutation({
+		mutationFn: (id: string) => productsService.approveProduct(id),
+		onSuccess: () => {
+			toast("Product Approved", "The product is now active.", "success");
+			queryClient.invalidateQueries({ queryKey: ["products"] });
+		},
+		onError: (error) => {
+			toast("Approval Failed", getErrorMessage(error), "error");
+		},
+	});
+
+	const rejectMutation = useMutation({
+		mutationFn: (id: string) => productsService.rejectProduct(id),
+		onSuccess: () => {
+			toast("Product Rejected", "The product has been rejected.", "success");
+			queryClient.invalidateQueries({ queryKey: ["products"] });
+		},
+		onError: (error) => {
+			toast("Rejection Failed", getErrorMessage(error), "error");
 		},
 	});
 
@@ -464,6 +488,31 @@ function ProductsPageContent() {
 														</Button>
 													}
 												>
+												<DropdownItem
+																icon={
+																	<CheckCircle
+																		size={14}
+																		className="text-green-500"
+																	/>
+																}
+																onClick={() => approveMutation.mutate(product.id)}
+																disabled={approveMutation.isPending || product.status === "Active"}
+															>
+																Approve Product
+															</DropdownItem>
+															{/* <DropdownItem
+																icon={
+																	<XCircle
+																		size={14}
+																		className="text-red-500"
+																	/>
+																}
+																onClick={() => rejectMutation.mutate(product.id)}
+																disabled={rejectMutation.isPending || product.status === "Rejected"}
+															>
+																Reject Product
+															</DropdownItem> */}
+															<DropdownDivider />
 													<DropdownItem
 														icon={
 															<ExternalLink

@@ -38,6 +38,7 @@ import {
 } from "react-hook-form";
 import { productSchema, ProductFormValues } from "@/lib/schemas/vendor";
 import { CreateProductDTO } from "@/lib/api/types/products.types";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 // Helper type that represents the logical OR of all fields for easier RHF integration
 type FlatProductValues = {
@@ -147,10 +148,28 @@ export default function AddProductPage() {
 		Set<string>
 	>(new Set());
 
-	const [categories, setCategories] = useState<CategoryResponseDTO[]>([]);
-	const [loadingCategories, setLoadingCategories] = useState(true);
-	const [error, setError] = useState<string | null>(null);
-	const [isSubmitting, setIsSubmitting] = useState(false);
+	const queryClient = useQueryClient();
+
+	const categoriesQuery = useQuery({
+		queryKey: ["categories"],
+		queryFn: async () => {
+			const data = (await categoriesService.getCategories()) || [];
+			const apiCategoryNames = new Set(
+				data.filter((c) => c && c.name).map((c) => c.name?.toLowerCase()),
+			);
+			const filteredRobust = ROBUST_CATEGORIES.filter(
+				(c) => c && c.name && !apiCategoryNames.has(c.name?.toLowerCase()),
+			);
+			return [...data, ...filteredRobust];
+		},
+		staleTime: 5 * 60 * 1000,
+	});
+
+	const categories = categoriesQuery.data || [];
+	const loadingCategories = categoriesQuery.isLoading;
+	const categoryError = categoriesQuery.isError
+		? getErrorMessage(categoriesQuery.error)
+		: null;
 
 	const form = useForm<ProductFormValues>({
 		resolver: zodResolver(productSchema),
@@ -240,32 +259,6 @@ export default function AddProductPage() {
 		return () => {
 			localImagesRef.current.forEach((img) => URL.revokeObjectURL(img.preview));
 		};
-	}, []);
-
-	const fetchCats = async () => {
-		try {
-			setLoadingCategories(true);
-			setError(null);
-			const data = (await categoriesService.getCategories()) || [];
-
-			const apiCategoryNames = new Set(
-				data.filter((c) => c && c.name).map((c) => c.name?.toLowerCase()),
-			);
-			const filteredRobust = ROBUST_CATEGORIES.filter(
-				(c) => c && c.name && !apiCategoryNames.has(c.name?.toLowerCase()),
-			);
-
-			setCategories([...data, ...filteredRobust]);
-		} catch (err) {
-			console.error("Failed to load categories:", err);
-			setError(getErrorMessage(err));
-		} finally {
-			setLoadingCategories(false);
-		}
-	};
-
-	useEffect(() => {
-		fetchCats();
 	}, []);
 
 	const flattenedCategories = useMemo(() => {
@@ -458,10 +451,9 @@ export default function AddProductPage() {
 		setFieldValue("variations" as Path<FlatProductValues>, updated);
 	};
 
-	const onSubmit = async (values: ProductFormValues) => {
-		const data = values as unknown as FlatProductValues;
-		try {
-			setIsSubmitting(true);
+	const createProductMutation = useMutation({
+		mutationFn: async (values: ProductFormValues) => {
+			const data = values as unknown as FlatProductValues;
 
 			// 1. Upload images first if any
 			const uploadedImageUrls: string[] = [];
@@ -478,11 +470,6 @@ export default function AddProductPage() {
 						uploadedImageUrls.push(result.value);
 					} else {
 						console.error(`Failed to upload image ${idx}:`, result.reason);
-						toast(
-							"Upload Warning",
-							`Image ${idx + 1} failed to upload and was skipped.`,
-							"warning",
-						);
 					}
 				});
 				setIsUploading(false);
@@ -523,15 +510,20 @@ export default function AddProductPage() {
 						}),
 			};
 
-			await productsService.createProduct(payload);
+			return await productsService.createProduct(payload);
+		},
+		onSuccess: () => {
 			toast("Success", "Product published successfully", "success");
+			queryClient.invalidateQueries({ queryKey: ["products"] });
 			router.push("/products");
-		} catch (error) {
+		},
+		onError: (error) => {
 			toast("Error", getErrorMessage(error), "error");
-		} finally {
-			setIsSubmitting(false);
-			setIsUploading(false);
-		}
+		},
+	});
+
+	const onSubmit = async (values: ProductFormValues) => {
+		createProductMutation.mutate(values);
 	};
 
 	// Organization Segment shared between mobile and desktop
@@ -558,10 +550,10 @@ export default function AddProductPage() {
 						) : null
 					}
 					rightSlot={
-						error ? (
+						categoryError ? (
 							<button
 								type="button"
-								onClick={fetchCats}
+								onClick={() => categoriesQuery.refetch()}
 								className="text-gold hover:text-black transition-colors"
 								title="Retry Loading Categories"
 							>
@@ -572,7 +564,7 @@ export default function AddProductPage() {
 							</button>
 						) : null
 					}
-					error={error || errors.categoryId?.message}
+					error={categoryError || errors.categoryId?.message}
 				/>
 				<Input
 					id="sku-number"
@@ -589,7 +581,7 @@ export default function AddProductPage() {
 	return (
 		<div className="max-w-5xl mx-auto space-y-12 pb-24">
 			<PageHeader
-				title="Publish New Product"
+				title="Add New Product"
 				description="List your product to the global marketplace"
 				actions={
 					<>
@@ -597,10 +589,10 @@ export default function AddProductPage() {
 							onClick={handleSubmit((data) =>
 								onSubmit(data as ProductFormValues),
 							)}
-							disabled={isSubmitting}
+							disabled={createProductMutation.isPending}
 							size="sm"
 							rounded="full"
-							loading={isSubmitting}
+							loading={createProductMutation.isPending}
 							className="flex-1 lg:flex-none px-6 lg:px-8"
 						>
 							Publish Product
