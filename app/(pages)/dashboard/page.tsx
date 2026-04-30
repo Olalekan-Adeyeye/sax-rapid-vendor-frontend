@@ -1,5 +1,4 @@
 "use client";
-import React from "react";
 import {
 	TrendingUp,
 	ShoppingBag,
@@ -8,6 +7,8 @@ import {
 	Bell,
 	ArrowUpRight,
 	MoreVertical,
+	AlertCircle,
+	RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
@@ -29,6 +30,7 @@ function StatCard({
 	detail,
 	icon: Icon,
 	variant = "light",
+	isError,
 }: {
 	title: string;
 	value: string;
@@ -36,6 +38,7 @@ function StatCard({
 	trend?: string;
 	icon: React.ElementType;
 	variant?: "light" | "dark";
+	isError?: boolean;
 }) {
 	const isDark = variant === "dark";
 
@@ -69,11 +72,14 @@ function StatCard({
 					{title}
 				</p>
 				<h3
-					className={`text-2xl lg:text-3xl font-black tracking-tighter mb-2 transition-colors duration-300 ${
+					className={`text-2xl lg:text-3xl font-black tracking-tighter mb-2 transition-colors duration-300 flex items-center gap-2 ${
 						!isDark && "group-hover:text-black"
-					}`}
+					} ${isError ? "text-red-500" : ""}`}
 				>
 					{value}
+					{isError && (
+						<AlertCircle size={16} className="text-red-500 animate-pulse" />
+					)}
 				</h3>
 			</div>
 			<p
@@ -165,6 +171,8 @@ export default function DashboardOverview() {
 	const {
 		data: wallet,
 		isLoading: loadingWallet,
+		error: walletError,
+		refetch: refetchWallet,
 	} = useQuery({
 		queryKey: ["vendor-wallet"],
 		queryFn: getMyWallet,
@@ -173,6 +181,8 @@ export default function DashboardOverview() {
 	const {
 		data: productStats,
 		isLoading: loadingStats,
+		error: statsError,
+		refetch: refetchStats,
 	} = useQuery({
 		queryKey: ["product-stats"],
 		queryFn: getProductStats,
@@ -208,14 +218,6 @@ export default function DashboardOverview() {
 				actions={
 					<>
 						<Button
-							variant="outline"
-							rounded="full"
-							size="sm"
-							className="font-bold flex-1 sm:flex-none whitespace-nowrap"
-						>
-							Generate Report
-						</Button>
-						<Button
 							variant="primary"
 							rounded="full"
 							size="sm"
@@ -232,7 +234,14 @@ export default function DashboardOverview() {
 				<StatCard
 					icon={TrendingUp}
 					title="Wallet Balance"
-					value={loadingWallet ? "..." : formatCurrency(wallet?.balance || 0)}
+					value={
+						loadingWallet
+							? "..."
+							: walletError
+								? "N/A"
+								: formatCurrency(wallet?.balance || 0)
+					}
+					isError={!!walletError}
 					detail="Available for withdrawal"
 					variant="dark"
 				/>
@@ -242,8 +251,11 @@ export default function DashboardOverview() {
 					value={
 						loadingStats
 							? "..."
-							: (productStats?.totalViews || 0).toLocaleString()
+							: statsError
+								? "N/A"
+								: (productStats?.totalViews || 0).toLocaleString()
 					}
+					isError={!!statsError}
 					detail="Total visibility"
 				/>
 				<StatCard
@@ -252,16 +264,24 @@ export default function DashboardOverview() {
 					value={
 						loadingStats
 							? "..."
-							: (productStats?.totalProducts || 0).toLocaleString()
+							: statsError
+								? "N/A"
+								: (productStats?.totalProducts || 0).toLocaleString()
 					}
+					isError={!!statsError}
 					detail="Listed in marketplace"
 				/>
 				<StatCard
 					icon={DollarSign}
 					title="Pending Funds"
 					value={
-						loadingWallet ? "..." : formatCurrency(wallet?.pendingBalance || 0)
+						loadingWallet
+							? "..."
+							: walletError
+								? "N/A"
+								: formatCurrency(wallet?.pendingBalance || 0)
 					}
+					isError={!!walletError}
 					detail="Escrow / Processing"
 				/>
 			</div>
@@ -330,17 +350,29 @@ export default function DashboardOverview() {
 
 					<div className="bg-white border border-gray-100 rounded divide-y divide-gray-50 overflow-hidden min-h-75 flex flex-col">
 						{notificationsError ? (
-							<div className="p-10 text-center flex-1 flex flex-col items-center justify-center space-y-3">
-								<p className="text-[10px] font-black text-red-500 uppercase tracking-widest">
-									Failed to load updates
-								</p>
+							<div className="p-10 text-center flex-1 flex flex-col items-center justify-center space-y-4 bg-red-50/10">
+								<div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center mb-1">
+									<AlertCircle size={20} className="text-red-500" />
+								</div>
+								<div className="space-y-1">
+									<p className="text-[10px] font-black text-red-500 uppercase tracking-widest">
+										Failed to load updates
+									</p>
+									<p className="text-[9px] font-bold text-gray-400 uppercase tracking-tight">
+										Connection Sync Interrupted
+									</p>
+								</div>
 								<Button
 									variant="ghost"
 									size="sm"
 									onClick={() => refetchNotifications()}
-									className="text-[9px] font-black uppercase text-gold hover:text-black h-auto p-0 border-none"
+									className="text-[9px] font-black uppercase text-gold hover:text-black h-auto p-0 border-none flex items-center gap-2 group"
 								>
-									Retry
+									<RefreshCw
+										size={10}
+										className="group-hover:rotate-180 transition-transform duration-500"
+									/>
+									Retry Sync
 								</Button>
 							</div>
 						) : loadingNotifications ? (
@@ -582,18 +614,33 @@ export default function DashboardOverview() {
 						<tbody className="divide-y divide-gray-50">
 							{ordersError ? (
 								<tr>
-									<td colSpan={7} className="px-8 py-20 text-center">
-										<div className="flex flex-col items-center justify-center space-y-3">
-											<p className="text-[10px] font-black text-red-500 uppercase tracking-widest">
-												Failed to load orders
-											</p>
+									<td
+										colSpan={7}
+										className="px-8 py-20 text-center bg-red-50/5"
+									>
+										<div className="flex flex-col items-center justify-center space-y-4">
+											<div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center mb-1">
+												<AlertCircle size={20} className="text-red-500" />
+											</div>
+											<div className="space-y-1">
+												<p className="text-[10px] font-black text-red-500 uppercase tracking-widest">
+													Failed to load orders
+												</p>
+												<p className="text-[9px] font-bold text-gray-400 uppercase tracking-tight">
+													Transactional Data Unavailable
+												</p>
+											</div>
 											<Button
 												variant="ghost"
 												size="sm"
 												onClick={() => refetchOrders()}
-												className="text-[9px] font-black uppercase text-gold hover:text-black h-auto p-0 border-none"
+												className="text-[9px] font-black uppercase text-gold hover:text-black h-auto p-0 border-none flex items-center gap-2 group"
 											>
-												Retry
+												<RefreshCw
+													size={10}
+													className="group-hover:rotate-180 transition-transform duration-500"
+												/>
+												Retry Sync
 											</Button>
 										</div>
 									</td>
@@ -654,10 +701,10 @@ export default function DashboardOverview() {
 												asChild
 												variant="ghost"
 												size="sm"
-												className="text-gray-300 hover:text-black px-4"
+												className="text-gray-300 hover:text-black px-3!"
 											>
 												<Link href={`/orders/${order.id}`}>
-													<MoreVertical size={16} />
+													<Eye size={16} />
 												</Link>
 											</Button>
 										</td>

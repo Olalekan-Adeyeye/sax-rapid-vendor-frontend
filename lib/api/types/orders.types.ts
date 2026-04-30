@@ -2,6 +2,26 @@
  * TypeScript types/DTOs for the Orders tag
  */
 
+export interface VariationAttributeDTO {
+  attributeName?: string | null;
+  attributeValue?: string | null;
+  name?: string | null;
+  value?: string | null;
+}
+
+export interface VariationDetailsDTO {
+  id?: string;
+  sku?: string | null;
+  price?: number;
+  salePrice?: number | null;
+  effectivePrice?: number;
+  stockQuantity?: number;
+  isInStock?: boolean;
+  attributes?: Record<string, string> | VariationAttributeDTO[] | null;
+}
+
+export type VariationDetails = string | VariationDetailsDTO | null;
+
 export enum OrderStatus {
   Pending = "Pending",
   Confirmed = "Confirmed",
@@ -48,7 +68,7 @@ export interface OrderItemResponseDTO {
   productId: string;
   productName: string | null;
   productSKU: string | null;
-  variationDetails: string | null;
+  variationDetails: VariationDetails;
   quantity: number;
   unitPrice: number;
   totalPrice: number;

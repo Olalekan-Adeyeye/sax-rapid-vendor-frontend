@@ -16,6 +16,7 @@ import * as ordersService from "@/lib/api/services/orders";
 import { OrderResponseDTO, OrderStatus } from "@/lib/api/types/orders.types";
 import { formatCurrency } from "../../../../lib/utils/currency";
 import { formatDate } from "@/lib/utils/date";
+import { formatVariationDetails } from "@/lib/utils/product";
 import { useToast } from "@/lib/context/ToastContext";
 import { Button } from "@/components/ui/Button";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
@@ -232,7 +233,7 @@ export default function OrderDetailsPage() {
 										</div>
 										{item.variationDetails && (
 											<p className="text-[12px] font-bold text-gray-400 uppercase tracking-widest">
-												{item.variationDetails}
+												{formatVariationDetails(item.variationDetails)}
 											</p>
 										)}
 										<div className="flex items-center gap-4 mt-2">

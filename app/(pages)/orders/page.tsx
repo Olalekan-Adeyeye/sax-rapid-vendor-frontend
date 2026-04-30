@@ -161,7 +161,7 @@ export default function OrdersPage() {
 								/>
 							</div>
 							<div className="flex items-center gap-3">
-								<button className="px-6 py-3 rounded-full border border-gray-100 text-xs font-bold text-gray-400 hover:text-black flex items-center gap-2">
+								<button className="px-6 py-3 rounded border border-gray-100 text-xs font-bold text-gray-400 hover:text-black flex items-center gap-2">
 									<Filter size={14} />
 									Filter
 								</button>
