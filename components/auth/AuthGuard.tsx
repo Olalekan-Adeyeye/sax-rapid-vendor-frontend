@@ -1,9 +1,9 @@
 "use client";
 
-import { useAuth } from "@/lib/context/AuthContext";
+import React, { useMemo, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { useEffect } from "react";
-// import Loading from "@/app/loading";
+import Loading from "@/app/loading";
+import { useAuth } from "@/lib/context/AuthContext";
 
 interface AuthGuardProps {
 	children: React.ReactNode;
@@ -17,118 +17,68 @@ const PUBLIC_PAGES = [
 ];
 const AUTH_FLOW_PAGES = ["/verify", "/2fa", "/onboarding"];
 
-/**
- * Global Route Guard
- * Enforces dynamic redirection based on user status (verified, 2fa, etc.)
- */
 export function AuthGuard({ children }: AuthGuardProps) {
-	const { user, loading, isTwoFactorVerified } = useAuth();
+	const { user, loading, isTwoFactorVerified, vendorProfile, vendorLoading } =
+		useAuth();
 	const router = useRouter();
 	const pathname = usePathname();
 
+	// ─── 1. Resolve Target Route ──────────────────────────────────────────────
+	const targetRoute = useMemo(() => {
+		// While loading, we don't have enough state to make a decision
+		if (loading || vendorLoading) return null;
+
+		const isPublic = PUBLIC_PAGES.includes(pathname);
+		const isAuthFlow = AUTH_FLOW_PAGES.includes(pathname);
+
+		// 1. Calculate if the user is 100% ready for the dashboard
+		const isFullyReady =
+			!!user &&
+			user.isVerified &&
+			(!user.isTwoFactorEnabled || isTwoFactorVerified) &&
+			!!vendorProfile;
+
+		// 2. Fully ready users: Redirect AWAY from public/auth pages to dashboard
+		if (isFullyReady) {
+			if (isPublic || isAuthFlow || pathname === "/") {
+				return "/dashboard";
+			}
+			return pathname;
+		}
+
+		// 3. Partially ready users: Allow staying on public pages
+		if (isPublic) return pathname;
+
+		// 4. Partially ready users on protected routes: Enforce the Auth Flow
+		if (!user) return "/login";
+		// if (!user.isVerified) return "/verify"; //LAX for development purpose
+		if (user.isTwoFactorEnabled && !isTwoFactorVerified) return "/2fa";
+		if (vendorProfile === null) return "/onboarding";
+
+		return pathname;
+	}, [
+		user,
+		loading,
+		isTwoFactorVerified,
+		vendorProfile,
+		vendorLoading,
+		pathname,
+	]);
+
+	// ─── 2. Handle Redirection ────────────────────────────────────────────────
 	useEffect(() => {
-		if (loading) return;
-
-		// 1. Unauthenticated -> Redirect to login if on protected/auth route
-		if (!user) {
-			if (!PUBLIC_PAGES.includes(pathname)) {
-				router.replace("/login");
-			}
-			return;
+		if (targetRoute && targetRoute !== pathname) {
+			router.replace(targetRoute);
 		}
+	}, [targetRoute, pathname, router]);
 
-		// 2. Role Security -> Only Sellers (Vendors) allowed. Buyers/others go to onboarding
-		// (Assuming onboarding converts Buyer to Seller)
+	// ─── 3. Render Logic (Flash Prevention) ───────────────────────────────────
+	// Show global loader if we are still fetching core auth state
+	if (loading || vendorLoading) return <Loading />;
 
-		// 3. Status Check: Verification
-		// Have to disable for now (Still in testing phase)
-		/*
-		if (!user.isVerified) {
-			if (pathname !== "/verify") {
-				router.replace("/verify");
-			}
-			return;
-		}
-		*/
+	// If a redirection is in progress, prevent rendering children to avoid flickering
+	if (targetRoute && targetRoute !== pathname) return <Loading />;
 
-		// 4. Status Check: Two Factor
-		// Have to disable for now (Still in testing phase)
-		/*
-		if (user.isTwoFactorEnabled && !isTwoFactorVerified) {
-			if (pathname !== "/2fa") {
-				router.replace("/2fa");
-			}
-			return;
-		}
-		*/
-
-		// LAX_FOR_TESTING: Disabled to allow viewing changes
-		/*
-		// 5. Status Check: Onboarding (Vendor/Seller role is the completion flag)
-		const isMerchant = user.role === "Vendor" || user.role === "Seller";
-		if (!isMerchant) {
-			if (pathname !== "/onboarding") {
-				router.replace("/onboarding");
-			}
-			return;
-		}
-		*/
-
-		// 6. Already authenticated & authorized -> redirect away from auth pages
-		// LAX_FOR_TESTING: Disabled to allow viewing changes
-		/*
-		if (
-			PUBLIC_PAGES.includes(pathname) ||
-			AUTH_FLOW_PAGES.includes(pathname) ||
-			pathname === "/"
-		) {
-			router.replace("/dashboard");
-		}
-		*/
-	}, [user, loading, isTwoFactorVerified, pathname, router]);
-
-	// ─── FLASH PREVENTION ──────────────────────────────────────────────
-	// Determine if we should render children or null based on current state vs route
-
-	if (loading) return null; // Or a global spinner
-
-	if (!user) {
-		return PUBLIC_PAGES.includes(pathname) ? <>{children}</> : null;
-	}
-
-	// Have to disable for now (Still in testing phase)
-	/*
-	if (!user.isVerified) {
-		return pathname === "/verify" ? <>{children}</> : null;
-	}
-
-	if (user.isTwoFactorEnabled && !isTwoFactorVerified) {
-		return pathname === "/2fa" ? <>{children}</> : null;
-	}
-	*/
-
-	// For fully ready sellers, block auth pages
-	// LAX_FOR_TESTING: Disabled to allow viewing changes
-	/*
-	// For users who are NOT yet vendors/sellers, only allow onboarding
-	const isMerchant = user.role === "Vendor" || user.role === "Seller";
-	if (!isMerchant) {
-		return pathname === "/onboarding" ? <>{children}</> : null;
-	}
-	*/
-
-	// For fully ready sellers, block auth pages
-	// LAX_FOR_TESTING: Disabled to allow viewing changes
-	/*
-	// For fully ready merchants, block auth pages
-	if (
-		PUBLIC_PAGES.includes(pathname) ||
-		AUTH_FLOW_PAGES.includes(pathname) ||
-		pathname === "/"
-	) {
-		return null;
-	}
-	*/
-
+	// Render children only if the user is on the correct route
 	return <>{children}</>;
 }

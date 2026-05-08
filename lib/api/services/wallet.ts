@@ -6,62 +6,42 @@
 import apiClient from "../apiClient";
 import { ApiResponse } from "../types/auth.types";
 import {
-  WalletResponseDTO,
-  PagedWalletTransactionResponseDTO,
-  FundWalletRequestDTO,
-  WithdrawRequestDTO,
+  WalletDetailsResponseDTO,
   WalletFundRequestDTO,
-  WalletFundResponseDTO,
+  VendorWithdrawalRequestDTO,
 } from "../types/wallet.types";
+import { InitializePaymentResponseDTO } from "../types/payments.types";
 
-const BASE = "/Wallet";
+const BASE = "/vendor/wallet";
 
 /**
- * GET /api/Wallet
- * Get my wallet
+ * GET /api/vendor/wallet
+ * Get wallet details
  */
-export async function getMyWallet(): Promise<WalletResponseDTO> {
-  const response = await apiClient.get<ApiResponse<WalletResponseDTO>>(`${BASE}`);
+export async function getWalletDetails(): Promise<WalletDetailsResponseDTO> {
+  const response = await apiClient.get<ApiResponse<WalletDetailsResponseDTO>>(`${BASE}`);
   return response.data.data;
 }
 
 /**
- * GET /api/Wallet/transactions
- * Get transaction history
+ * POST /api/vendor/wallet/fund
+ * Fund wallet
  */
-export async function getTransactionHistory(
-  pageIndex = 1,
-  pageSize = 20
-): Promise<PagedWalletTransactionResponseDTO> {
-  const response = await apiClient.get<ApiResponse<PagedWalletTransactionResponseDTO>>(
-    `${BASE}/transactions`,
-    { params: { pageIndex, pageSize } }
-  );
+export async function fundWallet(data: WalletFundRequestDTO): Promise<InitializePaymentResponseDTO> {
+  const response = await apiClient.post<ApiResponse<InitializePaymentResponseDTO>>(`${BASE}/fund`, data);
   return response.data.data;
 }
 
 /**
- * POST /api/Wallet/fund/initialize
- * Initialize wallet funding
- */
-export async function initializeFund(data: WalletFundRequestDTO): Promise<WalletFundResponseDTO> {
-  const response = await apiClient.post<ApiResponse<WalletFundResponseDTO>>(`${BASE}/fund/initialize`, data);
-  return response.data.data;
-}
-
-/**
- * POST /api/Wallet/fund
- * Fund wallet (Verify/Complete)
- */
-export async function fundWallet(data: FundWalletRequestDTO): Promise<WalletResponseDTO> {
-  const response = await apiClient.post<ApiResponse<WalletResponseDTO>>(`${BASE}/fund`, data);
-  return response.data.data;
-}
-
-/**
- * POST /api/Wallet/withdraw
+ * POST /api/vendor/wallet/withdraw
  * Withdraw from wallet
  */
-export async function withdraw(data: WithdrawRequestDTO): Promise<void> {
+export async function withdraw(data: VendorWithdrawalRequestDTO): Promise<void> {
   await apiClient.post(`${BASE}/withdraw`, data);
 }
+
+// Deprecated methods for backward compatibility - will point to new endpoints where possible
+export async function getMyWallet(): Promise<WalletDetailsResponseDTO> {
+  return getWalletDetails();
+}
+

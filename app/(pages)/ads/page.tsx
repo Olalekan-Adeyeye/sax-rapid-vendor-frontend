@@ -16,7 +16,7 @@ import {
 	getMyBoosts,
 	boostProduct,
 } from "@/lib/api/services/boost";
-import { getMyWallet } from "@/lib/api/services/wallet";
+import * as walletService from "@/lib/api/services/wallet";
 import { getMyVendorProfile } from "@/lib/api/services/vendor";
 import { getProducts } from "@/lib/api/services/products";
 import type {
@@ -58,9 +58,10 @@ export default function BoostAdsPage() {
 	});
 
 	const { data: wallet, isLoading: loadingWallet } = useQuery({
-		queryKey: ["my-wallet"],
-		queryFn: getMyWallet,
+		queryKey: ["vendor-wallet"],
+		queryFn: walletService.getWalletDetails,
 	});
+
 
 	const { data: productsData, isLoading: loadingProducts } = useQuery({
 		queryKey: ["vendor-products", vendor?.userId],
@@ -89,7 +90,7 @@ export default function BoostAdsPage() {
 			toast("Success", "Product boost activated successfully!", "success");
 			setIsModalOpen(false);
 			queryClient.invalidateQueries({ queryKey: ["my-boosts"] });
-			queryClient.invalidateQueries({ queryKey: ["my-wallet"] });
+			queryClient.invalidateQueries({ queryKey: ["vendor-wallet"] });
 		},
 		onError: (error) => {
 			toast("Error", getErrorMessage(error), "error");
@@ -114,7 +115,7 @@ export default function BoostAdsPage() {
 		if (!selectedBoost) return;
 
 		const totalCost = calculateCost();
-		if (wallet && wallet.availableBalance < totalCost) {
+		if (wallet && wallet.balance < totalCost) {
 			toast("Insufficient Funds", "Please fund your wallet to continue", "error");
 			return;
 		}
@@ -413,15 +414,16 @@ export default function BoostAdsPage() {
 						</div>
 						<div className="flex flex-col items-end gap-1">
 							<span
-								className={`text-[8px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full ${wallet && wallet.availableBalance >= calculateCost() ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"}`}
+								className={`text-[8px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full ${wallet && wallet.balance >= calculateCost() ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"}`}
 							>
-								{wallet && wallet.availableBalance >= calculateCost()
+								{wallet && wallet.balance >= calculateCost()
 									? "Wallet Sufficient"
 									: "Insufficient Funds"}
 							</span>
 							<p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">
-								Balance: {formatCurrency(wallet?.availableBalance || 0)}
+								Balance: {formatCurrency(wallet?.balance || 0)}
 							</p>
+
 						</div>
 					</div>
 
@@ -440,9 +442,10 @@ export default function BoostAdsPage() {
 							onClick={handleConfirmBoost}
 							loading={boostMutation.isPending}
 							disabled={
-								!wallet || !selectedBoost || wallet.availableBalance < calculateCost()
+								!wallet || !selectedBoost || wallet.balance < calculateCost()
 							}
 						>
+
 							<CheckCircle size={16} />
 							Confirm
 						</Button>

@@ -8,9 +8,10 @@ import {
 	Paperclip,
 	Smile,
 	MessageSquare,
-	ChevronLeft,
 	Loader2,
 	Inbox,
+	RefreshCw,
+	ChevronLeft,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -33,22 +34,34 @@ export default function MessagesPage() {
 	const { user } = useAuth();
 	const { toast } = useToast();
 	const queryClient = useQueryClient();
-	const [selectedChatId, setSelectedChatId] = React.useState<string | null>(null);
+	const [selectedChatId, setSelectedChatId] = React.useState<string | null>(
+		null,
+	);
 	const [newMessage, setNewMessage] = React.useState("");
 
 	// Queries
-	const { data: conversationsData, isLoading: loadingConversations, error: conversationsError } = useQuery({
+	const {
+		data: conversationsData,
+		isLoading: loadingConversations,
+		isFetching: fetchingConversations,
+		error: conversationsError,
+		refetch: refetchConversations,
+	} = useQuery({
 		queryKey: ["conversations"],
 		queryFn: getConversations,
 	});
 
 	const { data: messagesData, isLoading: loadingMessages } = useQuery({
 		queryKey: ["messages", selectedChatId],
-		queryFn: () => (selectedChatId ? getMessages(selectedChatId, 1, 100) : null),
+		queryFn: () =>
+			selectedChatId ? getMessages(selectedChatId, 1, 100) : null,
 		enabled: !!selectedChatId,
 	});
 
-	const conversations = React.useMemo(() => conversationsData || [], [conversationsData]);
+	const conversations = React.useMemo(
+		() => conversationsData || [],
+		[conversationsData],
+	);
 	const messages = messagesData?.items || [];
 	const error = conversationsError ? getErrorMessage(conversationsError) : null;
 
@@ -74,7 +87,7 @@ export default function MessagesPage() {
 
 	React.useEffect(() => {
 		if (selectedChatId) {
-			const convo = conversations.find(c => c.id === selectedChatId);
+			const convo = conversations.find((c) => c.id === selectedChatId);
 			if (convo && convo.unreadCount > 0) {
 				markAsReadMutation.mutate(selectedChatId);
 			}
@@ -91,6 +104,15 @@ export default function MessagesPage() {
 		});
 	};
 
+	const handleRefresh = async () => {
+		try {
+			await refetchConversations();
+			toast("Refreshed", "Conversation list updated", "success");
+		} catch (err) {
+			toast("Refresh Failed", "Could not sync conversations", "error");
+		}
+	};
+
 	const selectedConversation = conversations.find(
 		(c) => c.id === selectedChatId,
 	);
@@ -101,13 +123,30 @@ export default function MessagesPage() {
 				<ErrorComponent
 					title="Failed to load messages"
 					message={error!}
-					onRetry={() => queryClient.invalidateQueries({ queryKey: ["conversations"] })}
+					onRetry={() =>
+						queryClient.invalidateQueries({ queryKey: ["conversations"] })
+					}
 				/>
 			) : (
 				<>
 					<PageHeader
 						title="Messages"
 						description="Direct communication with your customers and support team"
+						actions={
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={handleRefresh}
+								disabled={fetchingConversations}
+								className="px-6 rounded-full text-xs font-bold gap-2"
+							>
+								<RefreshCw
+									size={14}
+									className={`${fetchingConversations ? "animate-spin" : ""}`}
+								/>
+								Refresh
+							</Button>
+						}
 					/>
 
 					<div className="flex h-[calc(100vh-180px)] bg-white border border-gray-100 rounded overflow-hidden relative">
@@ -373,11 +412,17 @@ export default function MessagesPage() {
 										<Button
 											variant="outline"
 											size="sm"
-											className="mt-4 rounded-full mx-auto"
-											onClick={() => queryClient.invalidateQueries({ queryKey: ["conversations"] })}
-											loading={loadingConversations}
+											className="mt-4 rounded-full mx-auto gap-2 font-bold"
+											onClick={handleRefresh}
+											disabled={fetchingConversations}
 										>
-											Refresh Conversations
+											<RefreshCw
+												size={16}
+												className={fetchingConversations ? "animate-spin" : ""}
+											/>
+											{fetchingConversations
+												? "Refreshing..."
+												: "Refresh Conversations"}
 										</Button>
 									</div>
 								</div>

@@ -121,7 +121,6 @@ export const onboardingSchema = z
 		address: z.string().min(1, "Address is required"),
 		city: z.string().min(1, "City is required"),
 		state: z.string().min(1, "State is required"),
-		postalCode: z.string().min(1, "Postal code is required"),
 		suite: z.string().optional(),
 		idType: z.string().min(1, "Identification type is required"),
 		idFile: z.any().optional(),

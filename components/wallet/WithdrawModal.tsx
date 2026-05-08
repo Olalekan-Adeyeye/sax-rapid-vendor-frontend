@@ -27,11 +27,11 @@ export function WithdrawModal({
 
 	const [formData, setFormData] = useState({
 		amount: "",
-		bankName: "",
+		bankCode: "",
 		accountNumber: "",
 		accountName: "",
-		routingNumber: "",
 	});
+
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -58,10 +58,12 @@ export function WithdrawModal({
 		try {
 			setLoading(true);
 			await walletService.withdraw({
-				...formData,
 				amount: numAmount,
-				currency: currency,
+				bankCode: formData.bankCode,
+				accountNumber: formData.accountNumber,
+				accountName: formData.accountName,
 			});
+
 
 			toast(
 				"Payout Requested",
@@ -119,7 +121,7 @@ export function WithdrawModal({
 					</div>
 					<div className="space-y-3">
 						<label className="block text-[10px] font-black uppercase tracking-widest text-gray-400">
-							Bank Name
+							Bank Code
 						</label>
 						<div className="relative">
 							<Building2
@@ -127,17 +129,18 @@ export function WithdrawModal({
 								size={14}
 							/>
 							<Input
-								id="bank-name"
-								placeholder="e.g. GTBank"
+								id="bank-code"
+								placeholder="e.g. 058"
 								className="pl-10 text-[10px]"
-								value={formData.bankName}
+								value={formData.bankCode}
 								onChange={(e) =>
-									setFormData({ ...formData, bankName: e.target.value })
+									setFormData({ ...formData, bankCode: e.target.value })
 								}
 								required
 							/>
 						</div>
 					</div>
+
 				</div>
 
 				<div className="grid grid-cols-2 gap-6">

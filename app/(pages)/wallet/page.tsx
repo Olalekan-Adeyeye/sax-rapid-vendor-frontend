@@ -40,17 +40,8 @@ export default function WalletPage() {
 		isLoading: loadingWallet,
 		error: walletError,
 	} = useQuery({
-		queryKey: ["my-wallet"],
-		queryFn: walletService.getMyWallet,
-	});
-
-	const {
-		data: transactionsData,
-		isLoading: loadingTransactions,
-		error: transactionsError,
-	} = useQuery({
-		queryKey: ["wallet-transactions"],
-		queryFn: () => walletService.getTransactionHistory(1, 10),
+		queryKey: ["vendor-wallet"],
+		queryFn: walletService.getWalletDetails,
 	});
 
 	const { data: vendor } = useQuery({
@@ -58,15 +49,17 @@ export default function WalletPage() {
 		queryFn: vendorService.getMyVendorProfile,
 	});
 
-	const activeCurrency = wallet?.currency || "";
-	const transactions = transactionsData?.items || [];
+	const activeCurrency = wallet?.currency || "NGN";
+	const transactions = wallet?.recentTransactions || [];
 	const error = walletError ? getErrorMessage(walletError) : null;
-	const transactionError = !!transactionsError;
+	const loadingTransactions = loadingWallet;
+	const transactionError = !!walletError;
+
 
 	const handleActionSuccess = () => {
-		queryClient.invalidateQueries({ queryKey: ["my-wallet"] });
-		queryClient.invalidateQueries({ queryKey: ["wallet-transactions"] });
+		queryClient.invalidateQueries({ queryKey: ["vendor-wallet"] });
 	};
+
 
 	return (
 		<div className="space-y-10">
@@ -136,18 +129,18 @@ export default function WalletPage() {
 									<div className="relative z-10">
 										<h3 className="text-4xl font-black tracking-tighter mb-2">
 											{formatCurrency(
-												wallet?.availableBalance || 0,
+												wallet?.balance || 0,
 												activeCurrency,
 											)}
 										</h3>
 										<p className="text-xs font-bold text-gray-500">
-											Available for Payout
+											Total Wallet Balance
 										</p>
 									</div>
-									{/* <div className="grid grid-cols-2 gap-4 relative z-10">
+									<div className="grid grid-cols-2 gap-4 relative z-10">
 										<div className="bg-white/5 rounded p-4 group-hover:bg-white/10 transition-colors border border-white/5">
 											<p className="text-[10px] font-bold text-gray-500 mb-1">
-												Balance
+												Available
 											</p>
 											<p className="text-sm font-bold">
 												{formatCurrency(wallet?.balance || 0, activeCurrency)}
@@ -164,7 +157,8 @@ export default function WalletPage() {
 												)}
 											</p>
 										</div>
-									</div> */}
+									</div>
+
 								</div>
 							)}
 
@@ -350,9 +344,10 @@ export default function WalletPage() {
 				isOpen={isWithdrawModalOpen}
 				onClose={() => setIsWithdrawModalOpen(false)}
 				onSuccess={handleActionSuccess}
-				availableBalance={wallet?.availableBalance || 0}
+				availableBalance={wallet?.balance || 0}
 				currency={activeCurrency}
 			/>
+
 		</div>
 	);
 }

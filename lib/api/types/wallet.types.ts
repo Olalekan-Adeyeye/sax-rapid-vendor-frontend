@@ -3,14 +3,11 @@
  * Strictly following swagger.json
  */
 
-export interface WalletResponseDTO {
-  id: string;
-  currency?: string | null;
+export interface WalletDetailsResponseDTO {
   balance: number;
   pendingBalance: number;
-  availableBalance: number;
-  createdAt: string;
-  updatedAt?: string | null;
+  currency?: string | null;
+  recentTransactions?: WalletTransactionResponseDTO[] | null;
 }
 
 export interface WalletTransactionResponseDTO {
@@ -23,12 +20,6 @@ export interface WalletTransactionResponseDTO {
   transactionDate: string;
 }
 
-export interface FundWalletRequestDTO {
-  amount: number;
-  paymentReference: string;
-  provider: string; // Paystack, PayFast, Manual
-}
-
 export interface WalletFundRequestDTO {
   email: string;
   amount: number;
@@ -36,19 +27,19 @@ export interface WalletFundRequestDTO {
   callbackUrl?: string | null;
 }
 
-export interface WalletFundResponseDTO {
-  authorizationUrl: string;
-  accessCode: string;
-  reference: string;
+export interface VendorWithdrawalRequestDTO {
+  amount: number;
+  bankCode: string;
+  accountNumber: string;
+  accountName?: string | null;
 }
 
-export interface WithdrawRequestDTO {
-  amount: number;
-  bankName: string;
-  accountNumber: string;
-  accountName: string;
-  routingNumber?: string | null;
-  currency?: string | null;
+// Keeping these for backward compatibility if needed, but they might be deprecated
+export interface WalletResponseDTO extends WalletDetailsResponseDTO {
+  id: string;
+  availableBalance: number;
+  createdAt: string;
+  updatedAt?: string | null;
 }
 
 export interface PagedWalletTransactionResponseDTO {
@@ -60,3 +51,4 @@ export interface PagedWalletTransactionResponseDTO {
   hasPreviousPage: boolean;
   hasNextPage: boolean;
 }
+

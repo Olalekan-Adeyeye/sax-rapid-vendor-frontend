@@ -49,32 +49,26 @@ export function FundWalletModal({
 			setLoading(true);
 
 			// 1. Initialize funding through the backend
-			const initData = await walletService.initializeFund({
+			// The new fundWallet service handles the initialization and returns the gateway info
+			const result = await walletService.fundWallet({
 				amount: numAmount,
 				email: userEmail,
 				gateway: provider,
 				callbackUrl: `${window.location.origin}/wallet`, // Redirect back to wallet page
 			});
 
-			// 2. Call fund endpoint to credit the wallet as per swagger design
-			await walletService.fundWallet({
-				amount: numAmount,
-				paymentReference: initData.reference,
-				provider: provider,
-			});
-
-			if (initData.authorizationUrl) {
+			if (result.authorizationUrl) {
 				toast(
 					"Redirecting",
 					"You are being redirected to complete your payment.",
 					"success",
 				);
 				// Redirect to gateway
-				window.location.href = initData.authorizationUrl;
+				window.location.href = result.authorizationUrl;
 			} else {
 				toast(
-					"Payment Successful",
-					`${currency} ${numAmount.toLocaleString()} added via ${provider}`,
+					"Payment Initialized",
+					`Reference: ${result.reference}. Please complete payment manually if required.`,
 					"success",
 				);
 				onSuccess();
@@ -87,6 +81,7 @@ export function FundWalletModal({
 			setLoading(false);
 		}
 	};
+
 
 	return (
 		<Modal

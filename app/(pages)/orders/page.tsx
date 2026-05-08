@@ -7,7 +7,16 @@ import {
 	Eye,
 	Truck,
 	Loader2,
+	Printer,
+	Mail,
+	XCircle,
+	AlertCircle,
 } from "lucide-react";
+import {
+	Dropdown,
+	DropdownItem,
+	DropdownDivider,
+} from "@/components/ui/Dropdown";
 import { useQuery } from "@tanstack/react-query";
 import * as ordersService from "@/lib/api/services/orders";
 import { OrderStatus } from "@/lib/api/types/orders.types";
@@ -161,10 +170,14 @@ export default function OrdersPage() {
 								/>
 							</div>
 							<div className="flex items-center gap-3">
-								<button className="px-6 py-3 rounded border border-gray-100 text-xs font-bold text-gray-400 hover:text-black flex items-center gap-2">
+								<Button
+									variant="outline"
+									size="sm"
+									className="text-gray-400! hover:text-black! flex items-center gap-2"
+								>
 									<Filter size={14} />
 									Filter
-								</button>
+								</Button>
 							</div>
 						</div>
 
@@ -244,18 +257,76 @@ export default function OrdersPage() {
 												</td>
 												<td className="px-8 py-5 text-right">
 													<div className="flex items-center justify-end gap-2">
-														<Link
-															href={`/orders/${order.id}`}
-															className="w-9 h-9 rounded bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-black hover:border-black transition-all"
+														<Button
+															variant="outline"
+															asChild
+															className="w-9 h-9 p-0! text-gray-400!"
 														>
-															<Eye size={14} />
-														</Link>
-														<button className="w-9 h-9 rounded bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-black hover:border-black transition-all">
+															<Link href={`/orders/${order.id}`}>
+																<Eye size={14} />
+															</Link>
+														</Button>
+														<Button
+															variant="outline"
+															className="w-9 h-9 p-0! text-gray-400!"
+														>
 															<Truck size={14} />
-														</button>
-														<button className="w-9 h-9 rounded bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-black hover:border-black transition-all">
-															<MoreVertical size={14} />
-														</button>
+														</Button>
+														<Dropdown
+															trigger={
+																<Button
+																	variant="outline"
+															className="w-9 h-9 p-0! text-gray-400!"
+																>
+																	<MoreVertical size={14} />
+																</Button>
+															}
+														>
+															<DropdownItem
+																icon={<Printer size={14} />}
+																onClick={() =>
+																	toast(
+																		"Invoice",
+																		"Generating PDF invoice...",
+																		"info",
+																	)
+																}
+															>
+																Print Invoice
+															</DropdownItem>
+															<DropdownItem
+																icon={<Mail size={14} />}
+																onClick={() =>
+																	toast(
+																		"Message",
+																		"Opening customer chat...",
+																		"info",
+																	)
+																}
+															>
+																Contact Customer
+															</DropdownItem>
+															<DropdownDivider />
+															{order.status !== OrderStatus.Cancelled &&
+																order.status !== OrderStatus.Delivered && (
+																	<DropdownItem
+																		icon={<XCircle size={14} />}
+																		variant="danger"
+																		onClick={() =>
+																			toast(
+																				"Order Status",
+																				"Requesting order cancellation...",
+																				"info",
+																			)
+																		}
+																	>
+																		Cancel Order
+																	</DropdownItem>
+																)}
+															<DropdownItem icon={<AlertCircle size={14} />}>
+																Flag Order
+															</DropdownItem>
+														</Dropdown>
 													</div>
 												</td>
 											</tr>

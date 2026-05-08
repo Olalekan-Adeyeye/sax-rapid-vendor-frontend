@@ -8,8 +8,8 @@ import {
 	Clock,
 	CheckCircle,
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { getMyWallet, getTransactionHistory } from "@/lib/api/services/wallet";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import * as walletService from "@/lib/api/services/wallet";
 import { formatCurrency } from "@/lib/utils/currency";
 import { formatDate } from "@/lib/utils/date";
 import { Button } from "@/components/ui/Button";
@@ -20,20 +20,20 @@ import { Loader2 } from "lucide-react";
 import { WithdrawModal } from "@/components/wallet/WithdrawModal";
 
 export default function PayoutsPage() {
+	const queryClient = useQueryClient();
 	const [isWithdrawModalOpen, setIsWithdrawModalOpen] = React.useState(false);
 	const [searchQuery, setSearchQuery] = React.useState("");
 
+
 	const { data: wallet, isLoading: loadingWallet } = useQuery({
-		queryKey: ["my-wallet"],
-		queryFn: getMyWallet,
+		queryKey: ["vendor-wallet"],
+		queryFn: walletService.getWalletDetails,
 	});
 
-	const { data: transactionsData, isLoading: loadingTransactions } = useQuery({
-		queryKey: ["wallet-transactions"],
-		queryFn: () => getTransactionHistory(1, 100),
-	});
+	const loadingTransactions = loadingWallet;
+	const transactions = wallet?.recentTransactions || [];
 
-	const withdrawals = (transactionsData?.items || []).filter(
+	const withdrawals = transactions.filter(
 		(t) => t.transactionType?.toLowerCase() === "withdrawal" || t.transactionType?.toLowerCase() === "payout"
 	);
 
@@ -42,10 +42,11 @@ export default function PayoutsPage() {
 		(w.id && w.id.toLowerCase().includes(searchQuery.toLowerCase()))
 	);
 
+
 	const stats = [
 		{
 			label: "Available Balance",
-			value: wallet?.availableBalance || 0,
+			value: wallet?.balance || 0,
 			detail: "Ready for payout",
 			icon: Banknote,
 			color: "text-gold",
@@ -59,12 +60,13 @@ export default function PayoutsPage() {
 		},
 		{
 			label: "Total Balance",
-			value: wallet?.balance || 0,
-			detail: "Lifetime earnings",
+			value: (wallet?.balance || 0) + (wallet?.pendingBalance || 0),
+			detail: "Combined value",
 			icon: CheckCircle,
 			color: "text-green-500",
 		},
 	];
+
 
 	return (
 		<div className="space-y-10">
@@ -244,11 +246,12 @@ export default function PayoutsPage() {
 				isOpen={isWithdrawModalOpen}
 				onClose={() => setIsWithdrawModalOpen(false)}
 				onSuccess={() => {
-					// Invalidate queries
+					queryClient.invalidateQueries({ queryKey: ["vendor-wallet"] });
 				}}
-				availableBalance={wallet?.availableBalance || 0}
+				availableBalance={wallet?.balance || 0}
 				currency={wallet?.currency || "NGN"}
 			/>
+
 		</div>
 	);
 }

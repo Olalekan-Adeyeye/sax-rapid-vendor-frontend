@@ -1,28 +1,39 @@
 "use client";
 import {
-	TrendingUp,
 	ShoppingBag,
 	DollarSign,
 	Eye,
 	Bell,
 	ArrowUpRight,
-	MoreVertical,
 	AlertCircle,
-	RefreshCw,
+	Package,
+	Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-
 import Image from "next/image";
 import Link from "next/link";
 import { getNotifications } from "@/lib/api/services/notifications";
 import { getVendorOrders } from "@/lib/api/services/orders";
-import { getProductStats } from "@/lib/api/services/products";
-import { getMyWallet } from "@/lib/api/services/wallet";
+import {
+	getVendorDashboardStats,
+	getVendorPerformanceAnalytics,
+	getVendorTopSellers,
+} from "@/lib/api/services/analytics";
 import { OrderStatus } from "@/lib/api/types/orders.types";
 import { getRelativeTime, formatDate } from "@/lib/utils/date";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { useQuery } from "@tanstack/react-query";
 import { formatCurrency } from "@/lib/utils/currency";
+
+function PulsingDots() {
+	return (
+		<span className="flex items-center tracking-tighter">
+			<span className="animate-[pulse_1.5s_ease-in-out_infinite]">.</span>
+			<span className="animate-[pulse_1.5s_ease-in-out_0.2s_infinite]">.</span>
+			<span className="animate-[pulse_1.5s_ease-in-out_0.4s_infinite]">.</span>
+		</span>
+	);
+}
 
 function StatCard({
 	title,
@@ -33,7 +44,7 @@ function StatCard({
 	isError,
 }: {
 	title: string;
-	value: string;
+	value: React.ReactNode;
 	detail: string;
 	trend?: string;
 	icon: React.ElementType;
@@ -93,53 +104,75 @@ function StatCard({
 	);
 }
 
-function ProductViewCard({
+function TopSellerCard({
 	image,
 	name,
-	views,
-	change,
+	sales,
+	revenue,
+	productId,
 }: {
 	image: string;
 	name: string;
-	views: string;
-	change: string;
+	sales: string;
+	revenue: string;
+	productId: string;
 }) {
+	const isPlaceholder = !image || image === "";
+
 	return (
-		<div className="bg-white border border-gray-100 rounded overflow-hidden group hover:border-gold hover:shadow-lg transition-all">
+		<div className="bg-white border border-gray-100 rounded overflow-hidden group hover:border-gold hover:shadow-lg transition-all flex flex-col">
 			<div className="aspect-square bg-gray-50 overflow-hidden relative flex items-center justify-center">
-				<div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none text-gray-200">
-					<div className="w-1/3 h-1/3 relative opacity-20 filter grayscale brightness-0">
+				{isPlaceholder ? (
+					<div className="w-1/2 h-1/2 relative filter grayscale">
 						<Image
 							src="/assets/icons/SaxRapid-Logo.png"
-							alt="Placeholder"
+							alt="Product placeholder"
 							fill
 							className="object-contain"
 						/>
 					</div>
-				</div>
-				<Image
-					src={image}
-					alt={name}
-					fill
-					className="object-cover group-hover:scale-105 transition-transform duration-700 relative z-10"
-				/>
+				) : (
+					<Image
+						src={image}
+						alt={name}
+						fill
+						className="object-cover group-hover:scale-105 transition-transform duration-700 relative z-10"
+					/>
+				)}
 				<div className="absolute top-3 right-3 z-20">
-					<div className="bg-white/90 backdrop-blur-sm p-2 rounded-full text-black hover:bg-gold transition-colors shadow-sm">
+					<Link
+						href={`/products/${productId}`}
+						className="bg-white/90 backdrop-blur-sm p-2 rounded-full text-black hover:bg-gold transition-colors shadow-sm block"
+					>
 						<ArrowUpRight size={14} />
-					</div>
+					</Link>
 				</div>
 			</div>
-			<div className="p-4">
-				<p className="text-[10px] font-bold text-gray-400 mb-1">Product View</p>
-				<h4 className="text-sm font-bold text-black tracking-tight mb-2 truncate">
-					{name}
-				</h4>
-				<div className="flex items-center justify-between">
-					<div className="flex items-center gap-1.5 text-black">
-						<Eye size={12} className="text-gold" />
-						<span className="text-sm font-bold">{views}</span>
+			<div className="p-4 flex-1 flex flex-col">
+				<p className="text-[10px] font-bold text-gray-400 mb-1">Top Seller</p>
+				<Link
+					href={`/products/${productId}`}
+					className="block mb-3 hover:text-gold transition-colors"
+				>
+					<h4 className="text-sm font-bold text-black tracking-tight truncate">
+						{name}
+					</h4>
+				</Link>
+
+				<div className="space-y-4 mt-auto">
+					<div className="space-y-2">
+						<div className="flex items-center gap-2 text-black">
+							<ShoppingBag size={14} className="text-gold" />
+							<span className="text-xs font-bold">{sales} Units Sold</span>
+						</div>
 					</div>
-					<span className="text-xs font-bold text-green-600">+{change}%</span>
+
+					<div className="pt-3 border-t border-gray-50">
+						<p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+							Revenue Generated
+						</p>
+						<p className="text-sm font-black text-black">{revenue}</p>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -147,12 +180,10 @@ function ProductViewCard({
 }
 
 export default function DashboardOverview() {
-	// Queries
 	const {
 		data: orders,
 		isLoading: loadingOrders,
 		error: ordersError,
-		refetch: refetchOrders,
 	} = useQuery({
 		queryKey: ["vendor-orders", 1, 5],
 		queryFn: () => getVendorOrders(1, 5),
@@ -162,34 +193,48 @@ export default function DashboardOverview() {
 		data: notificationsData,
 		isLoading: loadingNotifications,
 		error: notificationsError,
-		refetch: refetchNotifications,
 	} = useQuery({
 		queryKey: ["notifications", 1, 4],
 		queryFn: () => getNotifications(1, 4),
 	});
 
 	const {
-		data: wallet,
-		isLoading: loadingWallet,
-		error: walletError,
-		refetch: refetchWallet,
+		data: dashboardStats,
+		isLoading: loadingDashboardStats,
+		error: dashboardStatsError,
 	} = useQuery({
-		queryKey: ["vendor-wallet"],
-		queryFn: getMyWallet,
+		queryKey: ["vendor-analytics-dashboard"],
+		queryFn: () => getVendorDashboardStats(),
 	});
 
 	const {
-		data: productStats,
-		isLoading: loadingStats,
-		error: statsError,
-		refetch: refetchStats,
+		data: performanceData,
+		isLoading: loadingPerformance,
+		error: performanceError,
 	} = useQuery({
-		queryKey: ["product-stats"],
-		queryFn: getProductStats,
+		queryKey: ["vendor-analytics-performance"],
+		queryFn: () =>
+			getVendorPerformanceAnalytics({
+				groupBy: "Month",
+			}),
+	});
+
+	const {
+		data: topSellers,
+		isLoading: loadingTopSellers,
+		error: topSellersError,
+	} = useQuery({
+		queryKey: ["vendor-analytics-top-sellers"],
+		queryFn: () =>
+			getVendorTopSellers({
+				pageNumber: 1,
+				pageSize: 3,
+			}),
 	});
 
 	const notifications = notificationsData?.items || [];
 	const latestOrders = orders || [];
+	const topSellerItems = topSellers?.items || [];
 
 	const getStatusColor = (status: OrderStatus) => {
 		switch (status) {
@@ -232,57 +277,69 @@ export default function DashboardOverview() {
 			{/* Stats Grid */}
 			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
 				<StatCard
-					icon={TrendingUp}
-					title="Wallet Balance"
+					icon={DollarSign}
+					title="Total Revenue"
 					value={
-						loadingWallet
-							? "..."
-							: walletError
-								? "N/A"
-								: formatCurrency(wallet?.balance || 0)
+						loadingDashboardStats ? (
+							<PulsingDots />
+						) : dashboardStatsError ? (
+							"N/A"
+						) : (
+							formatCurrency(dashboardStats?.revenue || 0)
+						)
 					}
-					isError={!!walletError}
-					detail="Available for withdrawal"
+					isError={!!dashboardStatsError}
+					detail={
+						dashboardStats?.currency
+							? `in ${dashboardStats.currency}`
+							: "Available earnings"
+					}
 					variant="dark"
 				/>
 				<StatCard
-					icon={Eye}
-					title="Product Views"
-					value={
-						loadingStats
-							? "..."
-							: statsError
-								? "N/A"
-								: (productStats?.totalViews || 0).toLocaleString()
-					}
-					isError={!!statsError}
-					detail="Total visibility"
-				/>
-				<StatCard
 					icon={ShoppingBag}
-					title="Total Products"
+					title="Total Orders"
 					value={
-						loadingStats
-							? "..."
-							: statsError
-								? "N/A"
-								: (productStats?.totalProducts || 0).toLocaleString()
+						loadingDashboardStats ? (
+							<PulsingDots />
+						) : dashboardStatsError ? (
+							"N/A"
+						) : (
+							(dashboardStats?.totalOrders || 0).toLocaleString()
+						)
 					}
-					isError={!!statsError}
-					detail="Listed in marketplace"
+					isError={!!dashboardStatsError}
+					detail="Completed transactions"
 				/>
 				<StatCard
-					icon={DollarSign}
-					title="Pending Funds"
+					icon={Package}
+					title="Active Products"
 					value={
-						loadingWallet
-							? "..."
-							: walletError
-								? "N/A"
-								: formatCurrency(wallet?.pendingBalance || 0)
+						loadingDashboardStats ? (
+							<PulsingDots />
+						) : dashboardStatsError ? (
+							"N/A"
+						) : (
+							(dashboardStats?.activeProducts || 0).toLocaleString()
+						)
 					}
-					isError={!!walletError}
-					detail="Escrow / Processing"
+					isError={!!dashboardStatsError}
+					detail={`of ${dashboardStats?.totalProducts || 0} total`}
+				/>
+				<StatCard
+					icon={Users}
+					title="Unique Customers"
+					value={
+						loadingDashboardStats ? (
+							<PulsingDots />
+						) : dashboardStatsError ? (
+							"N/A"
+						) : (
+							(dashboardStats?.uniqueCustomers || 0).toLocaleString()
+						)
+					}
+					isError={!!dashboardStatsError}
+					detail="Total buyers"
 				/>
 			</div>
 
@@ -294,42 +351,48 @@ export default function DashboardOverview() {
 						<div className="flex items-center gap-3">
 							<Eye size={18} className="text-gold" />
 							<h4 className="text-sm font-bold text-black">
-								Top Product Views
+								Top Selling Products
 							</h4>
 						</div>
 						<Link
-							href="/notifications"
+							href="/analytics"
 							className="text-xs font-bold text-gray-400 hover:text-gold transition-colors"
 						>
 							View Analytics
 						</Link>
 					</div>
 
-					<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-						<ProductViewCard
-							image="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop"
-							name="Premium Watch 5"
-							views="1,204"
-							change="12"
-						/>
-						<ProductViewCard
-							image="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop"
-							name="Studio Headphones"
-							views="842"
-							change="8"
-						/>
-						<ProductViewCard
-							image="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop"
-							name="Speed Sneakers"
-							views="731"
-							change="24"
-						/>
-						<ProductViewCard
-							image="https://images.unsplash.com/photo-1585333127302-3f8d9560f63b?w=400&h=400&fit=crop"
-							name="Dashed Fragrance"
-							views="652"
-							change="15"
-						/>
+					<div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+						{loadingTopSellers ? (
+							[1, 2, 3].map((i) => (
+								<div
+									key={i}
+									className="bg-gray-100 rounded animate-pulse aspect-square"
+								/>
+							))
+						) : topSellersError ? (
+							<div className="col-span-full p-8 text-center bg-red-50/10 rounded flex flex-col items-center justify-center space-y-2">
+								<AlertCircle size={20} className="text-red-500" />
+								<p className="text-xs font-bold text-red-500">
+									Failed to load top sellers
+								</p>
+							</div>
+						) : topSellerItems.length > 0 ? (
+							topSellerItems.map((product) => (
+								<TopSellerCard
+									key={product.productId}
+									productId={product.productId}
+									image={product.imageUrl || ""}
+									name={product.productName || "Product"}
+									sales={product.unitsSold.toLocaleString()}
+									revenue={formatCurrency(product.revenueGenerated)}
+								/>
+							))
+						) : (
+							<div className="col-span-full p-8 text-center text-gray-400">
+								<p className="text-xs font-bold">No sales data yet</p>
+							</div>
+						)}
 					</div>
 				</div>
 
@@ -362,18 +425,6 @@ export default function DashboardOverview() {
 										Connection Sync Interrupted
 									</p>
 								</div>
-								<Button
-									variant="ghost"
-									size="sm"
-									onClick={() => refetchNotifications()}
-									className="text-[9px] font-black uppercase text-gold hover:text-black h-auto p-0 border-none flex items-center gap-2 group"
-								>
-									<RefreshCw
-										size={10}
-										className="group-hover:rotate-180 transition-transform duration-500"
-									/>
-									Retry Sync
-								</Button>
 							</div>
 						) : loadingNotifications ? (
 							[1, 2, 3, 4].map((i) => (
@@ -445,7 +496,7 @@ export default function DashboardOverview() {
 			</div>
 
 			{/* Secondary Stats/Activity */}
-			<div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+			<div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
 				<div className="bg-white border border-gray-100 rounded p-6">
 					<div className="flex items-center justify-between mb-8">
 						<h4 className="text-xs font-bold text-black">
@@ -457,123 +508,291 @@ export default function DashboardOverview() {
 						</select>
 					</div>
 					<div className="h-48 relative w-full group">
-						<svg
-							viewBox="0 0 1200 300"
-							className="w-full h-full overflow-visible drop-shadow-[0_10px_10px_rgba(239,191,4,0.05)]"
-							preserveAspectRatio="none"
-						>
-							<defs>
-								<linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-									<stop offset="0%" stopColor="#EFBF04" stopOpacity="0.15" />
-									<stop offset="100%" stopColor="#EFBF04" stopOpacity="0" />
-								</linearGradient>
-							</defs>
+						{loadingPerformance ? (
+							<div className="w-full h-full bg-gray-50 rounded animate-pulse" />
+						) : performanceError ? (
+							<div className="w-full h-full flex items-center justify-center bg-red-50/10 rounded">
+								<div className="text-center space-y-2">
+									<AlertCircle size={20} className="text-red-500 mx-auto" />
+									<p className="text-xs font-bold text-red-500">
+										Failed to load performance data
+									</p>
+								</div>
+							</div>
+						) : performanceData && performanceData.length > 0 ? (
+							<svg
+								viewBox="0 0 1200 300"
+								className="w-full h-full overflow-visible drop-shadow-[0_10px_10px_rgba(239,191,4,0.05)]"
+								preserveAspectRatio="none"
+							>
+								<defs>
+									<linearGradient
+										id="chartGradient"
+										x1="0"
+										y1="0"
+										x2="0"
+										y2="1"
+									>
+										<stop offset="0%" stopColor="#EFBF04" stopOpacity="0.15" />
+										<stop offset="100%" stopColor="#EFBF04" stopOpacity="0" />
+									</linearGradient>
+								</defs>
 
-							{/* Grid lines */}
-							<line
-								x1="0"
-								y1="0"
-								x2="1200"
-								y2="0"
-								stroke="#f1f5f9"
-								strokeWidth="1"
-							/>
-							<line
-								x1="0"
-								y1="100"
-								x2="1200"
-								y2="100"
-								stroke="#f1f5f9"
-								strokeWidth="1"
-							/>
-							<line
-								x1="0"
-								y1="200"
-								x2="1200"
-								y2="200"
-								stroke="#f1f5f9"
-								strokeWidth="1"
-							/>
-							<line
-								x1="0"
-								y1="300"
-								x2="1200"
-								y2="300"
-								stroke="#f1f5f9"
-								strokeWidth="1"
-							/>
-
-							{/* Area Fill */}
-							<path
-								d="M0,300 L0,220 L100,180 L200,230 L300,140 L400,180 L500,80 L600,140 L700,90 L800,160 L900,40 L1000,100 L1100,60 L1200,120 L1200,300 Z"
-								fill="url(#chartGradient)"
-							/>
-
-							{/* The Line */}
-							<path
-								d="M0,220 L100,180 L200,230 L300,140 L400,180 L500,80 L600,140 L700,90 L800,160 L900,40 L1000,100 L1100,60 L1200,120"
-								fill="none"
-								stroke="#EFBF04"
-								strokeWidth="4"
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								className="animate-[LOADING-ANIMATION-OR-STRETCH]"
-							/>
-
-							{/* Active Marker Points */}
-							{[
-								{ x: 0, y: 220 },
-								{ x: 500, y: 80 },
-								{ x: 900, y: 40 },
-								{ x: 1200, y: 120 },
-							].map((p, i) => (
-								<circle
-									key={i}
-									cx={p.x}
-									cy={p.y}
-									r="5"
-									fill="white"
-									stroke="#EFBF04"
-									strokeWidth="2"
-									className="transition-all duration-300"
+								{/* Grid lines */}
+								<line
+									x1="0"
+									y1="0"
+									x2="1200"
+									y2="0"
+									stroke="#f1f5f9"
+									strokeWidth="1"
 								/>
-							))}
-						</svg>
+								<line
+									x1="0"
+									y1="100"
+									x2="1200"
+									y2="100"
+									stroke="#f1f5f9"
+									strokeWidth="1"
+								/>
+								<line
+									x1="0"
+									y1="200"
+									x2="1200"
+									y2="200"
+									stroke="#f1f5f9"
+									strokeWidth="1"
+								/>
+								<line
+									x1="0"
+									y1="300"
+									x2="1200"
+									y2="300"
+									stroke="#f1f5f9"
+									strokeWidth="1"
+								/>
+
+								{(() => {
+									const maxRevenue = Math.max(
+										...performanceData.map((d) => d.revenue),
+										1,
+									);
+									const points = performanceData.map((d, i) => ({
+										x: (i / Math.max(performanceData.length - 1, 1)) * 1200,
+										y: 300 - (d.revenue / maxRevenue) * 280,
+										...d,
+									}));
+
+									const pathData =
+										"M" + points.map((p) => `${p.x},${p.y}`).join(" L");
+									const areaData = `M0,300 L${points.map((p) => `${p.x},${p.y}`).join(" L")} L1200,300 Z`;
+
+									return (
+										<>
+											{/* Area Fill */}
+											<path d={areaData} fill="url(#chartGradient)" />
+
+											{/* The Line */}
+											<path
+												d={pathData}
+												fill="none"
+												stroke="#EFBF04"
+												strokeWidth="4"
+												strokeLinecap="round"
+												strokeLinejoin="round"
+												className="animate-[LOADING-ANIMATION-OR-STRETCH]"
+											/>
+
+											{/* Active Marker Points (every 4th point or less if fewer) */}
+											{points
+												.filter(
+													(_, i) =>
+														i % Math.max(Math.floor(points.length / 4), 1) ===
+														0,
+												)
+												.map((p, i) => (
+													<circle
+														key={i}
+														cx={p.x}
+														cy={p.y}
+														r="5"
+														fill="white"
+														stroke="#EFBF04"
+														strokeWidth="2"
+														className="transition-all duration-300"
+													/>
+												))}
+										</>
+									);
+								})()}
+							</svg>
+						) : (
+							<div className="w-full h-full flex items-center justify-center bg-gray-50 rounded">
+								<p className="text-xs font-bold text-gray-400">
+									No performance data available
+								</p>
+							</div>
+						)}
 
 						{/* X-Axis Labels */}
 						<div className="absolute -bottom-4 left-0 right-0 flex justify-between text-[8px] font-black uppercase tracking-widest text-gray-300">
-							{["Jan", "Mar", "May", "Jul", "Sep", "Nov", "Dec"].map((m) => (
-								<span key={m}>{m}</span>
-							))}
+							{performanceData && performanceData.length > 0 ? (
+								performanceData
+									.filter(
+										(_, i) =>
+											i %
+												Math.max(Math.floor(performanceData.length / 7), 1) ===
+											0,
+									)
+									.map((d, i) => {
+										const date = new Date(d.date);
+										return (
+											<span key={i}>
+												{date.toLocaleDateString("en-US", {
+													month: "short",
+													day: "numeric",
+												})}
+											</span>
+										);
+									})
+							) : (
+								<>
+									{["Jan", "Mar", "May", "Jul", "Sep", "Nov", "Dec"].map(
+										(m) => (
+											<span key={m}>{m}</span>
+										),
+									)}
+								</>
+							)}
 						</div>
 					</div>
 				</div>
 
-				<div className="bg-white border border-gray-100 rounded p-6">
-					<div className="flex items-center justify-between mb-8">
-						<h4 className="text-xs font-bold text-black">Popular Categories</h4>
-						<MoreVertical size={14} className="text-gray-400 cursor-pointer" />
-					</div>
-					<div className="space-y-6">
-						{[
-							{ name: "Electronics", val: 85 },
-							{ name: "Fast Fashion", val: 65 },
-							{ name: "Home Living", val: 45 },
-							{ name: "Beauty", val: 30 },
-						].map((cat, i) => (
-							<div key={i} className="space-y-2">
-								<div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest">
-									<span className="text-black">{cat.name}</span>
-									<span className="text-gray-400">{cat.val}%</span>
-								</div>
-								<div className="h-1.5 bg-gray-50 rounded-full overflow-hidden">
-									<div
-										className="h-full bg-gold rounded-full transition-all duration-1000"
-										style={{ width: `${cat.val}%` }}
-									/>
-								</div>
+				<div className="space-y-6">
+					<div className="bg-white border border-gray-100 rounded p-6">
+						<div className="flex items-center justify-between mb-4">
+							<h4 className="text-xs font-bold text-black">Inventory Health</h4>
+						</div>
+
+						{/* Inventory Content */}
+						{loadingDashboardStats ? (
+							<div className="h-28 rounded bg-gray-50 animate-pulse" />
+						) : dashboardStatsError ? (
+							<div className="h-28 flex items-center justify-center bg-red-50/10 rounded">
+								<p className="text-xs font-bold text-red-500">
+									Unable to load inventory data
+								</p>
 							</div>
-						))}
+						) : (
+							(() => {
+								const active = dashboardStats?.activeProducts || 0;
+								const outOfStock = dashboardStats?.outOfStockProducts || 0;
+								const total =
+									(dashboardStats?.totalProducts ?? active + outOfStock) || 0;
+								const pctActive =
+									total > 0 ? Math.round((active / total) * 100) : 0;
+
+								return (
+									<div className="space-y-4">
+										<div className="flex items-center justify-between">
+											<div>
+												<p className="text-[10px] font-bold text-gray-400">
+													Products In Stock
+												</p>
+												<p className="text-lg font-black text-black">
+													{active.toLocaleString()}
+												</p>
+											</div>
+											<div>
+												<p className="text-[10px] font-bold text-gray-400">
+													Out of Stock
+												</p>
+												<p
+													className={`text-lg font-black ${outOfStock > 0 ? "text-red-600" : "text-gray-600"}`}
+												>
+													{outOfStock.toLocaleString()}
+												</p>
+											</div>
+											<div>
+												<p className="text-[10px] font-bold text-gray-400">
+													Total
+												</p>
+												<p className="text-lg font-black text-black">
+													{total.toLocaleString()}
+												</p>
+											</div>
+										</div>
+
+										<div>
+											<div className="h-2 bg-gray-50 rounded-full overflow-hidden">
+												<div
+													className="h-full bg-gold rounded-full transition-all"
+													style={{ width: `${pctActive}%` }}
+												/>
+											</div>
+											<p className="text-[10px] mt-1 text-gray-400">
+												{pctActive}% in stock
+											</p>
+										</div>
+									</div>
+								);
+							})()
+						)}
+					</div>
+
+					<div className="bg-white border border-gray-100 rounded p-6">
+						<div className="flex items-center justify-between mb-8">
+							<h4 className="text-xs font-bold text-black">
+								Product Revenue Share
+							</h4>
+						</div>
+						<div className="space-y-6">
+							{loadingTopSellers ? (
+								[1, 2, 3, 4].map((i) => (
+									<div key={i} className="space-y-2 animate-pulse">
+										<div className="flex justify-between">
+											<div className="h-2 bg-gray-50 rounded w-1/3" />
+											<div className="h-2 bg-gray-50 rounded w-1/4" />
+										</div>
+										<div className="h-1.5 bg-gray-50 rounded-full" />
+									</div>
+								))
+							) : topSellersError || topSellerItems.length === 0 ? (
+								<div className="py-10 text-center">
+									<p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+										No data available
+									</p>
+								</div>
+							) : (
+								topSellerItems.slice(0, 4).map((product) => {
+									const share = dashboardStats?.revenue
+										? Math.round(
+												(product.revenueGenerated / dashboardStats.revenue) *
+													100,
+											)
+										: 0;
+									return (
+										<div key={product.productId} className="space-y-2">
+											<div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest">
+												<Link
+													href={`/products/${product.productId}`}
+													className="text-black truncate max-w-[70%] hover:text-gold transition-colors"
+												>
+													{product.productName}
+												</Link>
+												<span className="text-gray-400">{share}%</span>
+											</div>
+											<div className="h-1.5 bg-gray-50 rounded-full overflow-hidden">
+												<div
+													className="h-full bg-gold rounded-full transition-all duration-1000"
+													style={{ width: `${share}%` }}
+												/>
+											</div>
+										</div>
+									);
+								})
+							)}
+						</div>
 					</div>
 				</div>
 			</div>
@@ -630,18 +849,6 @@ export default function DashboardOverview() {
 													Transactional Data Unavailable
 												</p>
 											</div>
-											<Button
-												variant="ghost"
-												size="sm"
-												onClick={() => refetchOrders()}
-												className="text-[9px] font-black uppercase text-gold hover:text-black h-auto p-0 border-none flex items-center gap-2 group"
-											>
-												<RefreshCw
-													size={10}
-													className="group-hover:rotate-180 transition-transform duration-500"
-												/>
-												Retry Sync
-											</Button>
 										</div>
 									</td>
 								</tr>

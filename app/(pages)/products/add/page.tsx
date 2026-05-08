@@ -143,6 +143,8 @@ export default function AddProductPage() {
 		return "$";
 	}, [user?.countryCode]);
 
+	const [selectedMainCategoryId, setSelectedMainCategoryId] = useState("");
+
 	const [hasGeneratedVariations, setHasGeneratedVariations] = useState(false);
 	const [expandedVariationSchedules, setExpandedVariationSchedules] = useState<
 		Set<string>
@@ -261,31 +263,63 @@ export default function AddProductPage() {
 		};
 	}, []);
 
-	const flattenedCategories = useMemo(() => {
-		const flat: { id: string; label: string; name: string }[] = [];
+	const mainCategories = useMemo(() => {
+		const flatMain: { label: string; value: string }[] = [];
 		const seenIds = new Set<string>();
 
-		const process = (cats: CategoryResponseDTO[]) => {
-			if (!cats || !Array.isArray(cats)) return;
-			cats.forEach((cat) => {
-				if (!cat) return;
+		categories.forEach((cat) => {
+			if (!cat) return;
+			if (cat.parentId == null) {
 				const stringId = (cat.id ?? "").toString();
 				if (stringId && !seenIds.has(stringId)) {
-					flat.push({
-						id: stringId,
+					flatMain.push({
+						value: stringId,
 						label: cat.name || "Unnamed Category",
-						name: cat.name || "",
 					});
 					seenIds.add(stringId);
 				}
-				if (cat.subCategories && cat.subCategories.length > 0) {
-					process(cat.subCategories);
+			}
+		});
+		return flatMain;
+	}, [categories]);
+
+	const subCategories = useMemo(() => {
+		if (!selectedMainCategoryId) return [];
+
+		const flatSub: { label: string; value: string }[] = [];
+		const seenIds = new Set<string>();
+
+		categories.forEach((cat) => {
+			if (cat && cat.parentId?.toString() === selectedMainCategoryId) {
+				const stringId = (cat.id ?? "").toString();
+				if (stringId && !seenIds.has(stringId)) {
+					flatSub.push({
+						value: stringId,
+						label: cat.name || "Unnamed Subcategory",
+					});
+					seenIds.add(stringId);
+				}
+			}
+		});
+
+		const parent = categories.find(
+			(c) => c.id?.toString() === selectedMainCategoryId,
+		);
+		if (parent && parent.subCategories) {
+			parent.subCategories.forEach((sub) => {
+				const stringId = (sub.id ?? "").toString();
+				if (stringId && !seenIds.has(stringId)) {
+					flatSub.push({
+						value: stringId,
+						label: sub.name || "Unnamed Subcategory",
+					});
+					seenIds.add(stringId);
 				}
 			});
-		};
-		process(categories);
-		return flat;
-	}, [categories]);
+		}
+
+		return flatSub;
+	}, [categories, selectedMainCategoryId]);
 
 	const displayedPresets = useMemo(() => {
 		if (!categoryId) return [];
@@ -534,16 +568,17 @@ export default function AddProductPage() {
 			</h4>
 			<div className="space-y-6">
 				<Select
-					id="category-selection"
-					label="Category Selection"
+					id="main-category"
+					label="Main Category"
 					required
-					value={categoryId}
-					onChange={(e) => setValue("categoryId", e.target.value)}
+					value={selectedMainCategoryId}
+					onChange={(e) => {
+						const val = e.target.value;
+						setSelectedMainCategoryId(val);
+						setValue("categoryId", val);
+					}}
 					disabled={loadingCategories}
-					options={flattenedCategories.map((cat) => ({
-						label: cat.label,
-						value: cat.id,
-					}))}
+					options={mainCategories}
 					leftSlot={
 						loadingCategories ? (
 							<Loader2 size={14} className="animate-spin" />
@@ -564,8 +599,28 @@ export default function AddProductPage() {
 							</button>
 						) : null
 					}
-					error={categoryError || errors.categoryId?.message}
+					error={
+						categoryError ||
+						(selectedMainCategoryId ? undefined : errors.categoryId?.message)
+					}
 				/>
+
+				{subCategories.length > 0 && (
+					<Select
+						id="sub-category"
+						label="Sub Category"
+						value={categoryId === selectedMainCategoryId ? "" : categoryId}
+						onChange={(e) => {
+							const val = e.target.value;
+							setValue("categoryId", val || selectedMainCategoryId);
+						}}
+						options={subCategories}
+						className="animate-in fade-in slide-in-from-top-1 duration-200"
+					/>
+				)}
+
+				<input type="hidden" {...register("categoryId")} />
+
 				<Input
 					id="sku-number"
 					label="SKU Number"

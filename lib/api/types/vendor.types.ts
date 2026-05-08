@@ -45,8 +45,8 @@ export interface UpdateVendorProfileRequest {
 
 /** POST /api/Vendor/profile/documents – Upload KYC documents */
 export interface UploadDocumentsRequest {
-  governmentId: File;
-  businessDocument?: File | null;
+  governmentIdUrl?: string | null;
+  businessDocumentUrl?: string | null;
 }
 
 // ─── Response DTOs ────────────────────────────────────────────────────────────

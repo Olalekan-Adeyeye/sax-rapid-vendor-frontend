@@ -10,6 +10,7 @@ import {
 	Star,
 	Shield,
 	Inbox,
+	RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import {
@@ -40,7 +41,13 @@ export default function NotificationsPage() {
 	const queryClient = useQueryClient();
 
 	// Queries
-	const { data: notificationsData, isLoading: loadingNotifications, error: queryError } = useQuery({
+	const {
+		data: notificationsData,
+		isLoading: loadingNotifications,
+		isFetching: fetchingNotifications,
+		error: queryError,
+		refetch,
+	} = useQuery({
 		queryKey: ["notifications"],
 		queryFn: () => getNotifications(1, 100),
 	});
@@ -107,6 +114,15 @@ export default function NotificationsPage() {
 		deleteMutation.mutate(id);
 	};
 
+	const handleRefresh = async () => {
+		try {
+			await refetch();
+			toast("Refreshed", "Notification list updated", "success");
+		} catch (err) {
+			toast("Refresh Failed", "Could not sync notifications", "error");
+		}
+	};
+
 	return (
 		<div className="space-y-10">
 			{loading && notifications.length === 0 ? (
@@ -115,7 +131,9 @@ export default function NotificationsPage() {
 				<ErrorComponent
 					title="Failed to load notifications"
 					message={error!}
-					onRetry={() => queryClient.invalidateQueries({ queryKey: ["notifications"] })}
+					onRetry={() =>
+						queryClient.invalidateQueries({ queryKey: ["notifications"] })
+					}
 				/>
 			) : (
 				<>
@@ -143,6 +161,19 @@ export default function NotificationsPage() {
 								>
 									<CheckCircle size={14} />
 									Mark all read
+								</Button>
+								<Button
+									variant="outline"
+									size="sm"
+									onClick={handleRefresh}
+									disabled={fetchingNotifications}
+									className="px-6 rounded-full text-xs font-bold gap-2"
+								>
+									<RefreshCw
+										size={14}
+										className={fetchingNotifications ? "animate-spin" : ""}
+									/>
+									Refresh
 								</Button>
 								<Button
 									variant="outline"
@@ -248,10 +279,15 @@ export default function NotificationsPage() {
 								<Button
 									variant="outline"
 									size="sm"
-									className="mt-8 rounded-full px-8"
-									onClick={() => queryClient.invalidateQueries({ queryKey: ["notifications"] })}
+									className="mt-8 rounded-full px-8 gap-2 font-bold"
+									onClick={handleRefresh}
+									disabled={fetchingNotifications}
 								>
-									Refresh List
+									<RefreshCw
+										size={16}
+										className={fetchingNotifications ? "animate-spin" : ""}
+									/>
+									{fetchingNotifications ? "Refreshing..." : "Refresh List"}
 								</Button>
 							</div>
 						)}

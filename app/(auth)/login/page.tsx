@@ -63,19 +63,19 @@ export default function LoginPage() {
 			// 4. Redirect path
 			// if (!response.isVerified) {
 			//   router.push("/verify");
-			// } else if (response.isTwoFactorEnabled) {
-			//   router.push("/2fa");
+			// } else
+			// if (response.isTwoFactorEnabled) {
+			// 	router.push("/2fa");
 			// } else {
-			//   router.push("/dashboard");
+			// 	router.push("/dashboard");
 			// }
 			router.push("/dashboard");
 		} catch (err: unknown) {
 			setUser(null);
 			tokenStorage.clearTokens();
-			let message = "Invalid email or password";
-			if (axios.isAxiosError<ApiError>(err)) {
-				message = err.response?.data?.message || message;
-			}
+			const message = axios.isAxiosError<ApiError>(err)
+				? err.response?.data?.message || err.message
+				: "An unexpected error occurred. Please try again.";
 			toast("Login Failed", message, "error");
 			setApiError(message);
 			setLoading(false);
