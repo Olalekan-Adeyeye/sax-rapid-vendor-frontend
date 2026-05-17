@@ -167,7 +167,7 @@ export default function AddProductPage() {
 		staleTime: 5 * 60 * 1000,
 	});
 
-	const categories = categoriesQuery.data || [];
+	const categories = useMemo(() => categoriesQuery.data || [], [categoriesQuery.data]);
 	const loadingCategories = categoriesQuery.isLoading;
 	const categoryError = categoriesQuery.isError
 		? getErrorMessage(categoriesQuery.error)

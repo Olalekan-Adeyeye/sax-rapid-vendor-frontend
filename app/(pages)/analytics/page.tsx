@@ -16,6 +16,7 @@ import {
 	PieChart as PieChartIcon,
 } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency } from "@/lib/utils/currency";
 import {
@@ -156,6 +157,7 @@ export default function AnalyticsPage() {
 	}, [stats, productStats]);
 
 	return (
+		<ErrorBoundary>
 		<div className="space-y-12 pb-20">
 			<PageHeader
 				title="Performance Analytics"
@@ -874,5 +876,6 @@ export default function AnalyticsPage() {
 				</div>
 			</div>
 		</div>
+		</ErrorBoundary>
 	);
 }

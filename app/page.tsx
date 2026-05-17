@@ -204,7 +204,7 @@ export default function VendorCenter() {
 			</div>
 
 			{/* ── TOP BAR ──────────────────────────────── */}
-			<div className="bg-black text-[10px] uppercase tracking-widest font-black border-b border-white/5 hidden md:block">
+			{/* <div className="bg-black text-[10px] uppercase tracking-widest font-black border-b border-white/5 hidden md:block">
 				<div className="max-w-7xl mx-auto px-6 h-8 md:h-10 flex items-center justify-between">
 					<div className="flex items-center gap-6 text-gray-400">
 						<Link href="/signup" className="hover:text-gold transition-colors">
@@ -219,12 +219,12 @@ export default function VendorCenter() {
 							Seller Resources
 						</Link>
 					</div>
-					{/* <div className="flex items-center gap-2 text-gold ml-auto md:ml-0">
+					 <div className="flex items-center gap-2 text-gold ml-auto md:ml-0">
 						<span className="w-1 md:w-1.5 h-1 md:h-1.5 bg-gold rounded-full animate-pulse" />
 						Track My Application
-					</div> */}
+					</div> 
 				</div>
-			</div>
+			</div> */}
 
 			{/* ── HEADER ───────────────────────────────── */}
 			<header className="bg-white/95 backdrop-blur-md border-b border-gray-100 sticky top-0 z-50">

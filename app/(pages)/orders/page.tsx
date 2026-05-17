@@ -30,6 +30,7 @@ import { SearchInput } from "@/components/ui/SearchInput";
 import { PageHeader } from "@/components/ui/PageHeader";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 export default function OrdersPage() {
 	const [activeTab, setActiveTab] = useState("All Orders");
@@ -97,6 +98,7 @@ export default function OrdersPage() {
 	};
 
 	return (
+		<ErrorBoundary>
 		<div className="space-y-10">
 			{loading && orders.length === 0 ? (
 				<FullPageLoader label="Loading orders..." icon={ShoppingBag} />
@@ -350,5 +352,6 @@ export default function OrdersPage() {
 				</>
 			)}
 		</div>
+		</ErrorBoundary>
 	);
 }

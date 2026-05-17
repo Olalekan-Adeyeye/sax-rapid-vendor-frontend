@@ -22,6 +22,7 @@ import { CategoryResponseDTO } from "@/lib/api/types/categories.types";
 import { useToast } from "@/lib/context/ToastContext";
 import { getErrorMessage } from "@/lib/utils/errors";
 import { ErrorComponent } from "@/components/ui/ErrorComponent";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -601,6 +602,7 @@ function ProductsPageContent() {
 
 export default function ProductsPage() {
 	return (
+		<ErrorBoundary>
 		<Suspense
 			fallback={
 				<FullPageLoader label="Initializing products..." icon={ShoppingBag} />
@@ -608,5 +610,6 @@ export default function ProductsPage() {
 		>
 			<ProductsPageContent />
 		</Suspense>
+		</ErrorBoundary>
 	);
 }

@@ -20,7 +20,7 @@ interface HeaderProps {
 
 export function Header({ onMenuClick }: HeaderProps) {
   const router = useRouter();
-  const { user, setUser } = useAuth();
+  const { user, setUser, setTwoFactorVerified } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -39,6 +39,7 @@ export function Header({ onMenuClick }: HeaderProps) {
 
   const handleLogout = () => {
     tokenStorage.clearTokens();
+    setTwoFactorVerified(false);
     setUser(null);
     router.push("/login");
   };
