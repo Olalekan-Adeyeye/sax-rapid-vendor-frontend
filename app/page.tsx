@@ -219,7 +219,7 @@ export default function VendorCenter() {
 							Seller Resources
 						</Link>
 					</div>
-					 <div className="flex items-center gap-2 text-gold ml-auto md:ml-0">
+					<div className="flex items-center gap-2 text-gold ml-auto md:ml-0">
 						<span className="w-1 md:w-1.5 h-1 md:h-1.5 bg-gold rounded-full animate-pulse" />
 						Track My Application
 					</div> 

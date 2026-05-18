@@ -21,7 +21,6 @@ import * as productsService from "@/lib/api/services/products";
 import * as filesService from "@/lib/api/services/files";
 import { CategoryResponseDTO } from "@/lib/api/types/categories.types";
 import { ATTRIBUTE_CATEGORIES } from "@/lib/constants/attributeCategories";
-import { ROBUST_CATEGORIES } from "@/lib/constants/categories";
 import { getErrorMessage } from "@/lib/utils/errors";
 import { Input } from "@/components/ui/Input";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -156,13 +155,7 @@ export default function AddProductPage() {
 		queryKey: ["categories"],
 		queryFn: async () => {
 			const data = (await categoriesService.getCategories()) || [];
-			const apiCategoryNames = new Set(
-				data.filter((c) => c && c.name).map((c) => c.name?.toLowerCase()),
-			);
-			const filteredRobust = ROBUST_CATEGORIES.filter(
-				(c) => c && c.name && !apiCategoryNames.has(c.name?.toLowerCase()),
-			);
-			return [...data, ...filteredRobust];
+			return data;
 		},
 		staleTime: 5 * 60 * 1000,
 	});

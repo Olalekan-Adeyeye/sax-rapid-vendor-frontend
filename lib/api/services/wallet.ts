@@ -39,9 +39,3 @@ export async function fundWallet(data: WalletFundRequestDTO): Promise<Initialize
 export async function withdraw(data: VendorWithdrawalRequestDTO): Promise<void> {
   await apiClient.post(`${BASE}/withdraw`, data);
 }
-
-// Deprecated methods for backward compatibility - will point to new endpoints where possible
-export async function getMyWallet(): Promise<WalletDetailsResponseDTO> {
-  return getWalletDetails();
-}
-

@@ -1,3 +1,5 @@
+import type { UserProfile } from "./auth.types";
+
 /**
  * User related type definitions
  * Derived from the Sax Rapid Marketplace OpenAPI spec v1
@@ -36,15 +38,6 @@ export enum VerificationStatus {
 	Rejected = "Rejected",
 }
 
-/**
- * Actions that can be performed on a user (Admin)
- */
-export enum UserAction {
-	Suspend = "Suspend",
-	Activate = "Activate",
-	ResetPassword = "ResetPassword",
-	Delete = "Delete",
-}
 
 /**
  * User Profile Response Schema
@@ -74,8 +67,6 @@ export interface UpdateProfileRequest {
 	phoneNumber?: string | null;
 	profileImageUrl?: string | null;
 }
-
-import type { UserProfile } from "./auth.types";
 
 /**
  * Maps UserProfileResponse to the shared UserProfile state

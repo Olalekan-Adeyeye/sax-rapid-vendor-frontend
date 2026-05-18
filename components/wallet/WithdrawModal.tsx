@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/Input";
 import { useToast } from "@/lib/context/ToastContext";
 import * as walletService from "@/lib/api/services/wallet";
 import { Modal } from "@/components/ui/Modal";
+import { useMutation } from "@tanstack/react-query";
+import { getErrorMessage } from "@/lib/utils/errors";
 
 interface WithdrawModalProps {
 	isOpen: boolean;
@@ -23,7 +25,6 @@ export function WithdrawModal({
 	currency,
 }: WithdrawModalProps) {
 	const { toast } = useToast();
-	const [loading, setLoading] = useState(false);
 
 	const [formData, setFormData] = useState({
 		amount: "",
@@ -32,8 +33,23 @@ export function WithdrawModal({
 		accountName: "",
 	});
 
+	const mutation = useMutation({
+		mutationFn: walletService.withdraw,
+		onSuccess: () => {
+			toast(
+				"Payout Requested",
+				"Expect your funds in the secondary account within 24-48 hours",
+				"success",
+			);
+			onSuccess();
+			onClose();
+		},
+		onError: (error) => {
+			toast("Withdrawal Failed", getErrorMessage(error), "error");
+		},
+	});
 
-	const handleSubmit = async (e: React.FormEvent) => {
+	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 		const numAmount = parseFloat(formData.amount);
 
@@ -55,33 +71,12 @@ export function WithdrawModal({
 			return;
 		}
 
-		try {
-			setLoading(true);
-			await walletService.withdraw({
-				amount: numAmount,
-				bankCode: formData.bankCode,
-				accountNumber: formData.accountNumber,
-				accountName: formData.accountName,
-			});
-
-
-			toast(
-				"Payout Requested",
-				`Expect your funds in the secondary account within 24-48 hours`,
-				"success",
-			);
-			onSuccess();
-			onClose();
-		} catch (err) {
-			console.error("Withdrawal error:", err);
-			toast(
-				"Withdrawal Failed",
-				"Could not process your payout request",
-				"error",
-			);
-		} finally {
-			setLoading(false);
-		}
+		mutation.mutate({
+			amount: numAmount,
+			bankCode: formData.bankCode,
+			accountNumber: formData.accountNumber,
+			accountName: formData.accountName,
+		});
 	};
 
 	return (
@@ -140,7 +135,6 @@ export function WithdrawModal({
 							/>
 						</div>
 					</div>
-
 				</div>
 
 				<div className="grid grid-cols-2 gap-6">
@@ -212,7 +206,7 @@ export function WithdrawModal({
 						type="submit"
 						variant="primary"
 						className="flex-1"
-						loading={loading}
+						loading={mutation.isPending}
 					>
 						Payout
 					</Button>
