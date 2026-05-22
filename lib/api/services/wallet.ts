@@ -39,3 +39,12 @@ export async function fundWallet(data: WalletFundRequestDTO): Promise<Initialize
 export async function withdraw(data: VendorWithdrawalRequestDTO): Promise<void> {
   await apiClient.post(`${BASE}/withdraw`, data);
 }
+
+/**
+ * PUT /api/Wallet/currency
+ * Changes the vendor's wallet currency to either NGN or ZAR. Only allowed if balance is zero.
+ */
+export async function changeCurrency(data: ChangeCurrencyRequestDTO): Promise<void> {
+  const response = await apiClient.put<void>(`${BASE}/currency`, data);
+  return response.data;
+}

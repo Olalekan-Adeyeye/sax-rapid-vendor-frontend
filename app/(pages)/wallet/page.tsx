@@ -142,7 +142,7 @@ export default function WalletPage() {
 											<p className="text-[10px] font-bold text-gray-500 mb-1">
 												Available
 											</p>
-											<p className="text-sm font-bold">
+											<p className="text-sm font-bold wrap-break-word">
 												{formatCurrency(wallet?.balance || 0, activeCurrency)}
 											</p>
 										</div>

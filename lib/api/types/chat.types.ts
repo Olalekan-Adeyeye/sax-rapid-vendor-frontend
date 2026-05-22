@@ -4,12 +4,15 @@
 
 export interface ConversationResponseDTO {
   id: string; // uuid
-  otherParticipantId: string;
-  otherParticipantName: string;
-  otherParticipantAvatar: string | null;
-  lastMessage: string | null;
+  buyerId: string;
+  buyerName: string;
+  vendorId: string;
+  vendorName: string;
+  orderId: string | null;
+  lastMessage: MessageResponseDTO | null;
   lastMessageAt: string;
   unreadCount: number;
+  createdAt: string;
 }
 
 export interface MessageResponseDTO {
@@ -20,6 +23,7 @@ export interface MessageResponseDTO {
   content: string;
   imageUrl: string | null;
   isRead: boolean;
+  isFlagged: boolean;
   createdAt: string;
 }
 

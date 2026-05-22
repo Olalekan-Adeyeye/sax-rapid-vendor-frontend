@@ -5,13 +5,13 @@
 
 import apiClient from "../apiClient";
 import type { ApiResponse } from "../types/auth.types";
-import type { 
-  ConversationResponseDTO, 
-  MessageResponseDTO, 
-  SendMessageRequestDTO, 
+import type {
+  ConversationResponseDTO,
+  MessageResponseDTO,
+  SendMessageRequestDTO,
   StartConversationRequestDTO,
   PagedMessagesResponseDTO,
-  UnreadCountResponse
+  UnreadCountResponse,
 } from "../types/chat.types";
 
 const BASE = "/Chat";
@@ -21,7 +21,9 @@ const BASE = "/Chat";
  * Get all conversations for the authenticated user
  */
 export async function getConversations(): Promise<ConversationResponseDTO[]> {
-  const response = await apiClient.get<ApiResponse<ConversationResponseDTO[]>>(`${BASE}/conversations`);
+  const response = await apiClient.get<ApiResponse<ConversationResponseDTO[]>>(
+    `${BASE}/conversations`,
+  );
   return response.data.data;
 }
 
@@ -29,8 +31,12 @@ export async function getConversations(): Promise<ConversationResponseDTO[]> {
  * GET /api/Chat/conversations/{conversationId}
  * Get details of a specific conversation
  */
-export async function getConversation(conversationId: string): Promise<ConversationResponseDTO> {
-  const response = await apiClient.get<ApiResponse<ConversationResponseDTO>>(`${BASE}/conversations/${conversationId}`);
+export async function getConversation(
+  conversationId: string,
+): Promise<ConversationResponseDTO> {
+  const response = await apiClient.get<ApiResponse<ConversationResponseDTO>>(
+    `${BASE}/conversations/${conversationId}`,
+  );
   return response.data.data;
 }
 
@@ -39,23 +45,39 @@ export async function getConversation(conversationId: string): Promise<Conversat
  * Get messages in a conversation (paginated)
  */
 export async function getMessages(
-  conversationId: string, 
-  page = 1, 
-  pageSize = 50
+  conversationId: string,
+  page = 1,
+  pageSize = 50,
 ): Promise<PagedMessagesResponseDTO> {
-  const response = await apiClient.get<ApiResponse<PagedMessagesResponseDTO>>(
+  const response = await apiClient.get<ApiResponse<MessageResponseDTO[]>>(
     `${BASE}/conversations/${conversationId}/messages`,
-    { params: { page, pageSize } }
+    { params: { page, pageSize } },
   );
-  return response.data.data;
+  const messages = response.data.data;
+
+  // Transform array response into PagedMessagesResponseDTO format
+  return {
+    items: messages,
+    totalCount: messages.length,
+    pageIndex: page,
+    pageSize: pageSize,
+    totalPages: 1,
+    hasPreviousPage: page > 1,
+    hasNextPage: false,
+  };
 }
 
 /**
  * POST /api/Chat/messages
  * Send a new message
  */
-export async function sendMessage(request: SendMessageRequestDTO): Promise<MessageResponseDTO> {
-  const response = await apiClient.post<ApiResponse<MessageResponseDTO>>(`${BASE}/messages`, request);
+export async function sendMessage(
+  request: SendMessageRequestDTO,
+): Promise<MessageResponseDTO> {
+  const response = await apiClient.post<ApiResponse<MessageResponseDTO>>(
+    `${BASE}/messages`,
+    request,
+  );
   return response.data.data;
 }
 
@@ -72,7 +94,9 @@ export async function markAsRead(conversationId: string): Promise<void> {
  * Get total unread message count
  */
 export async function getUnreadCount(): Promise<UnreadCountResponse> {
-  const response = await apiClient.get<ApiResponse<UnreadCountResponse>>(`${BASE}/unread-count`);
+  const response = await apiClient.get<ApiResponse<UnreadCountResponse>>(
+    `${BASE}/unread-count`,
+  );
   return response.data.data;
 }
 
@@ -80,7 +104,12 @@ export async function getUnreadCount(): Promise<UnreadCountResponse> {
  * POST /api/Chat/conversations
  * Start a new conversation (Vendor usually doesn't do this, but included for completeness)
  */
-export async function startConversation(request: StartConversationRequestDTO): Promise<ConversationResponseDTO> {
-  const response = await apiClient.post<ApiResponse<ConversationResponseDTO>>(`${BASE}/conversations`, request);
+export async function startConversation(
+  request: StartConversationRequestDTO,
+): Promise<ConversationResponseDTO> {
+  const response = await apiClient.post<ApiResponse<ConversationResponseDTO>>(
+    `${BASE}/conversations`,
+    request,
+  );
   return response.data.data;
 }

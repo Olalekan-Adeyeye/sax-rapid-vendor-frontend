@@ -52,3 +52,6 @@ export interface PagedWalletTransactionResponseDTO {
   hasNextPage: boolean;
 }
 
+export interface ChangeCurrencyRequestDTO {
+  currency: "NGN" | "ZAR";
+}
