@@ -5,11 +5,12 @@ import {
   MoreVertical,
   Edit,
   Trash2,
-  Loader2,
   ShoppingBag,
   ExternalLink,
   CheckCircle,
   XCircle,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
@@ -22,8 +23,8 @@ import { CategoryResponseDTO } from "@/lib/api/types/categories.types";
 import { useToast } from "@/lib/context/ToastContext";
 import { getErrorMessage } from "@/lib/utils/errors";
 import { ErrorComponent } from "@/components/ui/ErrorComponent";
-import { FullPageLoader } from "@/components/common/FullPageLoader";
 import { SearchInput } from "@/components/ui/SearchInput";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Pagination } from "@/components/ui/Pagination";
 import { Select } from "@/components/ui/Select";
@@ -186,20 +187,6 @@ export default function ProductsPage() {
   // isFetching is true on page transitions — show subtle inline spinner
   const isFetching = productsQuery.isFetching;
 
-  if (isInitialLoading) {
-    return <FullPageLoader label="Loading products..." icon={ShoppingBag} />;
-  }
-
-  if (isError) {
-    return (
-      <ErrorComponent
-        title="Failed to load products"
-        message={getErrorMessage(productsQuery.error)}
-        onRetry={() => productsQuery.refetch()}
-      />
-    );
-  }
-
   return (
     <div className="space-y-10">
       <PageHeader
@@ -215,7 +202,7 @@ export default function ProductsPage() {
         }
         description="Manage your product inventory and listings"
         actions={
-          <Button asChild rounded="full" size="sm">
+          <Button asChild rounded="full" size="sm" disabled={isInitialLoading}>
             <Link href="/products/add" className="flex items-center gap-3">
               <Plus size={16} />
               Add New Product
@@ -226,7 +213,9 @@ export default function ProductsPage() {
 
       <div className="bg-white border border-gray-100 rounded overflow-hidden">
         {/* Toolbar */}
-        <div className="p-6 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div
+          className={`p-6 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-4 ${isInitialLoading ? "pointer-events-none opacity-50" : ""}`}
+        >
           <div className="relative flex-1 max-w-md">
             <SearchInput
               placeholder="Search by product name, SKU..."
@@ -238,6 +227,7 @@ export default function ProductsPage() {
               variant="muted"
               fullWidth
               focusColor="gold"
+              disabled={isInitialLoading || isFetching}
             />
           </div>
           <div className="flex items-center gap-3">
@@ -309,14 +299,65 @@ export default function ProductsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {isFetching && products.length === 0 ? (
+              {isError ? (
                 <tr>
-                  <td colSpan={7} className="px-8 py-10 text-center">
-                    <div className="flex justify-center">
-                      <Loader2 className="h-6 w-6 animate-spin text-gold" />
+                  <td colSpan={7} className="px-8 py-16 text-center">
+                    <div className="flex flex-col items-center justify-center space-y-4">
+                      <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center">
+                        <AlertCircle size={24} className="text-red-500" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-sm font-black text-red-600">
+                          Failed to load products
+                        </p>
+                        <p className="text-xs font-bold text-gray-400 max-w-md">
+                          {getErrorMessage(productsQuery.error)}
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => productsQuery.refetch()}
+                        className="rounded-full text-xs font-bold mt-2"
+                      >
+                        <RefreshCw size={14} className="mr-1.5" />
+                        Retry
+                      </Button>
                     </div>
                   </td>
                 </tr>
+              ) : isFetching && products.length === 0 ? (
+                [1, 2, 3, 4].map((row) => (
+                  <tr key={row}>
+                    <td className="px-8 py-5">
+                      <div className="flex items-center gap-4">
+                        <Skeleton className="w-12 h-12 bg-gray-100 shrink-0 rounded" />
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-36 bg-gray-100" />
+                          <Skeleton className="h-3 w-16" />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-8 py-5">
+                      <Skeleton className="h-4 w-24 bg-gray-100" />
+                    </td>
+                    <td className="px-8 py-5">
+                      <Skeleton className="h-4 w-20 bg-gray-100" />
+                    </td>
+                    <td className="px-8 py-5">
+                      <Skeleton className="h-4 w-16 bg-gray-100" />
+                    </td>
+                    <td className="px-8 py-5">
+                      <Skeleton className="h-4 w-28 bg-gray-100" />
+                    </td>
+                    <td className="px-8 py-5">
+                      <Skeleton className="h-5 w-16 bg-gray-100 rounded-full" />
+                    </td>
+                    <td className="px-8 py-5">
+                      <Skeleton className="h-4 w-20 bg-gray-100 ml-auto" />
+                    </td>
+                  </tr>
+                ))
               ) : displayedProducts.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-8 py-10 text-center">
@@ -462,6 +503,7 @@ export default function ProductsPage() {
                         <Link href={`/products/edit/${product.id}`} passHref>
                           <Button
                             variant="outline"
+                            disabled={isFetching}
                             className="w-8 h-8 p-0! bg-white border-gray-100 text-black hover:border-black rounded-none flex items-center justify-center transition-all"
                             title="Edit Product"
                           >
@@ -488,6 +530,7 @@ export default function ProductsPage() {
                           trigger={
                             <Button
                               variant="outline"
+                              disabled={isFetching}
                               className="w-8 h-8 p-0! bg-white border-gray-100 text-black hover:text-gold hover:border-gold rounded-none flex items-center justify-center transition-all"
                             >
                               <MoreVertical size={14} />
@@ -529,19 +572,17 @@ export default function ProductsPage() {
                                 className="text-gray-400"
                               />
                             }
-                            onClick={() =>
-                              router.push(`/products/${product.id}`)
-                            }
                           >
-                            View Details
+                            <Link href={`/products/${product.id}`}>
+                              View Details
+                            </Link>
                           </DropdownItem>
                           <DropdownItem
                             icon={<Edit size={14} className="text-gray-400" />}
-                            onClick={() =>
-                              router.push(`/products/edit/${product.id}`)
-                            }
                           >
-                            Detailed Edit
+                            <Link href={`/products/edit/${product.id}`}>
+                              Detailed Edit
+                            </Link>
                           </DropdownItem>
                           <DropdownItem
                             icon={
@@ -550,11 +591,10 @@ export default function ProductsPage() {
                                 className="text-gray-400"
                               />
                             }
-                            onClick={() =>
-                              router.push(`/reviews?productId=${product.id}`)
-                            }
                           >
-                            View Reviews
+                            <Link href={`/reviews?productId=${product.id}`}>
+                              View Reviews
+                            </Link>
                           </DropdownItem>
                           <DropdownDivider />
                           <DropdownItem

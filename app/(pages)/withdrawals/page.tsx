@@ -160,13 +160,14 @@ export default function PayoutsPage() {
 				<div className="p-8 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-6">
 					<h4 className="text-sm font-bold text-black uppercase tracking-widest">Payout History</h4>
 					<div className="flex flex-wrap items-center gap-3">
-						<SearchInput
-							placeholder="Search payouts..."
-							variant="muted"
-							focusColor="gold"
-							value={searchQuery}
-							onChange={setSearchQuery}
-						/>
+					<SearchInput
+						placeholder="Search payouts..."
+						variant="muted"
+						focusColor="gold"
+						value={searchQuery}
+						onChange={setSearchQuery}
+						disabled={loadingTransactions}
+					/>
 					</div>
 				</div>
 				<div className="overflow-x-auto">

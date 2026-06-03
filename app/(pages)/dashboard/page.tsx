@@ -1,15 +1,19 @@
 "use client";
+
 import {
-  ShoppingBag,
+  AlertCircle,
+  Bell,
   DollarSign,
   Eye,
-  Bell,
-  AlertCircle,
   Package,
+  ShoppingBag,
   Users,
 } from "lucide-react";
-import { Button } from "@/components/ui/Button";
 import Link from "next/link";
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/Button";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { getNotifications } from "@/lib/api/services/notifications";
 import { getVendorOrders } from "@/lib/api/services/orders";
 import {
@@ -17,17 +21,13 @@ import {
   getVendorPerformanceAnalytics,
   getVendorTopSellers,
 } from "@/lib/api/services/analytics";
-import { OrderStatus } from "@/lib/api/types/orders.types";
 import { getRelativeTime, formatDate } from "@/lib/utils/date";
 import { getOrderStatusColor } from "@/lib/utils/orderStatus";
-import { PulsingDots } from "@/components/dashboard/PulsingDots";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { TopSellerCard } from "@/components/dashboard/TopSellerCard";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
 import { InventoryHealth } from "@/components/dashboard/InventoryHealth";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { formatCurrency } from "@/lib/utils/currency";
 
 export default function DashboardOverview() {
@@ -85,9 +85,9 @@ export default function DashboardOverview() {
 
   const notifications = useMemo(
     () =>
-      (notificationsData?.items || []).map((n) => ({
-        ...n,
-        relativeTime: getRelativeTime(n.createdAt),
+      (notificationsData?.items || []).map((notification) => ({
+        ...notification,
+        relativeTime: getRelativeTime(notification.createdAt),
       })),
     [notificationsData?.items],
   );
@@ -96,33 +96,28 @@ export default function DashboardOverview() {
 
   return (
     <div className="space-y-10 lg:space-y-14">
-      {/* Welcome Info */}
       <PageHeader
         title="Vendor Performance"
         description="Live Dashboard Overview"
         actions={
-          <>
-            <Button
-              variant="primary"
-              rounded="full"
-              size="sm"
-              className="font-bold flex-1 sm:flex-none whitespace-nowrap"
-            >
-              Withdraw Funds
-            </Button>
-          </>
+          <Button
+            variant="primary"
+            rounded="full"
+            size="sm"
+            disabled={loadingDashboardStats}
+            className="font-bold flex-1 sm:flex-none whitespace-nowrap"
+          >
+            Withdraw Funds
+          </Button>
         }
       />
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         <StatCard
           icon={DollarSign}
           title="Total Revenue"
           value={
-            loadingDashboardStats ? (
-              <PulsingDots />
-            ) : dashboardStatsError ? (
+            dashboardStatsError ? (
               "N/A"
             ) : (
               formatCurrency(dashboardStats?.revenue || 0)
@@ -130,62 +125,60 @@ export default function DashboardOverview() {
           }
           isError={!!dashboardStatsError}
           detail={
-            dashboardStats?.currency
-              ? `in ${dashboardStats.currency}`
-              : "Available earnings"
+            dashboardStats?.currency ? (
+              `in ${dashboardStats.currency}`
+            ) : (
+              "Available earnings"
+            )
           }
+          isLoading={loadingDashboardStats}
           variant="dark"
         />
         <StatCard
           icon={ShoppingBag}
           title="Total Orders"
           value={
-            loadingDashboardStats ? (
-              <PulsingDots />
-            ) : dashboardStatsError ? (
+            dashboardStatsError ? (
               "N/A"
             ) : (
               (dashboardStats?.totalOrders || 0).toLocaleString()
             )
           }
           isError={!!dashboardStatsError}
+          isLoading={loadingDashboardStats}
           detail="Completed transactions"
         />
         <StatCard
           icon={Package}
           title="Active Products"
           value={
-            loadingDashboardStats ? (
-              <PulsingDots />
-            ) : dashboardStatsError ? (
+            dashboardStatsError ? (
               "N/A"
             ) : (
               (dashboardStats?.activeProducts || 0).toLocaleString()
             )
           }
           isError={!!dashboardStatsError}
+          isLoading={loadingDashboardStats}
           detail={`of ${dashboardStats?.totalProducts || 0} total`}
         />
         <StatCard
           icon={Users}
           title="Unique Customers"
           value={
-            loadingDashboardStats ? (
-              <PulsingDots />
-            ) : dashboardStatsError ? (
+            dashboardStatsError ? (
               "N/A"
             ) : (
               (dashboardStats?.uniqueCustomers || 0).toLocaleString()
             )
           }
           isError={!!dashboardStatsError}
+          isLoading={loadingDashboardStats}
           detail="Total buyers"
         />
       </div>
 
-      {/* Main Content Area */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 lg:gap-12">
-        {/* Product Views Section */}
         <div className="xl:col-span-2 space-y-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -196,7 +189,7 @@ export default function DashboardOverview() {
             </div>
             <Link
               href="/analytics"
-              className="text-xs font-bold text-gray-400 hover:text-gold transition-colors"
+              className={`text-xs font-bold transition-colors ${loadingTopSellers ? "text-gray-200 pointer-events-none" : "text-gray-400 hover:text-gold"}`}
             >
               View Analytics
             </Link>
@@ -204,11 +197,24 @@ export default function DashboardOverview() {
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {loadingTopSellers ? (
-              [1, 2, 3].map((i) => (
+              [1, 2, 3].map((item) => (
                 <div
-                  key={i}
-                  className="bg-gray-100 rounded animate-pulse aspect-square"
-                />
+                  key={item}
+                  className="bg-white border border-gray-100 rounded overflow-hidden flex flex-col"
+                >
+                  <Skeleton className="aspect-square bg-gray-100" />
+                  <div className="p-4 flex-1 flex flex-col">
+                    <Skeleton className="h-3 w-16 mb-2" />
+                    <Skeleton className="h-4 w-4/5 mb-6" />
+                    <div className="space-y-4 mt-auto">
+                      <Skeleton className="h-4 w-28" />
+                      <div className="pt-3 border-t border-gray-50 space-y-2">
+                        <Skeleton className="h-2 w-24" />
+                        <Skeleton className="h-4 w-20" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
               ))
             ) : topSellersError ? (
               <div className="col-span-full p-8 text-center bg-red-50/10 rounded flex flex-col items-center justify-center space-y-2">
@@ -236,7 +242,6 @@ export default function DashboardOverview() {
           </div>
         </div>
 
-        {/* Notifications Section */}
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -245,7 +250,7 @@ export default function DashboardOverview() {
             </div>
             <Link
               href="/notifications"
-              className="text-xs font-bold text-gray-400 hover:text-gold transition-colors"
+              className={`text-xs font-bold transition-colors ${loadingNotifications ? "text-gray-200 pointer-events-none" : "text-gray-400 hover:text-gold"}`}
             >
               See All
             </Link>
@@ -267,13 +272,16 @@ export default function DashboardOverview() {
                 </div>
               </div>
             ) : loadingNotifications ? (
-              [1, 2, 3, 4].map((i) => (
-                <div key={i} className="p-5 animate-pulse">
+              [1, 2, 3, 4].map((item) => (
+                <div key={item} className="p-5">
                   <div className="flex items-start gap-4">
-                    <div className="w-2 h-2 rounded-full mt-1.5 bg-gray-100 shrink-0" />
+                    <Skeleton
+                      circle
+                      className="w-2 h-2 mt-1.5 bg-gray-100 shrink-0"
+                    />
                     <div className="flex-1 space-y-2">
-                      <div className="h-3 bg-gray-50 rounded w-1/2" />
-                      <div className="h-2 bg-gray-50 rounded w-full" />
+                      <Skeleton className="h-3 w-1/2" />
+                      <Skeleton className="h-2 w-full" />
                     </div>
                   </div>
                 </div>
@@ -328,6 +336,7 @@ export default function DashboardOverview() {
             rounded="full"
             size="sm"
             fullWidth
+            disabled={loadingNotifications}
             className="text-gray-400 hover:text-black hover:bg-gray-50/50 py-4"
           >
             <Link href="/notifications">View All Notifications</Link>
@@ -335,7 +344,6 @@ export default function DashboardOverview() {
         </div>
       </div>
 
-      {/* Secondary Stats/Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
         <div className="bg-white border border-gray-100 rounded p-6">
           <div className="flex items-center justify-between mb-8">
@@ -371,13 +379,13 @@ export default function DashboardOverview() {
             </div>
             <div className="space-y-6">
               {loadingTopSellers ? (
-                [1, 2, 3, 4].map((i) => (
-                  <div key={i} className="space-y-2 animate-pulse">
+                [1, 2, 3, 4].map((item) => (
+                  <div key={item} className="space-y-2">
                     <div className="flex justify-between">
-                      <div className="h-2 bg-gray-50 rounded w-1/3" />
-                      <div className="h-2 bg-gray-50 rounded w-1/4" />
+                      <Skeleton className="h-2 w-1/3" />
+                      <Skeleton className="h-2 w-1/4" />
                     </div>
-                    <div className="h-1.5 bg-gray-50 rounded-full" />
+                    <Skeleton circle className="h-1.5 w-full" />
                   </div>
                 ))
               ) : topSellersError || topSellerItems.length === 0 ? (
@@ -420,13 +428,12 @@ export default function DashboardOverview() {
         </div>
       </div>
 
-      {/* Latest Orders Table */}
       <div className="bg-white border border-gray-100 rounded overflow-hidden">
         <div className="p-6 border-b border-gray-100 flex items-center justify-between">
           <h4 className="text-xs font-bold text-black">Latest Orders</h4>
           <Link
             href="/orders"
-            className="text-xs font-bold text-gold hover:text-black transition-colors"
+            className={`text-xs font-bold transition-colors ${loadingOrders ? "text-gray-300 pointer-events-none" : "text-gold hover:text-black"}`}
           >
             View All
           </Link>
@@ -443,12 +450,12 @@ export default function DashboardOverview() {
                   "Date",
                   "Status",
                   "",
-                ].map((th) => (
+                ].map((heading) => (
                   <th
-                    key={th}
+                    key={heading}
                     className="px-8 py-5 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 whitespace-nowrap"
                   >
-                    {th}
+                    {heading}
                   </th>
                 ))}
               </tr>
@@ -476,13 +483,13 @@ export default function DashboardOverview() {
                   </td>
                 </tr>
               ) : loadingOrders ? (
-                [1, 2, 3].map((i) => (
-                  <tr key={i} className="animate-pulse">
+                [1, 2, 3].map((item) => (
+                  <tr key={item}>
                     <td className="px-8 py-6" colSpan={7}>
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-4 bg-gray-50 rounded" />
-                        <div className="flex-1 h-4 bg-gray-50 rounded" />
-                        <div className="w-24 h-4 bg-gray-50 rounded" />
+                        <Skeleton className="w-12 h-4" />
+                        <Skeleton className="flex-1 h-4" />
+                        <Skeleton className="w-24 h-4" />
                       </div>
                     </td>
                   </tr>
@@ -531,6 +538,7 @@ export default function DashboardOverview() {
                         asChild
                         variant="ghost"
                         size="sm"
+                        disabled={loadingOrders}
                         className="text-gray-300 hover:text-black px-3!"
                       >
                         <Link href={`/orders/${order.id}`}>

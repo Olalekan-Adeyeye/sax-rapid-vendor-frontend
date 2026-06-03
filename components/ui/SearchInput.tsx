@@ -27,6 +27,8 @@ interface SearchInputProps {
 	fullWidth?: boolean;
 	/** Input id – useful for accessibility */
 	id?: string;
+	/** When true the input is disabled */
+	disabled?: boolean;
 }
 
 const variantMap = {
@@ -48,6 +50,7 @@ export function SearchInput({
 	focusColor = "black",
 	fullWidth = false,
 	id,
+	disabled = false,
 }: SearchInputProps) {
 	const v = variantMap[variant];
 	const f = focusMap[focusColor];
@@ -64,7 +67,8 @@ export function SearchInput({
 				value={value}
 				onChange={(e) => onChange?.(e.target.value)}
 				placeholder={placeholder}
-				className={`${fullWidth ? "w-full" : ""} ${v} border rounded py-3 pl-12 pr-4 text-sm font-semibold text-black outline-none ${f} transition-all placeholder:text-gray-400`}
+				disabled={disabled}
+				className={`${fullWidth ? "w-full" : ""} ${v} border rounded py-3 pl-12 pr-4 text-sm font-semibold text-black outline-none ${f} transition-all placeholder:text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed`}
 			/>
 		</div>
 	);

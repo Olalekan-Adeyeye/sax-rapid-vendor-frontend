@@ -11,16 +11,15 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
         defaultOptions: {
           queries: {
             staleTime: 30_000,
-            gcTime: 0,
+            gcTime: 0, //5 * 60 * 1000,
             retry: 1,
-            refetchOnMount: true,
-            refetchOnReconnect: true,
-            refetchOnWindowFocus: true,
+            refetchOnMount: false,
+            refetchOnReconnect: false,
+            refetchOnWindowFocus: false,
           },
         },
       }),
   );
-
   return (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );

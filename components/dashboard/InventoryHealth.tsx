@@ -1,3 +1,5 @@
+import { Skeleton } from "@/components/ui/Skeleton";
+
 interface InventoryHealthProps {
   activeProducts: number;
   outOfStockProducts: number;
@@ -23,7 +25,7 @@ export function InventoryHealth({
       </div>
 
       {isLoading ? (
-        <div className="h-28 rounded bg-gray-50 animate-pulse" />
+        <Skeleton className="h-28" />
       ) : isError ? (
         <div className="h-28 flex items-center justify-center bg-red-50/10 rounded">
           <p className="text-xs font-bold text-red-500">

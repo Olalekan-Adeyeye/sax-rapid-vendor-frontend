@@ -145,6 +145,7 @@ export default function OrdersPage() {
                   variant="muted"
                   fullWidth
                   focusColor="gold"
+                  disabled={loading}
                 />
               </div>
               <div className="flex items-center gap-3">

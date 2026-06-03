@@ -107,14 +107,15 @@ export default function InventoryManagementPage() {
 
 			<div className="bg-white border border-gray-100 rounded overflow-hidden">
 				<div className="p-6 border-b border-gray-50 bg-gray-50/10">
-					<SearchInput
-						placeholder="Search inventory..."
-						variant="white"
-						focusColor="gold"
-						fullWidth
-						className="max-w-md"
-						value={searchQuery}
-						onChange={setSearchQuery}
+				<SearchInput
+					placeholder="Search inventory..."
+					variant="white"
+					focusColor="gold"
+					fullWidth
+					className="max-w-md"
+					value={searchQuery}
+					onChange={setSearchQuery}
+					disabled={loadingStats || loadingProducts}
 					/>
 				</div>
 

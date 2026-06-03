@@ -115,6 +115,7 @@ function ReviewsContent() {
                         onChange={setSearchTerm}
                         variant="muted"
                         focusColor="gold"
+                        disabled={loading}
                     />
                 </div>
 

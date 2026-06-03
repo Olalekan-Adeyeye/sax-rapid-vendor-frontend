@@ -30,6 +30,7 @@ import { Input } from "@/components/ui/Input";
 import Image from "next/image";
 import { getErrorMessage } from "@/lib/utils/errors";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 export default function MessagesPage() {
   const { user } = useAuth();
@@ -182,6 +183,25 @@ export default function MessagesPage() {
     [messages],
   );
 
+  const renderConversationSkeletons = () => (
+    <div className="divide-y divide-gray-50">
+      {[1, 2, 3, 4].map((item) => (
+        <div key={item} className="p-5">
+          <div className="flex items-start gap-4">
+            <Skeleton circle className="w-10 h-10 bg-gray-100 shrink-0" />
+            <div className="flex-1 space-y-2 min-w-0">
+              <div className="flex justify-between items-center gap-6">
+                <Skeleton className="h-4 w-1/3 bg-gray-100" />
+                <Skeleton className="h-3 w-12" />
+              </div>
+              <Skeleton className="h-3 w-full" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <div className="space-y-8 lg:space-y-10">
       <PageHeader
@@ -217,13 +237,12 @@ export default function MessagesPage() {
               variant="muted"
               fullWidth
               focusColor="gold"
+              disabled={loadingConversations}
             />
           </div>
           <div className="flex-1 overflow-y-auto no-scrollbar">
             {loadingConversations ? (
-              <div className="p-10 flex justify-center">
-                <Loader2 className="animate-spin text-gold" size={24} />
-              </div>
+              renderConversationSkeletons()
             ) : conversationsErrorMsg ? (
               <div className="p-8 text-center">
                 <p className="text-sm font-bold text-red-600 mb-2">
@@ -337,6 +356,7 @@ export default function MessagesPage() {
                     type="button"
                     variant="ghost"
                     size="sm"
+                    disabled={sendMutation.isPending}
                     className="p-2! text-gray-400! hover:text-black! transition-colors! border-0! !bg-transparent!"
                   >
                     <MoreHorizontal size={16} />
@@ -369,8 +389,16 @@ export default function MessagesPage() {
                     </Button>
                   </div>
                 ) : loadingMessages ? (
-                  <div className="flex justify-center py-20">
-                    <Loader2 className="animate-spin text-gold" size={32} />
+                  <div className="p-4 md:p-6 space-y-6">
+                    {[1, 2, 3].map((item) => (
+                      <div key={item} className={`flex gap-3 ${item % 2 === 0 ? "justify-end" : "justify-start"}`}>
+                        {item % 2 !== 0 && <Skeleton circle className="w-7 h-7 bg-gray-100 shrink-0" />}
+                        <div className={`flex flex-col gap-2 ${item % 2 === 0 ? "items-end" : "items-start"}`}>
+                          <Skeleton className={`h-10 ${item % 2 === 0 ? "w-48" : "w-36"} bg-gray-100 rounded`} />
+                          <Skeleton className="h-3 w-16" />
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ) : messages.length > 0 ? (
                   <>
@@ -495,6 +523,7 @@ export default function MessagesPage() {
                     type="button"
                     variant="ghost"
                     size="sm"
+                    disabled={sendMutation.isPending}
                     className="!p-2 !md:p-3 !text-gray-400 !hover:text-gold !transition-colors !border-0 !bg-transparent"
                   >
                     <Paperclip size={18} />
@@ -515,6 +544,7 @@ export default function MessagesPage() {
                     type="button"
                     variant="ghost"
                     size="sm"
+                    disabled={sendMutation.isPending}
                     className="hidden sm:block !p-3 !text-gray-400 !hover:text-gold !transition-colors !border-0 !bg-transparent"
                   >
                     <Smile size={18} />

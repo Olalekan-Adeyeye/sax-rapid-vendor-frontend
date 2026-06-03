@@ -163,7 +163,7 @@ export default function AnalyticsPage() {
         title="Performance Analytics"
         description="Deep dive into your store sales and performance"
         actions={
-          <div className="flex bg-white border border-gray-100 rounded-full p-1 shadow-xs">
+          <div className="flex bg-white border border-gray-100 rounded-full p-1">
             {(["7D", "30D", "1Y", "ALL"] as TimeRange[]).map((range) => (
               <button
                 key={range}

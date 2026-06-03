@@ -9,6 +9,7 @@ import {
   WalletDetailsResponseDTO,
   WalletFundRequestDTO,
   VendorWithdrawalRequestDTO,
+  ChangeCurrencyRequestDTO
 } from "../types/wallet.types";
 import { InitializePaymentResponseDTO } from "../types/payments.types";
 

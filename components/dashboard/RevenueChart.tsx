@@ -1,4 +1,5 @@
 import { AlertCircle } from "lucide-react";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 interface PerformanceDataPoint {
 	revenue: number;
@@ -16,7 +17,7 @@ export function RevenueChart({ data, isLoading, isError }: RevenueChartProps) {
 	return (
 		<div className="h-48 relative w-full group">
 			{isLoading ? (
-				<div className="w-full h-full bg-gray-50 rounded animate-pulse" />
+				<Skeleton className="w-full h-full" />
 			) : isError ? (
 				<div className="w-full h-full flex items-center justify-center bg-red-50/10 rounded">
 					<div className="text-center space-y-2">

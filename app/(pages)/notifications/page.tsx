@@ -24,8 +24,8 @@ import { getRelativeTime } from "@/lib/utils/date";
 import { useToast } from "@/lib/context/ToastContext";
 import { ErrorComponent } from "@/components/ui/ErrorComponent";
 import { getErrorMessage } from "@/lib/utils/errors";
-import { FullPageLoader } from "@/components/common/FullPageLoader";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 const typeConfig: Record<string, { icon: React.ElementType; color: string }> = {
 	Order: { icon: ShoppingBag, color: "bg-gold" },
@@ -52,7 +52,7 @@ export default function NotificationsPage() {
 		queryFn: () => getNotifications(1, 100),
 	});
 
-	const { data: countData } = useQuery({
+	const { data: countData, isLoading: loadingCount } = useQuery({
 		queryKey: ["notification-count"],
 		queryFn: getNotificationCount,
 	});
@@ -123,11 +123,29 @@ export default function NotificationsPage() {
 		}
 	};
 
+	const renderNotificationSkeletons = () => (
+		<div className="divide-y divide-gray-50">
+			{[1, 2, 3, 4].map((item) => (
+				<div key={item} className="p-6 lg:p-8">
+					<div className="flex items-start gap-6">
+						<Skeleton circle className="w-10 h-10 bg-gray-100 shrink-0" />
+						<div className="flex-1 space-y-3">
+							<div className="flex justify-between items-center gap-6">
+								<Skeleton className="h-4 w-1/4 bg-gray-100" />
+								<Skeleton className="h-3 w-12" />
+							</div>
+							<Skeleton className="h-3 w-full" />
+							<Skeleton className="h-3 w-2/3" />
+						</div>
+					</div>
+				</div>
+			))}
+		</div>
+	);
+
 	return (
 		<div className="space-y-10">
-			{loading && notifications.length === 0 ? (
-				<FullPageLoader label="Loading notifications..." icon={Bell} />
-			) : error && notifications.length === 0 ? (
+			{error && notifications.length === 0 ? (
 				<ErrorComponent
 					title="Failed to load notifications"
 					message={error!}
@@ -141,11 +159,13 @@ export default function NotificationsPage() {
 						title={
 							<span className="flex items-center gap-4">
 								Notifications
-								{counts.unread > 0 && (
+								{loadingCount ? (
+									<Skeleton circle className="h-6 w-8 bg-gold/20" />
+								) : counts.unread > 0 ? (
 									<span className="inline-flex items-center justify-center px-2 py-1 text-[10px] font-black bg-gold text-black rounded-full min-w-6">
 										{counts.unread}
 									</span>
-								)}
+								) : null}
 							</span>
 						}
 						description="Stay updated with your store activities"
@@ -193,23 +213,7 @@ export default function NotificationsPage() {
 
 					<div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm shadow-gray-100/50">
 						{loading ? (
-							<div className="divide-y divide-gray-50">
-								{[1, 2, 3, 4].map((i) => (
-									<div key={i} className="p-6 lg:p-8 animate-pulse">
-										<div className="flex items-start gap-6">
-											<div className="w-10 h-10 rounded-full bg-gray-100 shrink-0" />
-											<div className="flex-1 space-y-3">
-												<div className="flex justify-between items-center">
-													<div className="h-4 bg-gray-100 rounded w-1/4" />
-													<div className="h-3 bg-gray-50 rounded w-12" />
-												</div>
-												<div className="h-3 bg-gray-50 rounded w-full" />
-												<div className="h-3 bg-gray-50 rounded w-2/3" />
-											</div>
-										</div>
-									</div>
-								))}
-							</div>
+							renderNotificationSkeletons()
 						) : notifications?.length > 0 ? (
 							<div className="divide-y divide-gray-50">
 								{notifications.map((item) => {
@@ -247,7 +251,8 @@ export default function NotificationsPage() {
 															</span>
 															<button
 																onClick={(e) => handleDelete(e, item.id)}
-																className="opacity-0 group-hover:opacity-100 p-2 hover:bg-red-50 text-gray-300 hover:text-red-500 rounded-full transition-all"
+																disabled={deleteMutation.isPending}
+																className="opacity-0 group-hover:opacity-100 p-2 hover:bg-red-50 text-gray-300 hover:text-red-500 rounded-full transition-all disabled:opacity-30 disabled:cursor-not-allowed"
 															>
 																<Trash2 size={14} />
 															</button>

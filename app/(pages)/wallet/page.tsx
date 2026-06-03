@@ -103,7 +103,7 @@ export default function WalletPage() {
 
 					<div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14">
 						{/* Balance Section */}
-						<div className="lg:col-span-4 space-y-10">
+						<div className="lg:col-span-5 space-y-10">
 							{loadingWallet ? (
 								<div className="bg-black text-white rounded p-20 flex flex-col items-center justify-center gap-4">
 									<Loader2 className="w-8 h-8 text-gold animate-spin" />
@@ -197,13 +197,13 @@ export default function WalletPage() {
 						</div>
 
 						{/* History Section */}
-						<div className="lg:col-span-8 space-y-8">
+						<div className="lg:col-span-7 space-y-8">
 							<div className="bg-white border border-gray-100 rounded overflow-hidden transition-shadow">
 								<div className="p-8 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-6">
 									<h4 className="text-xs font-bold text-black">
 										Transaction History
 									</h4>
-									<div className="flex flex-wrap items-center gap-3">
+									{/* <div className="flex flex-wrap items-center gap-3">
 										<SearchInput
 											placeholder="Search transactions..."
 											variant="muted"
@@ -217,7 +217,7 @@ export default function WalletPage() {
 											<Filter size={14} />
 											Filter
 										</Button>
-									</div>
+									</div> */}
 								</div>
 								<div className="divide-y divide-gray-50 min-h-100">
 									{loadingTransactions ? (
