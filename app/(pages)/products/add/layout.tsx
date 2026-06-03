@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Add New Product | Vendor Dashboard",
+  title: "Add New Product",
   description: "Create and publish a new product listing to the marketplace.",
 };
 

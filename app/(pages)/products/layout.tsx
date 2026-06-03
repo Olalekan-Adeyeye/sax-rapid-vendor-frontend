@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Inventory Management | Vendor Dashboard",
+  title: "Inventory Management",
   description: "View and manage all your listed products, stock levels, and active promotions.",
 };
 

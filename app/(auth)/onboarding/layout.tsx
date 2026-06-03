@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-	title: "Complete Your Onboarding | SAX-RAPID Vendor Center",
+  title: "Complete Your Onboarding",
 	description: "Complete your store setup to start selling on SAX-RAPID.",
 };
 

@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Product Attributes | Vendor Dashboard",
+  title: "Product Attributes",
   description: "Configure reusable product attributes like size, color, and material.",
 };
 

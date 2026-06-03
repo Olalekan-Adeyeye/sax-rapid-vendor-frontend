@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Profile | Vendor Dashboard",
+  title: "Profile",
   description: "Manage your personal and business profile settings.",
 };
 

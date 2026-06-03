@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Product Variations | Vendor Dashboard",
+  title: "Product Variations",
   description: "Manage specific variations and combinations for your product listings.",
 };
 
