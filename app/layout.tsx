@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-import { PageLoaderSimulation } from "@/components/common/PageLoaderSimulation";
 import { ToastProvider } from "@/lib/context/ToastContext";
 import { AuthProvider } from "@/lib/context/AuthContext";
 import { AuthGuard } from "@/components/auth/AuthGuard";
@@ -91,7 +90,6 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
 };
 
 export default function RootLayout({
@@ -105,9 +103,7 @@ export default function RootLayout({
         <QueryProvider>
           <AuthProvider>
             <ToastProvider>
-              <AuthGuard>
-                <PageLoaderSimulation>{children}</PageLoaderSimulation>
-              </AuthGuard>
+              <AuthGuard>{children}</AuthGuard>
             </ToastProvider>
           </AuthProvider>
         </QueryProvider>

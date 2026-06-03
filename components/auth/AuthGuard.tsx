@@ -10,6 +10,7 @@ interface AuthGuardProps {
 }
 
 const PUBLIC_PAGES = [
+	"/",
 	"/login",
 	"/signup",
 	"/forgot-password",
