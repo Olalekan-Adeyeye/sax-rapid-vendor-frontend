@@ -13,12 +13,15 @@ import {
 	ExternalLink,
 } from "lucide-react";
 import * as ordersService from "@/lib/api/services/orders";
+import * as deliveryService from "@/lib/api/services/delivery";
 import { OrderResponseDTO, OrderStatus } from "@/lib/api/types/orders.types";
+import { DeliveryProvider, DeliveryStatus } from "@/lib/api/types/delivery.types";
 import { formatCurrency } from "../../../../lib/utils/currency";
 import { formatDate } from "@/lib/utils/date";
 import { formatVariationDetails } from "@/lib/utils/product";
 import { useToast } from "@/lib/context/ToastContext";
 import { Button } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Select";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
 import { ErrorComponent } from "@/components/ui/ErrorComponent";
 import { getErrorMessage } from "@/lib/utils/errors";
@@ -33,6 +36,7 @@ export default function OrderDetailsPage() {
 	const [loading, setLoading] = useState(true);
 	const [updating, setUpdating] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const [deliveryProvider, setDeliveryProvider] = useState<DeliveryProvider>("Manual");
 
 	const fetchOrder = React.useCallback(async () => {
 		try {
@@ -65,6 +69,18 @@ export default function OrderDetailsPage() {
 			toast("Success", `Order status updated to ${newStatus}`, "success");
 		} catch {
 			toast("Error", "Failed to update order status", "error");
+		} finally {
+			setUpdating(false);
+		}
+	};
+
+	const handleRequestDelivery = async () => {
+		try {
+			setUpdating(true);
+			await deliveryService.requestDelivery(orderId, deliveryProvider);
+			toast("Delivery Requested", `Delivery has been requested via ${deliveryProvider}`, "success");
+		} catch {
+			toast("Error", "Failed to request delivery", "error");
 		} finally {
 			setUpdating(false);
 		}
@@ -150,6 +166,31 @@ export default function OrderDetailsPage() {
 					>
 						Mark as Shipped
 					</Button>
+					{order.status === OrderStatus.Shipped && (
+						<div className="flex items-center gap-2">
+							<Select
+								id="delivery-provider"
+								options={[
+									{ label: "Manual", value: "Manual" },
+									{ label: "Uber", value: "Uber" },
+									{ label: "Bolt", value: "Bolt" },
+								]}
+								value={deliveryProvider}
+								onChange={(e) => setDeliveryProvider(e.target.value as DeliveryProvider)}
+								className="!w-30! text-[10px]!"
+							/>
+							<Button
+								variant="black"
+								size="sm"
+								onClick={handleRequestDelivery}
+								disabled={updating}
+								loading={updating}
+								className="rounded-full px-4 text-[10px] font-bold"
+							>
+								Request Delivery
+							</Button>
+						</div>
+					)}
 				</div>
 			</div>
 

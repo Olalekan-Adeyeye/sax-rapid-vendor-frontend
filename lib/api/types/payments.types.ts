@@ -41,3 +41,16 @@ export interface VerifyPaymentResponseDTO {
   gatewayResponse?: string | null;
   isSuccessful: boolean;
 }
+
+export interface PaymentResponseDTO {
+  id: string;
+  orderId?: string | null;
+  reference?: string | null;
+  amount: number;
+  currency?: string | null;
+  gateway: PaymentGateway;
+  status: PaymentStatus;
+  channel?: string | null;
+  paidAt?: string | null;
+  createdAt: string;
+}

@@ -27,11 +27,10 @@ export interface WalletFundRequestDTO {
   callbackUrl?: string | null;
 }
 
-export interface VendorWithdrawalRequestDTO {
+export interface WithdrawRequestDTO {
   amount: number;
-  bankCode: string;
-  accountNumber: string;
-  accountName?: string | null;
+  bankAccountId: string;
+  currency: string;
 }
 
 // Keeping these for backward compatibility if needed, but they might be deprecated

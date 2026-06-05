@@ -84,9 +84,10 @@ const navGroups = [
 interface SidebarProps {
 	isOpen: boolean;
 	onClose: () => void;
+	isDesktopCollapsed?: boolean;
 }
 
-export function Sidebar({ isOpen, onClose }: SidebarProps) {
+export function Sidebar({ isOpen, onClose, isDesktopCollapsed = false }: SidebarProps) {
 	const pathname = usePathname();
 
 	return (
@@ -101,17 +102,25 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
 			{/* Sidebar Container */}
 			<aside
-				className={`fixed inset-y-0 left-0 w-64 bg-[#0a0a0a] border-r border-white/5 flex flex-col z-200 transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+				className={`fixed inset-y-0 left-0 bg-[#0a0a0a] border-r border-white/5 flex flex-col z-200 transition-all duration-300 ease-in-out lg:translate-x-0 ${
 					isOpen ? "translate-x-0" : "-translate-x-full"
+				} ${
+					isDesktopCollapsed ? "w-64 lg:w-[72px]" : "w-64"
 				}`}
 			>
-				<div className="p-8 flex items-center justify-between">
+				<div className={`flex items-center ${isDesktopCollapsed ? 'justify-center p-4 lg:p-0 lg:pt-4 lg:pb-4' : 'p-8 justify-between'}`}>
 					<Link
 						href="/"
 						className="group transition-opacity hover:opacity-80"
 						onClick={onClose}
 					>
-						<Logo size="sm" showCaption={true} withBackground={false} />
+						{isDesktopCollapsed ? (
+							<div className="w-8 h-8 rounded bg-gold/20 flex items-center justify-center">
+								<div className="w-3 h-3 rounded-full bg-gold" />
+							</div>
+						) : (
+							<Logo size="sm" showCaption={true} withBackground={false} />
+						)}
 					</Link>
 					<button
 						onClick={onClose}
@@ -124,7 +133,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 				<nav className="flex-1 px-4 pb-8 space-y-6 overflow-y-auto premium-scrollbar">
 					{navGroups.map((group) => (
 						<div key={group.title} className="space-y-2">
-							<h3 className="px-4 text-[10px] font-bold uppercase tracking-wider text-gray-400">
+							<h3 className={`px-4 text-[10px] font-bold uppercase tracking-wider text-gray-400 ${
+								isDesktopCollapsed ? "lg:hidden" : ""
+							}`}>
 								{group.title}
 							</h3>
 							<div className="space-y-1">
@@ -134,7 +145,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 										<Link
 											key={item.href}
 											href={item.href}
-											className={`flex items-center gap-4 px-4 py-3 rounded text-[13px] transition-all duration-200 ${
+											className={`flex items-center rounded text-[13px] transition-all duration-200 ${
+												isDesktopCollapsed
+													? "justify-center py-3"
+													: "gap-4 px-4 py-3"
+											} ${
 												isActive
 													? "bg-gold text-black font-bold"
 													: "text-gray-400 font-medium hover:text-white hover:bg-white/5"
@@ -143,13 +158,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 										>
 											<item.icon
 												size={16}
-												className={
+												className={`shrink-0 ${
 													isActive
 														? "text-black font-bold"
-														: "text-gray-500 group-hover:text-white transition-colors"
-												}
+														: "text-gray-500"
+												}`}
 											/>
-											{item.name}
+											{!isDesktopCollapsed && item.name}
 										</Link>
 									);
 								})}
@@ -159,26 +174,32 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 				</nav>
 
 				<div className="p-4 border-t border-white/5">
-					<div className="bg-white/5 border border-white/5 rounded p-5 flex flex-col gap-4">
-						<div className="flex items-center gap-3">
-							<div className="w-8 h-8 rounded bg-gold/20 flex items-center justify-center text-gold">
+					<div className={`bg-white/5 border border-white/5 rounded ${
+						isDesktopCollapsed ? "p-2" : "p-5 flex flex-col gap-4"
+					}`}>
+						<div className={`flex items-center ${isDesktopCollapsed ? "justify-center" : "gap-3"}`}>
+							<div className="w-8 h-8 rounded bg-gold/20 flex items-center justify-center text-gold shrink-0">
 								<Headphones size={16} />
 							</div>
-							<p className="text-xs font-bold text-white">Support Center</p>
+							{!isDesktopCollapsed && <p className="text-xs font-bold text-white">Support Center</p>}
 						</div>
-						<p className="text-xs font-medium text-gray-500 leading-relaxed">
-							Need help with your store? Our elite support team is here 24/7.
-						</p>
-						<Link
-							href="/support"
-							className="flex items-center justify-between group/btn text-xs font-bold text-gold hover:text-white transition-colors"
-						>
-							Get Assistance
-							<ArrowUpRight
-								size={14}
-								className="transition-transform group-hover/btn:-translate-y-0.5 group-hover/btn:translate-x-0.5"
-							/>
-						</Link>
+						{!isDesktopCollapsed && (
+							<>
+								<p className="text-xs font-medium text-gray-500 leading-relaxed">
+									Need help with your store? Our elite support team is here 24/7.
+								</p>
+								<Link
+									href="/support"
+									className="flex items-center justify-between group/btn text-xs font-bold text-gold hover:text-white transition-colors"
+								>
+									Get Assistance
+									<ArrowUpRight
+										size={14}
+										className="transition-transform group-hover/btn:-translate-y-0.5 group-hover/btn:translate-x-0.5"
+									/>
+								</Link>
+							</>
+						)}
 					</div>
 				</div>
 			</aside>

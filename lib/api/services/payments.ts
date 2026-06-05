@@ -9,6 +9,7 @@ import {
   InitializePaymentRequestDTO,
   InitializePaymentResponseDTO,
   VerifyPaymentResponseDTO,
+  PaymentResponseDTO,
   PaymentGateway,
 } from "../types/payments.types";
 
@@ -56,7 +57,16 @@ export async function getPaymentDetails(reference: string): Promise<VerifyPaymen
  * GET /api/Payment/my
  * Get current user's payments
  */
-export async function getMyPayments(): Promise<VerifyPaymentResponseDTO[]> {
-  const response = await apiClient.get<ApiResponse<VerifyPaymentResponseDTO[]>>(`${BASE}/my`);
+export async function getMyPayments(): Promise<PaymentResponseDTO[]> {
+  const response = await apiClient.get<ApiResponse<PaymentResponseDTO[]>>(`${BASE}/my`);
+  return response.data.data;
+}
+
+/**
+ * GET /api/Payment/order/{orderId}
+ * Get all payments for a specific order
+ */
+export async function getPaymentsByOrder(orderId: string): Promise<PaymentResponseDTO[]> {
+  const response = await apiClient.get<ApiResponse<PaymentResponseDTO[]>>(`${BASE}/order/${orderId}`);
   return response.data.data;
 }

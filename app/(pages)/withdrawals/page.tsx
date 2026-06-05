@@ -7,9 +7,11 @@ import {
 	Banknote,
 	Clock,
 	CheckCircle,
+	Plus,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as walletService from "@/lib/api/services/wallet";
+import * as bankAccountService from "@/lib/api/services/bank-accounts";
 import { formatCurrency } from "@/lib/utils/currency";
 import { formatDate } from "@/lib/utils/date";
 import { Button } from "@/components/ui/Button";
@@ -18,16 +20,23 @@ import { SearchInput } from "@/components/ui/SearchInput";
 import { Loader2 } from "lucide-react";
 
 import { WithdrawModal } from "@/components/wallet/WithdrawModal";
+import { AddBankAccountModal } from "@/components/wallet/AddBankAccountModal";
 
 export default function PayoutsPage() {
 	const queryClient = useQueryClient();
 	const [isWithdrawModalOpen, setIsWithdrawModalOpen] = React.useState(false);
+	const [isAddBankModalOpen, setIsAddBankModalOpen] = React.useState(false);
 	const [searchQuery, setSearchQuery] = React.useState("");
 
 
 	const { data: wallet, isLoading: loadingWallet } = useQuery({
 		queryKey: ["vendor-wallet"],
 		queryFn: walletService.getWalletDetails,
+	});
+
+	const { data: bankAccounts = [] } = useQuery({
+		queryKey: ["bank-accounts"],
+		queryFn: bankAccountService.getBankAccounts,
 	});
 
 	const loadingTransactions = loadingWallet;
@@ -113,46 +122,56 @@ export default function PayoutsPage() {
 			<div className="bg-white border border-gray-100 rounded overflow-hidden">
 				<div className="p-8 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-6">
 					<h4 className="text-sm font-bold text-black">Payout Methods</h4>
-					<button className="text-xs font-bold text-gold hover:underline transition-all">
-						+ Add Bank Account
-					</button>
+					<Button
+						variant="ghost"
+						size="sm"
+						onClick={() => setIsAddBankModalOpen(true)}
+						className="text-xs font-bold text-gold hover:text-black"
+					>
+						<Plus size={14} />
+						Add Bank Account
+					</Button>
 				</div>
 				<div className="p-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-					{[
-						{
-							bank: "Guaranty Trust Bank",
-							account: "**** 8291",
-							holder: "TechWorld Enterprise",
-							status: "Primary",
-						},
-					].map((method, i) => (
-						<div
-							key={i}
-							className="bg-gray-50/50 border border-gray-100 rounded p-6 flex items-center justify-between group hover:border-black hover:bg-white transition-all"
-						>
-							<div className="flex items-center gap-6">
-								<div className="w-12 h-12 rounded bg-white border border-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-black group-hover:text-white transition-all">
-									<CreditCard size={20} />
+					{bankAccounts.length > 0 ? (
+						bankAccounts.map((method) => (
+							<div
+								key={method.id}
+								className="bg-gray-50/50 border border-gray-100 rounded p-6 flex items-center justify-between group hover:border-black hover:bg-white transition-all"
+							>
+								<div className="flex items-center gap-6">
+									<div className="w-12 h-12 rounded bg-white border border-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-black group-hover:text-white transition-all">
+										<CreditCard size={20} />
+									</div>
+									<div>
+										<h5 className="text-sm font-bold text-black">
+											{method.bankName}
+										</h5>
+										<p className="text-xs font-bold text-gray-400 mt-1">
+											**** {method.accountNumber?.slice(-4) || "0000"} · {method.accountName}
+										</p>
+									</div>
 								</div>
-								<div>
-									<h5 className="text-sm font-bold text-black">
-										{method.bank}
-									</h5>
-									<p className="text-xs font-bold text-gray-400 mt-1">
-										{method.account} · {method.holder}
-									</p>
+								<div className="flex items-center gap-4">
+									{method.isDefault && (
+										<span className="text-xs font-bold px-2.5 py-1.5 rounded bg-white border border-gray-100 text-gray-400 group-hover:border-black group-hover:text-black transition-all">
+											Primary
+										</span>
+									)}
+									<button className="text-gray-300 hover:text-black transition-colors">
+										<MoreVertical size={16} />
+									</button>
 								</div>
 							</div>
-							<div className="flex items-center gap-4">
-								<span className="text-xs font-bold px-2.5 py-1.5 rounded bg-white border border-gray-100 text-gray-400 group-hover:border-black group-hover:text-black transition-all">
-									{method.status}
-								</span>
-								<button className="text-gray-300 hover:text-black transition-colors">
-									<MoreVertical size={16} />
-								</button>
+						))
+					) : (
+						<div className="col-span-full py-12 text-center border border-dashed border-gray-200 rounded">
+							<div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center text-gray-300 mx-auto mb-3">
+								<CreditCard size={20} />
 							</div>
+							<p className="text-xs font-bold text-gray-400">No bank accounts added yet</p>
 						</div>
-					))}
+					)}
 				</div>
 			</div>
 
@@ -251,6 +270,11 @@ export default function PayoutsPage() {
 				}}
 				availableBalance={wallet?.balance || 0}
 				currency={wallet?.currency || "NGN"}
+			/>
+
+			<AddBankAccountModal
+				isOpen={isAddBankModalOpen}
+				onClose={() => setIsAddBankModalOpen(false)}
 			/>
 
 		</div>

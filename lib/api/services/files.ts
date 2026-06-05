@@ -1,5 +1,4 @@
 import apiClient from "../apiClient";
-import { ApiResponse } from "../types/auth.types";
 import { FileUploadResponse, FileBatchUploadResponse } from "../types/files.types";
 
 const BASE_PATH = "/File";
@@ -13,7 +12,7 @@ export async function uploadFile(file: File | Blob, folder: string = "general"):
 	const formData = new FormData();
 	formData.append("file", file);
 
-	const response = await apiClient.post<ApiResponse<FileUploadResponse>>(
+	const response = await apiClient.post<FileUploadResponse>(
 		`${BASE_PATH}/upload`,
 		formData,
 		{
@@ -21,7 +20,7 @@ export async function uploadFile(file: File | Blob, folder: string = "general"):
 			headers: { "Content-Type": "multipart/form-data" },
 		}
 	);
-	return response.data.data;
+	return response.data;
 }
 
 /**
@@ -33,7 +32,7 @@ export async function uploadFiles(files: (File | Blob)[], folder: string = "gene
 	const formData = new FormData();
 	files.forEach((file) => formData.append("files", file));
 
-	const response = await apiClient.post<ApiResponse<FileBatchUploadResponse>>(
+	const response = await apiClient.post<FileBatchUploadResponse>(
 		`${BASE_PATH}/upload/batch`,
 		formData,
 		{
@@ -41,37 +40,37 @@ export async function uploadFiles(files: (File | Blob)[], folder: string = "gene
 			headers: { "Content-Type": "multipart/form-data" },
 		}
 	);
-	return response.data.data;
+	return response.data;
 }
 
 /**
  * Check if a file exists by key
  */
 export async function checkFileExists(key: string): Promise<boolean> {
-	const response = await apiClient.get<ApiResponse<boolean>>(`${BASE_PATH}/exists`, {
+	const response = await apiClient.get<{ exists: boolean }>(`${BASE_PATH}/exists`, {
 		params: { key },
 	});
-	return response.data.data;
+	return response.data.exists;
 }
 
 /**
  * Get a presigned URL for a file
  */
 export async function getPresignedUrl(key: string, expiryMinutes: number = 60): Promise<string> {
-	const response = await apiClient.get<ApiResponse<string>>(`${BASE_PATH}/presign`, {
+	const response = await apiClient.get<{ url: string }>(`${BASE_PATH}/presign`, {
 		params: { key, expiryMinutes },
 	});
-	return response.data.data;
+	return response.data.url;
 }
 
 /**
  * Get a public URL for a file
  */
 export async function getFileUrl(key: string): Promise<string> {
-	const response = await apiClient.get<ApiResponse<string>>(`${BASE_PATH}/url`, {
+	const response = await apiClient.get<{ url: string }>(`${BASE_PATH}/url`, {
 		params: { key },
 	});
-	return response.data.data;
+	return response.data.url;
 }
 
 /**

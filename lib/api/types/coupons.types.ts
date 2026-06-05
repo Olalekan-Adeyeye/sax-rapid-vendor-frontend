@@ -51,3 +51,36 @@ export interface CouponQueryParams {
   pageNumber?: number;
   pageSize?: number;
 }
+
+export interface Coupon {
+  id: string;
+  vendorId: string | null;
+  code: string | null;
+  description: string | null;
+  value: number;
+  minimumOrderAmount: number | null;
+  maximumDiscountAmount: number | null;
+  usageLimit: number | null;
+  usedCount: number;
+  isActive: boolean;
+  discountType: string | null;
+  allowFreeShipping: boolean;
+  showOnStore: boolean;
+  status: string | null;
+  scope: string | null;
+  startDate: string;
+  endDate: string;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
+export interface CreateVendorCouponRequestDTO {
+  code: string;
+  discountType: string;
+  value: number;
+  minimumOrderAmount?: number | null;
+  maximumDiscountAmount?: number | null;
+  usageLimit?: number | null;
+  endDate: string;
+  description?: string | null;
+}

@@ -12,13 +12,17 @@ import {
   Settings,
   CreditCard,
   LogOut,
+  PanelLeftClose,
+  PanelLeft,
 } from "lucide-react";
 
 interface HeaderProps {
   onMenuClick: () => void;
+  isDesktopCollapsed?: boolean;
+  onDesktopCollapseToggle?: () => void;
 }
 
-export function Header({ onMenuClick }: HeaderProps) {
+export function Header({ onMenuClick, isDesktopCollapsed = false, onDesktopCollapseToggle }: HeaderProps) {
   const router = useRouter();
   const { user, setUser, setTwoFactorVerified } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -54,11 +58,21 @@ export function Header({ onMenuClick }: HeaderProps) {
   return (
     <header className="h-20 border-b border-gray-100 px-4 lg:px-8 flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur-md z-100 text-black w-full">
       <div className="flex items-center gap-2 lg:gap-4 flex-1 min-w-0 max-w-xl">
+        {/* Mobile hamburger */}
         <button
           onClick={onMenuClick}
           className="lg:hidden w-10 h-10 rounded bg-gray-50 flex items-center justify-center text-black hover:bg-gray-100 transition-colors shrink-0"
         >
           <Menu size={20} />
+        </button>
+
+        {/* Desktop collapse toggle */}
+        <button
+          onClick={onDesktopCollapseToggle}
+          className="hidden lg:flex w-10 h-10 rounded bg-gray-50 items-center justify-center text-black hover:bg-gray-100 transition-colors shrink-0"
+          aria-label={isDesktopCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {isDesktopCollapsed ? <PanelLeft size={20} /> : <PanelLeftClose size={20} />}
         </button>
 
         {/* Search Bar */}

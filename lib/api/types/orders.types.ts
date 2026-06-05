@@ -106,3 +106,10 @@ export interface OrderStatsDTO {
 export interface UpdateOrderStatusRequest {
   status: OrderStatus;
 }
+
+export interface CreateOrderRequestDTO {
+  shippingAddressId: string;
+  paymentMethod: PaymentMethod;
+  notes?: string | null;
+  couponCode?: string | null;
+}

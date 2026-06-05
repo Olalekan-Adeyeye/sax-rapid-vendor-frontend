@@ -18,6 +18,7 @@ import { useToast } from "@/lib/context/ToastContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as categoriesService from "@/lib/api/services/categories";
 import * as productsService from "@/lib/api/services/products";
+import * as brandsService from "@/lib/api/services/brands";
 import * as filesService from "@/lib/api/services/files";
 import { CategoryResponseDTO } from "@/lib/api/types/categories.types";
 import { ATTRIBUTE_CATEGORIES } from "@/lib/constants/attributeCategories";
@@ -44,6 +45,7 @@ type FlatProductValues = {
 	name: string;
 	description: string;
 	categoryId: string;
+	brandId: string;
 	type: "simple" | "variable";
 	regularPrice: string;
 	salePrice?: string;
@@ -160,6 +162,12 @@ export default function AddProductPage() {
 		staleTime: 5 * 60 * 1000,
 	});
 
+	const brandsQuery = useQuery({
+		queryKey: ["brands"],
+		queryFn: brandsService.getBrands,
+		staleTime: 10 * 60 * 1000,
+	});
+
 	const categories = useMemo(() => categoriesQuery.data || [], [categoriesQuery.data]);
 	const loadingCategories = categoriesQuery.isLoading;
 	const categoryError = categoriesQuery.isError
@@ -173,6 +181,7 @@ export default function AddProductPage() {
 			name: "",
 			description: "",
 			categoryId: "",
+			brandId: "",
 			regularPrice: "",
 			salePrice: "",
 			saleStartDate: "",
@@ -206,7 +215,7 @@ export default function AddProductPage() {
 		setValue as unknown as UseFormSetValue<FlatProductValues>;
 	const fieldErrors = errors as unknown as FieldErrors<FlatProductValues>;
 
-	const formValues = useWatch({ control });
+	const formValues = useWatch({ control }) as unknown as FlatProductValues;
 	const productType = formValues.type;
 	const categoryId = formValues.categoryId;
 	const attributes = (formValues.type === "variable"
@@ -483,7 +492,7 @@ export default function AddProductPage() {
 			const data = values as unknown as FlatProductValues;
 
 			// 1. Upload images first if any
-			const uploadedImageUrls: string[] = [];
+			const uploadedImages: { url: string; isPrimary: boolean }[] = [];
 			if (localImages.length > 0) {
 				setIsUploading(true);
 				const uploadResults = await Promise.allSettled(
@@ -494,7 +503,10 @@ export default function AddProductPage() {
 
 				uploadResults.forEach((result, idx) => {
 					if (result.status === "fulfilled") {
-						uploadedImageUrls.push(result.value);
+						uploadedImages.push({
+							url: result.value.url,
+							isPrimary: idx === 0,
+						});
 					} else {
 						console.error(`Failed to upload image ${idx}:`, result.reason);
 					}
@@ -502,9 +514,9 @@ export default function AddProductPage() {
 				setIsUploading(false);
 			}
 
-			const imagePayload = uploadedImageUrls.map((url, idx) => ({
-				imageUrl: url,
-				isPrimary: idx === 0,
+			const imagePayload = uploadedImages.map((img) => ({
+				imageUrl: img.url,
+				isPrimary: img.isPrimary,
 			}));
 
 			const isSimple = data.type === "simple";
@@ -512,6 +524,7 @@ export default function AddProductPage() {
 				name: data.name,
 				description: data.description,
 				categoryId: Number(data.categoryId),
+				brandId: data.brandId ? Number(data.brandId) : null,
 				productType: isSimple ? "Simple" : "Variable",
 				basePrice: Number(data.regularPrice) || 0,
 				salePrice: data.salePrice ? Number(data.salePrice) : null,
@@ -613,6 +626,18 @@ export default function AddProductPage() {
 				)}
 
 				<input type="hidden" {...register("categoryId")} />
+
+				<Select
+					id="brand"
+					label="Brand"
+					options={(brandsQuery.data || []).map((b) => ({
+						label: b.name || "",
+						value: b.id.toString(),
+					}))}
+					value={formValues.brandId || ""}
+					onChange={(e) => setFieldValue("brandId", e.target.value)}
+					disabled={brandsQuery.isLoading}
+				/>
 
 				<Input
 					id="sku-number"

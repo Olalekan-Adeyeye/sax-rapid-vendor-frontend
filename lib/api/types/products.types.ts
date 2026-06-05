@@ -96,7 +96,7 @@ export interface CreateProductImageDTO {
 	imageUrl: string;
 	isPrimary: boolean;
 }
-
+		
 export interface CreateProductDTO {
 	name: string | null;
 	description: string | null;
@@ -144,7 +144,7 @@ export interface ProductQueryParams {
 	PageSize?: number;
 }
 export interface ProductStatsResponseDTO {
-	totalProducts: number;
+	totalProducts: number;	
 	activeProducts: number;
 	pendingApproval: number;
 	outOfStock: number;

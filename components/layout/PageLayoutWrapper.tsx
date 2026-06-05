@@ -10,6 +10,7 @@ export default function PageLayoutWrapper({
   children: React.ReactNode;
 }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(false);
 
   return (
     <ErrorBoundary>
@@ -18,11 +19,18 @@ export default function PageLayoutWrapper({
         <Sidebar
           isOpen={isMobileMenuOpen}
           onClose={() => setIsMobileMenuOpen(false)}
+          isDesktopCollapsed={isDesktopCollapsed}
         />
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col lg:ml-64 transition-all duration-300 min-w-0 max-w-full ">
-          <Header onMenuClick={() => setIsMobileMenuOpen(true)} />
+        <div className={`flex-1 flex flex-col transition-all duration-300 min-w-0 max-w-full ${
+          isDesktopCollapsed ? "lg:ml-[72px]" : "lg:ml-64"
+        }`}>
+          <Header
+            onMenuClick={() => setIsMobileMenuOpen(true)}
+            isDesktopCollapsed={isDesktopCollapsed}
+            onDesktopCollapseToggle={() => setIsDesktopCollapsed((prev) => !prev)}
+          />
           <main className="flex-1 p-4 lg:p-10 w-full max-w-full overflow-x-hidden">
             {children}
           </main>

@@ -31,6 +31,7 @@ import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { BoostTypePickerModal } from "@/components/promotions/BoostTypePickerModal";
 import { getErrorMessage } from "@/lib/utils/errors";
 
 export default function BoostAdsPage() {
@@ -38,6 +39,7 @@ export default function BoostAdsPage() {
 	const queryClient = useQueryClient();
 	const [selectedDays, setSelectedDays] = useState(7);
 	const [isModalOpen, setIsModalOpen] = useState(false);
+	const [isBoostTypePickerOpen, setIsBoostTypePickerOpen] = useState(false);
 	const [selectedBoost, setSelectedBoost] = useState<BoostPricingResponseDTO | null>(null);
 	const [selectedProductId, setSelectedProductId] = useState<string>("");
 
@@ -211,13 +213,7 @@ export default function BoostAdsPage() {
 					<Button
 						size="sm"
 						variant="primary"
-						onClick={() =>
-							toast(
-								"Boost Ads",
-								"Select a promotion type below to get started",
-								"info",
-							)
-						}
+						onClick={() => setIsBoostTypePickerOpen(true)}
 						className="rounded-full"
 					>
 						<Plus size={16} />
@@ -226,61 +222,19 @@ export default function BoostAdsPage() {
 				}
 			/>
 
-			{/* Promotion Types */}
-			<div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-				{displayPricing.map((ad) => {
-					const Icon = getBoostIcon(ad.boostType);
-					const isBlack = ad.boostType === "Featured";
-					// Starting price is usually the first key (3 days)
-					const startingPrice = ad.pricingByDays["3"] || 0;
-
-					return (
-						<div
-							key={ad.boostType}
-							onClick={() => handleOpenBoostModal(ad)}
-							className={`p-8 lg:p-10 rounded border border-gray-100 flex flex-col justify-between group hover:-translate-y-1 transition-all cursor-pointer ${isBlack ? "bg-black text-white shadow-black/10" : "bg-white text-black"}`}
-						>
-							<div className="mb-10">
-								<div
-									className={`w-14 h-14 rounded flex items-center justify-center mb-6 group-hover:scale-110 transition-transform ${isBlack ? "bg-white/10 text-gold" : "bg-gold/20 text-gold"}`}
-								>
-									<Icon size={24} />
-								</div>
-								<h3 className="text-base font-bold mb-4">
-									{getBoostTitle(ad.boostType)}
-								</h3>
-								<p className="text-xs font-medium leading-relaxed opacity-60 mb-6">
-									{getBoostDescription(ad.boostType)}
-								</p>
-								<div className="flex items-center justify-between py-4 border-y border-gray-100/10">
-									<span className="text-[10px] font-bold text-gray-500">
-										Duration
-									</span>
-									<span className="text-[10px] font-bold text-gold text-right">
-										3 - 30 Days Available
-									</span>
-								</div>
-							</div>
-
-							<div className="flex items-center justify-between mb-8">
-								<p className="text-2xl font-black tracking-tight">
-									<span className="text-[10px] font-black uppercase tracking-widest text-gray-500 mr-2">
-										From
-									</span>
-									{formatCurrency(startingPrice)}
-								</p>
-							</div>
-
-							<Button
-								variant={isBlack ? "primary" : "black"}
-								className={`w-full rounded-full py-3.5 text-xs font-bold ${isBlack ? "hover:bg-white" : ""}`}
-							>
-								Configure
-							</Button>
-						</div>
-					);
-				})}
-			</div>
+			{/* Boost Type Picker Modal */}
+			<BoostTypePickerModal
+				isOpen={isBoostTypePickerOpen}
+				onClose={() => setIsBoostTypePickerOpen(false)}
+				onSelect={(type) => {
+					setIsBoostTypePickerOpen(false);
+					const boost = displayPricing.find((p) => p.boostType === type);
+					if (boost) {
+						setSelectedBoost(boost);
+						setIsModalOpen(true);
+					}
+				}}
+			/>
 
 			{/* Active Promotions List */}
 			<div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm shadow-gray-100/50">

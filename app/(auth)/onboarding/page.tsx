@@ -217,7 +217,7 @@ export default function OnboardingPage() {
 				if (data.idFile) {
 					try {
 						const res = await uploadFile(data.idFile, "kyc");
-						governmentIdUrl = res;
+						governmentIdUrl = res.url;
 					} catch (err) {
 						console.error("ID upload failed:", err);
 					}
@@ -226,7 +226,7 @@ export default function OnboardingPage() {
 				if (data.bizFile) {
 					try {
 						const res = await uploadFile(data.bizFile, "kyc");
-						businessDocumentUrl = res;
+						businessDocumentUrl = res.url;
 					} catch (err) {
 						console.error("Business doc upload failed:", err);
 					}

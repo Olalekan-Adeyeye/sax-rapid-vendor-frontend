@@ -24,6 +24,7 @@ import { useToast } from "@/lib/context/ToastContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as categoriesService from "@/lib/api/services/categories";
 import * as productsService from "@/lib/api/services/products";
+import * as brandsService from "@/lib/api/services/brands";
 import * as filesService from "@/lib/api/services/files";
 import { CategoryResponseDTO } from "@/lib/api/types/categories.types";
 import { ATTRIBUTE_CATEGORIES } from "@/lib/constants/attributeCategories";
@@ -43,6 +44,7 @@ import {
 	FieldErrors,
 	Path,
 } from "react-hook-form";
+import { useQuery } from "@tanstack/react-query";
 import { productSchema, ProductFormValues } from "@/lib/schemas/vendor";
 import { UpdateProductDTO } from "@/lib/api/types/products.types";
 
@@ -51,6 +53,7 @@ type FlatProductValues = {
 	name: string;
 	description: string;
 	categoryId: string;
+	brandId: string;
 	type: "simple" | "variable";
 	regularPrice: string;
 	salePrice?: string;
@@ -164,6 +167,12 @@ export default function EditProductPage() {
 	const [isFetching, setIsFetching] = useState(true);
 	const [isSchedulingSale, setIsSchedulingSale] = useState(false);
 
+	const { data: brands = [] } = useQuery({
+		queryKey: ["brands"],
+		queryFn: brandsService.getBrands,
+		staleTime: 10 * 60 * 1000,
+	});
+
 	const form = useForm<ProductFormValues>({
 		resolver: zodResolver(productSchema),
 		defaultValues: {
@@ -171,6 +180,7 @@ export default function EditProductPage() {
 			name: "",
 			description: "",
 			categoryId: "",
+			brandId: "",
 			regularPrice: "",
 			salePrice: "",
 			saleStartDate: "",
@@ -202,7 +212,7 @@ export default function EditProductPage() {
 		setValue as unknown as UseFormSetValue<FlatProductValues>;
 	const fieldErrors = errors as unknown as FieldErrors<FlatProductValues>;
 
-	const formValues = useWatch({ control });
+	const formValues = useWatch({ control }) as unknown as FlatProductValues;
 	const productType = formValues.type;
 	const categoryId = formValues.categoryId;
 	const attributes = (formValues.type === "variable"
@@ -561,11 +571,11 @@ export default function EditProductPage() {
 				} else if (item.file) {
 					// Needs upload
 					try {
-						const uploadedUrl = await filesService.uploadFile(
+						const uploadedFile = await filesService.uploadFile(
 							item.file,
 							"products",
 						);
-						finalImages.push(uploadedUrl);
+						finalImages.push(uploadedFile.url);
 					} catch (error) {
 						console.error(`Failed to upload local image ${i}:`, error);
 						toast(
@@ -588,6 +598,7 @@ export default function EditProductPage() {
 				name: data.name,
 				description: data.description,
 				categoryId: Number(data.categoryId),
+				brandId: data.brandId ? Number(data.brandId) : null,
 				productType: isSimple ? "Simple" : "Variable",
 				basePrice: Number(
 					isSimple ? data.regularPrice : data.regularPrice || 0,
@@ -661,6 +672,16 @@ export default function EditProductPage() {
 						) : null
 					}
 					error={error || errors.categoryId?.message}
+				/>
+				<Select
+					id="brand"
+					label="Brand"
+					options={brands.map((b: { name: string | null; id: number }) => ({
+						label: b.name || "",
+						value: b.id.toString(),
+					}))}
+					value={formValues.brandId || ""}
+					onChange={(e) => setFieldValue("brandId", e.target.value)}
 				/>
 				<Input
 					id="sku-number"

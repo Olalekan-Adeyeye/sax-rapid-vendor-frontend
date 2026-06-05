@@ -8,7 +8,7 @@ import { ApiResponse } from "../types/auth.types";
 import {
   WalletDetailsResponseDTO,
   WalletFundRequestDTO,
-  VendorWithdrawalRequestDTO,
+  WithdrawRequestDTO,
   ChangeCurrencyRequestDTO
 } from "../types/wallet.types";
 import { InitializePaymentResponseDTO } from "../types/payments.types";
@@ -37,12 +37,12 @@ export async function fundWallet(data: WalletFundRequestDTO): Promise<Initialize
  * POST /api/vendor/wallet/withdraw
  * Withdraw from wallet
  */
-export async function withdraw(data: VendorWithdrawalRequestDTO): Promise<void> {
+export async function withdraw(data: WithdrawRequestDTO): Promise<void> {
   await apiClient.post(`${BASE}/withdraw`, data);
 }
 
 /**
- * PUT /api/Wallet/currency
+ * PUT /api/vendor/wallet/currency
  * Changes the vendor's wallet currency to either NGN or ZAR. Only allowed if balance is zero.
  */
 export async function changeCurrency(data: ChangeCurrencyRequestDTO): Promise<void> {

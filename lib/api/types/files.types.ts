@@ -12,11 +12,17 @@ export interface UploadDocumentsRequestDTO {
 }
 
 /**
- * Single file upload response usually returns the key/url
+ * Single file upload response
  */
-export type FileUploadResponse = string;
+export interface FileUploadResponse {
+  url: string;
+  fileName: string;
+  contentType: string;
+  sizeBytes: number;
+  folder: string;
+}
 
 /**
- * Batch file upload response usually returns array of keys/urls
+ * Batch file upload response returns array of upload results
  */
-export type FileBatchUploadResponse = string[];
+export type FileBatchUploadResponse = FileUploadResponse[];

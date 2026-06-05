@@ -2,7 +2,8 @@ import apiClient from "../apiClient";
 import type { 
   OrderResponseDTO, 
   UpdateOrderStatusRequest,
-  OrderStatsDTO
+  OrderStatsDTO,
+  CreateOrderRequestDTO
 } from "../types/orders.types";
 import type { ApiResponse } from "../types/auth.types";
 
@@ -32,14 +33,14 @@ export async function getOrderById(orderId: string): Promise<OrderResponseDTO> {
 }
 
 /**
- * PATCH /api/Orders/{orderId}/status
+ * PUT /api/Orders/{orderId}/status
  * Updates the status of an order (e.g., shipped, delivered).
  */
 export async function updateOrderStatus(
   orderId: string, 
   request: UpdateOrderStatusRequest
 ): Promise<OrderResponseDTO> {
-  const response = await apiClient.patch<ApiResponse<OrderResponseDTO>>(`${BASE}/${orderId}/status`, request);
+  const response = await apiClient.put<ApiResponse<OrderResponseDTO>>(`${BASE}/${orderId}/status`, request);
   return response.data.data;
 }
 
@@ -49,5 +50,22 @@ export async function updateOrderStatus(
  */
 export async function getOrderStats(): Promise<OrderStatsDTO> {
   const response = await apiClient.get<ApiResponse<OrderStatsDTO>>(`${BASE}/admin/stats`);
+  return response.data.data;
+}
+
+/**
+ * POST /api/Orders/{orderId}/cancel
+ * Cancels an order if it hasn't been delivered or already cancelled.
+ */
+export async function cancelOrder(orderId: string): Promise<void> {
+  await apiClient.post(`${BASE}/${orderId}/cancel`);
+}
+
+/**
+ * POST /api/Orders
+ * Creates a new order from the current user's cart.
+ */
+export async function createOrder(data: CreateOrderRequestDTO): Promise<OrderResponseDTO> {
+  const response = await apiClient.post<ApiResponse<OrderResponseDTO>>(`${BASE}`, data);
   return response.data.data;
 }

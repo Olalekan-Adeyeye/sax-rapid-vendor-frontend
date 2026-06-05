@@ -16,6 +16,7 @@ import {
 import Image from "next/image";
 import axios from "axios";
 import { register as registerUser } from "@/lib/api/services/auth";
+import * as locationsService from "@/lib/api/services/locations";
 import { useRouter } from "next/navigation";
 import { ApiError, mapAuthToProfile } from "@/lib/api/types/auth.types";
 import { useToast } from "@/lib/context/ToastContext";
@@ -24,19 +25,8 @@ import { tokenStorage } from "@/lib/api/apiClient";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signupSchema, SignupFormValues } from "@/lib/schemas/auth";
-
-const countries = [
-	{ label: "Nigeria", value: "NG", code: "+234" },
-	{ label: "South Africa", value: "ZA", code: "+27" },
-	{ label: "Ghana (Coming Soon)", value: "GH", code: "+233", disabled: true },
-	{ label: "Kenya (Coming Soon)", value: "KE", code: "+254", disabled: true },
-	{
-		label: "United Kingdom (Coming Soon)",
-		value: "GB",
-		code: "+44",
-		disabled: true,
-	},
-];
+import { useQuery } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 
 import { AuthPageContainer } from "@/components/auth/AuthPageContainer";
 
@@ -48,6 +38,19 @@ export default function SignupPage() {
 	const [showPass, setShowPass] = useState(false);
 	const [showConfirmPass, setShowConfirmPass] = useState(false);
 	const [apiError, setApiError] = useState<string | null>(null);
+
+	const { data: countries = [], isLoading: loadingCountries } = useQuery({
+		queryKey: ["countries"],
+		queryFn: locationsService.getCountries,
+		staleTime: 10 * 60 * 1000,
+	});
+
+	const countryOptions = countries.map((c) => ({
+		label: c.isComingSoon ? `${c.name || ""} (Coming Soon)` : c.name || "",
+		value: c.code || "",
+		code: c.phoneCode || "",
+		disabled: c.isComingSoon || !c.isActive,
+	}));
 
 	const {
 		register,
@@ -72,7 +75,7 @@ export default function SignupPage() {
 	const countryCode = useWatch({ control, name: "countryCode" });
 	const phoneNumber = useWatch({ control, name: "phoneNumber" });
 
-	const selectedCountry = countries.find((c) => c.value === countryCode);
+	const selectedCountry = countryOptions.find((c) => c.value === countryCode);
 	const isComingSoon = selectedCountry?.disabled;
 
 	// Toast for coming soon
@@ -80,7 +83,7 @@ export default function SignupPage() {
 		if (isComingSoon) {
 			toast(
 				"Coming Soon",
-				`Launching in ${selectedCountry?.label.split(" (")[0]} soon. Stay tuned!`,
+				`Launching in ${(selectedCountry?.label || "").split(" (")[0]} soon. Stay tuned!`,
 				"warning",
 			);
 		}
@@ -222,8 +225,14 @@ export default function SignupPage() {
 				<Select
 					label="Country"
 					id="countryCode"
-					options={countries}
+					options={countryOptions}
 					{...register("countryCode")}
+					disabled={loadingCountries}
+					leftSlot={
+						loadingCountries ? (
+							<Loader2 size={14} className="animate-spin text-gray-400" />
+						) : undefined
+					}
 					className="h-12.5 rounded"
 				/>
 
@@ -246,7 +255,7 @@ export default function SignupPage() {
 							<div className="flex items-center gap-3 pr-5 border-r border-gray-200 transition-colors group-focus-within:border-gold/30 h-5">
 								<Phone size={16} className="text-gray-400 shrink-0" />
 								<span className="text-xs font-bold text-gray-400 pointer-events-none select-none">
-									{selectedCountry?.code}
+									{selectedCountry?.code || "+234"}
 								</span>
 							</div>
 						}
