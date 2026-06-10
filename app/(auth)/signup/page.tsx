@@ -5,13 +5,13 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import {
-	Mail,
-	Lock,
-	User,
-	Sparkle,
-	Check,
-	Phone,
-	AlertCircle,
+  Mail,
+  Lock,
+  User,
+  Sparkle,
+  Check,
+  Phone,
+  AlertCircle,
 } from "lucide-react";
 import Image from "next/image";
 import axios from "axios";
@@ -31,292 +31,292 @@ import { Loader2 } from "lucide-react";
 import { AuthPageContainer } from "@/components/auth/AuthPageContainer";
 
 export default function SignupPage() {
-	const router = useRouter();
-	const { setUser } = useAuth();
-	const { toast } = useToast();
-	const [loading, setLoading] = useState(false);
-	const [showPass, setShowPass] = useState(false);
-	const [showConfirmPass, setShowConfirmPass] = useState(false);
-	const [apiError, setApiError] = useState<string | null>(null);
+  const router = useRouter();
+  const { setUser } = useAuth();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [showPass, setShowPass] = useState(false);
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
 
-	const { data: countries = [], isLoading: loadingCountries } = useQuery({
-		queryKey: ["countries"],
-		queryFn: locationsService.getCountries,
-		staleTime: 10 * 60 * 1000,
-	});
+  const { data: countries = [], isLoading: loadingCountries } = useQuery({
+    queryKey: ["countries"],
+    queryFn: locationsService.getCountries,
+    staleTime: 10 * 60 * 1000,
+  });
 
-	const countryOptions = countries.map((c) => ({
-		label: c.isComingSoon ? `${c.name || ""} (Coming Soon)` : c.name || "",
-		value: c.code || "",
-		code: c.phoneCode || "",
-		disabled: c.isComingSoon || !c.isActive,
-	}));
+  const countryOptions = countries.map((c) => ({
+    label: c.isComingSoon ? `${c.name || ""} (Coming Soon)` : c.name || "",
+    value: c.code || "",
+    code: c.phoneCode || "",
+    disabled: c.isComingSoon || !c.isActive,
+  }));
 
-	const {
-		register,
-		handleSubmit,
-		control,
-		setValue,
-		formState: { errors },
-	} = useForm<SignupFormValues>({
-		resolver: zodResolver(signupSchema),
-		defaultValues: {
-			countryCode: "NG",
-			firstName: "",
-			lastName: "",
-			email: "",
-			password: "",
-			confirmPassword: "",
-			phoneNumber: "",
-		},
-		mode: "onBlur",
-	});
+  const {
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    formState: { errors },
+  } = useForm<SignupFormValues>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+      countryCode: "NG",
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      phoneNumber: "",
+    },
+    mode: "onBlur",
+  });
 
-	const countryCode = useWatch({ control, name: "countryCode" });
-	const phoneNumber = useWatch({ control, name: "phoneNumber" });
+  const countryCode = useWatch({ control, name: "countryCode" });
+  const phoneNumber = useWatch({ control, name: "phoneNumber" });
 
-	const selectedCountry = countryOptions.find((c) => c.value === countryCode);
-	const isComingSoon = selectedCountry?.disabled;
+  const selectedCountry = countryOptions.find((c) => c.value === countryCode);
+  const isComingSoon = selectedCountry?.disabled;
 
-	// Toast for coming soon
-	useEffect(() => {
-		if (isComingSoon) {
-			toast(
-				"Coming Soon",
-				`Launching in ${(selectedCountry?.label || "").split(" (")[0]} soon. Stay tuned!`,
-				"warning",
-			);
-		}
-	}, [countryCode, isComingSoon, selectedCountry, toast]);
+  // Toast for coming soon
+  useEffect(() => {
+    if (isComingSoon) {
+      toast(
+        "Coming Soon",
+        `Launching in ${(selectedCountry?.label || "").split(" (")[0]} soon. Stay tuned!`,
+        "warning",
+      );
+    }
+  }, [countryCode, isComingSoon, selectedCountry, toast]);
 
-	const onSubmit = async (data: SignupFormValues) => {
-		if (isComingSoon) return;
+  const onSubmit = async (data: SignupFormValues) => {
+    if (isComingSoon) return;
 
-		setLoading(true);
-		setApiError(null);
+    setLoading(true);
+    setApiError(null);
 
-		try {
-			// Persist registration
-			const response = await registerUser({
-				...data,
-				role: "Vendor",
-			});
+    try {
+      // Persist registration
+      const response = await registerUser({
+        ...data,
+        role: "Vendor",
+      });
 
-			// 1. Update context with user
-			setUser(mapAuthToProfile(response));
+      // 1. Update context with user
+      setUser(mapAuthToProfile(response));
 
-			// 2. Manually manage tokens
-			if (response.token && response.refreshToken) {
-				tokenStorage.setTokens(response.token, response.refreshToken);
-			}
+      // 2. Manually manage tokens
+      if (response.token && response.refreshToken) {
+        tokenStorage.setTokens(response.token, response.refreshToken);
+      }
 
-			// Navigate to verify
-			toast(
-				"Account Created",
-				"Your account was created successfully. Let's verify your email.",
-				"success",
-			);
-			// LAX mode currently - to be enabled later
-			// router.push("/verify");
-			router.push("/login");
-		} catch (err: unknown) {
-			setUser(null);
-			tokenStorage.clearTokens();
-			let message = "Registration failed. Please try again.";
-			if (axios.isAxiosError<ApiError>(err)) {
-				message = err.response?.data?.message || message;
-			}
-			toast("Error", message, "error");
-			setApiError(message);
-			setLoading(false);
-		}
-	};
+      // Navigate to verify
+      toast(
+        "Account Created",
+        "Your account was created successfully. Let's verify your email.",
+        "success",
+      );
+      // LAX mode currently - to be enabled later
+      // router.push("/verify");
+      router.push("/login");
+    } catch (err: unknown) {
+      setUser(null);
+      tokenStorage.clearTokens();
+      let message = "Registration failed. Please try again.";
+      if (axios.isAxiosError<ApiError>(err)) {
+        message = err.response?.data?.message || message;
+      }
+      toast("Error", message, "error");
+      setApiError(message);
+      setLoading(false);
+    }
+  };
 
-	return (
-		<AuthPageContainer
-			leftPanel={{
-				title: (
-					<>
-						Ready to <br />
-						Start?
-					</>
-				),
-				description:
-					"Join the thousands of sellers growing their business with us.",
-				extraContent: (
-					<div className="space-y-8">
-						{[
-							"Reach over 5 Million buyers",
-							"We handle your delivery",
-							"Get paid every week",
-							"Get help to grow your sales",
-						].map((perk) => (
-							<div
-								key={perk}
-								className="flex items-center gap-4 text-xs font-black uppercase tracking-widest text-gray-400"
-							>
-								<Sparkle size={14} className=" fill-current" />
-								{perk}
-							</div>
-						))}
-					</div>
-				),
-			}}
-			mainPanel={{
-				heading: "Create Account.",
-				subheading: "Provide your details to get started.",
-				gradientClass:
-					"bg-[radial-gradient(circle_at_top_right,var(--tw-gradient-stops))] from-gold/10 via-white to-white",
-				containerClass: "overflow-y-auto",
-				bottomContent: (
-					<p className="text-center mt-12 text-gray-400 text-sm font-medium">
-						Already have an account?{" "}
-						<Link
-							href="/login"
-							className="text-gold font-black hover:text-black transition-colors underline-offset-4 hover:underline"
-						>
-							Log In
-						</Link>
-					</p>
-				),
-			}}
-		>
-			<form
-				onSubmit={handleSubmit(onSubmit)}
-				className="space-y-5 animate-in fade-in slide-in-from-bottom-4"
-			>
-				{apiError && (
-					<div className="flex items-center gap-3 p-4 bg-red-50 border border-red-100 rounded text-red-600 text-xs font-semibold">
-						<AlertCircle size={16} />
-						<p>{apiError}</p>
-					</div>
-				)}
+  return (
+    <AuthPageContainer
+      leftPanel={{
+        title: (
+          <>
+            Ready to <br />
+            Start?
+          </>
+        ),
+        description:
+          "Join the thousands of sellers growing their business with us.",
+        extraContent: (
+          <div className="space-y-8">
+            {[
+              "Reach over 5 Million buyers",
+              "We handle your delivery",
+              "Get paid every week",
+              "Get help to grow your sales",
+            ].map((perk) => (
+              <div
+                key={perk}
+                className="flex items-center gap-4 text-xs font-black uppercase tracking-widest text-gray-400"
+              >
+                <Sparkle size={14} className=" fill-current" />
+                {perk}
+              </div>
+            ))}
+          </div>
+        ),
+      }}
+      mainPanel={{
+        heading: "Create Account.",
+        subheading: "Provide your details to get started.",
+        gradientClass:
+          "bg-[radial-gradient(circle_at_top_right,var(--tw-gradient-stops))] from-gold/10 via-white to-white",
+        containerClass: "overflow-y-auto",
+        bottomContent: (
+          <p className="text-center mt-12 text-gray-400 text-sm font-medium">
+            Already have an account?{" "}
+            <Link
+              href="/login"
+              className="text-gold font-black hover:text-black transition-colors underline-offset-4 hover:underline"
+            >
+              Log In
+            </Link>
+          </p>
+        ),
+      }}
+    >
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-5 animate-in fade-in slide-in-from-bottom-4"
+      >
+        {apiError && (
+          <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-100 rounded text-red-600 text-xs font-semibold">
+            <AlertCircle size={16} />
+            <p>{apiError}</p>
+          </div>
+        )}
 
-				<div className="grid grid-cols-2 gap-4">
-					<Input
-						id="firstName"
-						label="First Name"
-						type="text"
-						placeholder="Arthur"
-						{...register("firstName")}
-						error={errors.firstName?.message}
-						leftSlot={<User size={16} className="text-gray-400" />}
-					/>
-					<Input
-						id="lastName"
-						label="Last Name"
-						type="text"
-						placeholder="Morgan"
-						{...register("lastName")}
-						error={errors.lastName?.message}
-					/>
-				</div>
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            id="firstName"
+            label="First Name"
+            type="text"
+            placeholder="Arthur"
+            {...register("firstName")}
+            error={errors.firstName?.message}
+            leftSlot={<User size={16} className="text-gray-400" />}
+          />
+          <Input
+            id="lastName"
+            label="Last Name"
+            type="text"
+            placeholder="Morgan"
+            {...register("lastName")}
+            error={errors.lastName?.message}
+          />
+        </div>
 
-				<Input
-					id="email"
-					label="Email Address"
-					type="email"
-					placeholder="ceo@company.com"
-					{...register("email")}
-					error={errors.email?.message}
-					leftSlot={<Mail size={16} className="text-gray-400" />}
-				/>
+        <Input
+          id="email"
+          label="Email Address"
+          type="email"
+          placeholder="ceo@company.com"
+          {...register("email")}
+          error={errors.email?.message}
+          leftSlot={<Mail size={16} className="text-gray-400" />}
+        />
 
-				<Select
-					label="Country"
-					id="countryCode"
-					options={countryOptions}
-					{...register("countryCode")}
-					disabled={loadingCountries}
-					leftSlot={
-						loadingCountries ? (
-							<Loader2 size={14} className="animate-spin text-gray-400" />
-						) : undefined
-					}
-					className="h-12.5 rounded"
-				/>
+        <Select
+          label="Country"
+          id="countryCode"
+          options={countryOptions}
+          {...register("countryCode")}
+          disabled={loadingCountries}
+          leftSlot={
+            loadingCountries ? (
+              <Loader2 size={14} className="animate-spin text-gray-400" />
+            ) : undefined
+          }
+          className="h-12.5 rounded"
+        />
 
-				<div className="space-y-2">
-					<Input
-						id="phoneNumber"
-						label="Phone Number"
-						type="tel"
-						placeholder="08012345678"
-						error={errors.phoneNumber?.message}
-						{...register("phoneNumber", {
-							onChange: (e) => {
-								setValue("phoneNumber", e.target.value.replace(/\D/g, ""), {
-									shouldValidate: true,
-								});
-							},
-						})}
-						className="h-12.5 rounded pl-28!"
-						leftSlot={
-							<div className="flex items-center gap-3 pr-5 border-r border-gray-200 transition-colors group-focus-within:border-gold/30 h-5">
-								<Phone size={16} className="text-gray-400 shrink-0" />
-								<span className="text-xs font-bold text-gray-400 pointer-events-none select-none">
-									{selectedCountry?.code || "+234"}
-								</span>
-							</div>
-						}
-						rightSlot={
-							phoneNumber?.length > 7 ? (
-								<Check size={18} className="text-gold animate-in zoom-in" />
-							) : null
-						}
-					/>
-				</div>
+        <div className="space-y-2">
+          <Input
+            id="phoneNumber"
+            label="Phone Number"
+            type="tel"
+            placeholder="08012345678"
+            error={errors.phoneNumber?.message}
+            {...register("phoneNumber", {
+              onChange: (e) => {
+                setValue("phoneNumber", e.target.value.replace(/\D/g, ""), {
+                  shouldValidate: true,
+                });
+              },
+            })}
+            className="h-12.5 rounded pl-28!"
+            leftSlot={
+              <div className="flex items-center gap-3 pr-5 border-r border-gray-200 transition-colors group-focus-within:border-gold/30 h-5">
+                <Phone size={16} className="text-gray-400 shrink-0" />
+                <span className="text-xs font-bold text-gray-400 pointer-events-none select-none">
+                  {selectedCountry?.code || "+234"}
+                </span>
+              </div>
+            }
+            rightSlot={
+              phoneNumber?.length > 7 ? (
+                <Check size={18} className="text-gold animate-in zoom-in" />
+              ) : null
+            }
+          />
+        </div>
 
-				<div className="grid grid-cols-1 gap-5">
-					<Input
-						label="Password"
-						id="password"
-						type={showPass ? "text" : "password"}
-						{...register("password")}
-						error={errors.password?.message}
-						leftSlot={<Lock size={16} className="text-gray-400" />}
-						rightSlot={
-							<button
-								type="button"
-								onClick={() => setShowPass(!showPass)}
-								className="text-[9px] font-black text-gray-400 hover:text-gold transition-colors uppercase"
-							>
-								{showPass ? "Hide" : "Show"}
-							</button>
-						}
-					/>
-					<div className="flex flex-col gap-2">
-						<Input
-							label="Confirm Password"
-							id="confirmPassword"
-							type={showConfirmPass ? "text" : "password"}
-							{...register("confirmPassword")}
-							error={errors.confirmPassword?.message}
-							leftSlot={<Lock size={16} className="text-gray-400" />}
-							rightSlot={
-								<button
-									type="button"
-									onClick={() => setShowConfirmPass(!showConfirmPass)}
-									className="text-[9px] font-black text-gray-400 hover:text-gold transition-colors uppercase"
-								>
-									{showConfirmPass ? "Hide" : "Show"}
-								</button>
-							}
-						/>
-					</div>
-				</div>
+        <div className="grid grid-cols-1 gap-5">
+          <Input
+            label="Password"
+            id="password"
+            type={showPass ? "text" : "password"}
+            {...register("password")}
+            error={errors.password?.message}
+            leftSlot={<Lock size={16} className="text-gray-400" />}
+            rightSlot={
+              <button
+                type="button"
+                onClick={() => setShowPass(!showPass)}
+                className="text-[9px] font-black text-gray-400 hover:text-gold transition-colors uppercase"
+              >
+                {showPass ? "Hide" : "Show"}
+              </button>
+            }
+          />
+          <div className="flex flex-col gap-2">
+            <Input
+              label="Confirm Password"
+              id="confirmPassword"
+              type={showConfirmPass ? "text" : "password"}
+              {...register("confirmPassword")}
+              error={errors.confirmPassword?.message}
+              leftSlot={<Lock size={16} className="text-gray-400" />}
+              rightSlot={
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPass(!showConfirmPass)}
+                  className="text-[9px] font-black text-gray-400 hover:text-gold transition-colors uppercase"
+                >
+                  {showConfirmPass ? "Hide" : "Show"}
+                </button>
+              }
+            />
+          </div>
+        </div>
 
-				<Button
-					fullWidth
-					type="submit"
-					loading={loading}
-					disabled={isComingSoon}
-					className="mt-2 py-5"
-				>
-					Create Account
-				</Button>
+        <Button
+          fullWidth
+          type="submit"
+          loading={loading}
+          disabled={isComingSoon}
+          className="mt-2 py-5"
+        >
+          Create Account
+        </Button>
 
-				<div className="flex items-center gap-4 py-4">
+        {/* <div className="flex items-center gap-4 py-4">
 					<div className="flex-1 h-px bg-gray-100" />
 					<span className="text-[10px] font-black tracking-widest text-gray-400">
 						or
@@ -338,8 +338,8 @@ export default function SignupPage() {
 						className="shrink-0"
 					/>
 					Join with Google
-				</Button>
-			</form>
-		</AuthPageContainer>
-	);
+				</Button> */}
+      </form>
+    </AuthPageContainer>
+  );
 }
