@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { TextArea } from "@/components/ui/TextArea";
 import { FileUpload } from "@/components/ui/FileUpload";
+import { LocationPicker } from "@/components/ui/LocationPicker";
 import {
 	Store,
 	ShieldCheck,
@@ -18,6 +19,8 @@ import {
 	Rocket,
 	User,
 	Building2,
+	Crosshair,
+	Trash2,
 } from "lucide-react";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useToast } from "@/lib/context/ToastContext";
@@ -27,7 +30,7 @@ import {
 	createVendorProfile,
 	uploadVendorDocuments,
 } from "@/lib/api/services/vendor";
-import { uploadFile } from "@/lib/api/services/files";
+	import { uploadFile } from "@/lib/api/services/files";
 import type { AccountType } from "@/lib/api/types/vendor.types";
 
 const STEPS = [
@@ -102,6 +105,9 @@ export default function OnboardingPage() {
 	const [step, setStep] = useState(0);
 	const [loading, setLoading] = useState(false);
 	const [direction, setDirection] = useState<1 | -1>(1);
+	const [locationPickerOpen, setLocationPickerOpen] = useState(false);
+	const [storeLat, setStoreLat] = useState<number | undefined>(undefined);
+	const [storeLng, setStoreLng] = useState<number | undefined>(undefined);
 
 	const {
 		register,
@@ -129,7 +135,6 @@ export default function OnboardingPage() {
 			idType: "",
 			idFile: null,
 			bizFile: null,
-			regFile: null,
 			description: "",
 			agreedToTerms: false,
 		},
@@ -158,10 +163,11 @@ export default function OnboardingPage() {
 				idType: "",
 				idFile: null,
 				bizFile: null,
-				regFile: null,
 				description: "",
 				agreedToTerms: false,
 			});
+			setStoreLat(undefined);
+			setStoreLng(undefined);
 		}
 	}, [user, reset]);
 
@@ -202,12 +208,16 @@ export default function OnboardingPage() {
 					shopName: data.shopName,
 					accountType: (data.accountType.charAt(0).toUpperCase() +
 						data.accountType.slice(1)) as AccountType,
-					companyName: data.companyName || "",
-					businessRegistrationNumber: data.businessRegNumber || "",
-					storeAddress: data.address,
+					companyName: data.companyName || null,
+					businessRegistrationNumber: data.businessRegNumber || null,
+					storeAddress: data.suite
+						? `${data.address}, ${data.suite}`
+						: data.address,
 					storeCity: data.city,
 					storeState: data.state,
-					description: data.description,
+					storeLatitude: storeLat ?? null,
+					storeLongitude: storeLng ?? null,
+					description: data.description || null,
 				});
 
 				// 2. Upload Documents to File Storage
@@ -217,7 +227,7 @@ export default function OnboardingPage() {
 				if (data.idFile) {
 					try {
 						const res = await uploadFile(data.idFile, "kyc");
-						governmentIdUrl = res.url;
+						if (res?.url) governmentIdUrl = res.url;
 					} catch (err) {
 						console.error("ID upload failed:", err);
 					}
@@ -226,7 +236,7 @@ export default function OnboardingPage() {
 				if (data.bizFile) {
 					try {
 						const res = await uploadFile(data.bizFile, "kyc");
-						businessDocumentUrl = res.url;
+						if (res?.url) businessDocumentUrl = res.url;
 					} catch (err) {
 						console.error("Business doc upload failed:", err);
 					}
@@ -649,6 +659,43 @@ export default function OnboardingPage() {
 											error={errors.suite?.message}
 											className="h-12 lg:h-14 rounded w-full"
 										/>
+
+										{/* Map Location Picker */}
+										<div className="pt-4 border-t border-gray-100">
+											<p className="text-xs font-bold text-black mb-3">
+												Pickup Location (Optional)
+											</p>
+											{storeLat !== undefined && storeLng !== undefined ? (
+												<div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded">
+													<div className="flex items-center gap-2">
+														<MapPin size={14} className="text-green-600" />
+														<span className="text-xs font-bold text-green-700">
+															{storeLat.toFixed(6)}°N, {storeLng.toFixed(6)}°E
+														</span>
+													</div>
+													<button
+														type="button"
+														onClick={() => {
+															setStoreLat(undefined);
+															setStoreLng(undefined);
+														}}
+														className="text-[10px] font-black uppercase tracking-widest text-red-400 hover:text-red-600 transition-colors flex items-center gap-1"
+													>
+														<Trash2 size={12} />
+														Remove
+													</button>
+												</div>
+											) : (
+												<button
+													type="button"
+													onClick={() => setLocationPickerOpen(true)}
+													className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gold bg-gold/5 border border-gold/20 rounded px-4 py-3 hover:bg-gold/10 transition-colors w-full"
+												>
+													<Crosshair size={14} />
+													Set Store Location on Map
+												</button>
+											)}
+										</div>
 									</div>
 								</div>
 							</div>
@@ -809,6 +856,11 @@ export default function OnboardingPage() {
 												<p className="text-xs text-gray-500 font-medium">
 													{formValues.city}, {formValues.state}
 												</p>
+												{storeLat !== undefined && storeLng !== undefined && (
+													<p className="text-[10px] font-bold text-gold mt-2">
+														{storeLat.toFixed(6)}°N, {storeLng.toFixed(6)}°E
+													</p>
+												)}
 											</div>
 										</div>
 
@@ -886,6 +938,22 @@ export default function OnboardingPage() {
 					</motion.div>
 				</AnimatePresence>
 			</form>
+
+			{locationPickerOpen && (
+				<LocationPicker
+					onClose={() => setLocationPickerOpen(false)}
+					onConfirm={(lat, lng) => {
+						setStoreLat(lat);
+						setStoreLng(lng);
+					}}
+					onClear={() => {
+						setStoreLat(undefined);
+						setStoreLng(undefined);
+					}}
+					initialLat={storeLat}
+					initialLng={storeLng}
+				/>
+			)}
 		</AuthPageContainer>
 	);
 }

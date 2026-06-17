@@ -5,11 +5,11 @@ import * as z from "zod";
  */
 const passwordRules = z
 	.string()
-	.min(8, "Password must be at least 8 characters")
-	.regex(
-		/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-		"Password must contain uppercase, lowercase, number, and special character",
-	);
+	.min(8)
+	.regex(/[a-z]/, "Must contain a lowercase letter")
+	.regex(/[A-Z]/, "Must contain an uppercase letter")
+	.regex(/\d/, "Must contain a number")
+	.regex(/[@$!%*?&]/, "Must contain a special character (@$!%*?&)");
 
 /**
  * Login Schema
@@ -55,6 +55,11 @@ export type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
  */
 export const resetPasswordSchema = z
 	.object({
+		email: z.string().min(1, "Email is required").email("Invalid email address"),
+		otp: z
+			.string()
+			.length(6, "OTP must be exactly 6 digits")
+			.regex(/^\d+$/, "OTP must be numeric"),
 		password: passwordRules,
 		confirmPassword: z.string().min(1, "Confirm password is required"),
 	})
@@ -78,12 +83,12 @@ export const otpSchema = z.object({
 export type OtpFormValues = z.infer<typeof otpSchema>;
 
 /**
- * 2FA Schema (5 digits as per mock)
+ * 2FA Schema (6-digit TOTP code)
  */
 export const twoFactorSchema = z.object({
 	code: z
 		.string()
-		.length(5, "Code must be exactly 5 digits")
+		.length(6, "Code must be exactly 6 digits")
 		.regex(/^\d+$/, "Code must be numeric"),
 });
 
@@ -125,7 +130,6 @@ export const onboardingSchema = z
 		idType: z.string().min(1, "Identification type is required"),
 		idFile: z.any().optional(),
 		bizFile: z.any().optional(),
-		regFile: z.any().optional(),
 		description: z.string().optional(),
 		agreedToTerms: z.boolean().refine((val) => val === true, {
 			message: "You must agree to the terms",
