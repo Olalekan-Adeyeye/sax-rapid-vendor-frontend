@@ -1,13 +1,13 @@
 "use client";
 import React, { useState } from "react";
-import { Plus, Building2, Landmark, User, BadgeCheck } from "lucide-react";
+import { Plus, Building2, Landmark, User, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/lib/context/ToastContext";
 import * as bankAccountService from "@/lib/api/services/bank-accounts";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getErrorMessage } from "@/lib/utils/errors";
 
 interface AddBankAccountModalProps {
@@ -28,8 +28,24 @@ export function AddBankAccountModal({
     accountNumber: "",
     bankCode: "",
     currency: "NGN",
-    isDefault: false,
   });
+
+  const { data: supportedBanks = [], isLoading: loadingBanks } = useQuery({
+    queryKey: ["supported-banks", formData.currency],
+    queryFn: () => bankAccountService.getSupportedBanks(formData.currency),
+    enabled: isOpen,
+  });
+
+  const handleBankSelect = (bankId: string) => {
+    const bank = supportedBanks.find((b) => b.code === bankId);
+    if (bank) {
+      setFormData((prev) => ({
+        ...prev,
+        bankName: bank.name || "",
+        bankCode: bank.code || "",
+      }));
+    }
+  };
 
   const mutation = useMutation({
     mutationFn: bankAccountService.addBankAccount,
@@ -46,7 +62,6 @@ export function AddBankAccountModal({
         accountNumber: "",
         bankCode: "",
         currency: "NGN",
-        isDefault: false,
       });
       onClose();
     },
@@ -63,7 +78,6 @@ export function AddBankAccountModal({
       accountNumber: formData.accountNumber,
       bankCode: formData.bankCode,
       currency: formData.currency,
-      isDefault: formData.isDefault,
     });
   };
 
@@ -83,24 +97,38 @@ export function AddBankAccountModal({
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-2 gap-6">
-          <Input
-            id="bank-name"
-            label="Bank Name"
+          <Select
+            id="bank-select"
+            label="Bank"
             required
-            placeholder="e.g. Guaranty Trust Bank"
-            value={formData.bankName}
-            onChange={(e) =>
-              setFormData({ ...formData, bankName: e.target.value })
+            value={formData.bankCode}
+            onChange={(e) => handleBankSelect(e.target.value)}
+            leftSlot={
+              loadingBanks ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <Building2 size={14} />
+              )
             }
-            leftSlot={<Building2 size={14} />}
+            options={[
+              ...supportedBanks.map((b) => ({
+                label: b.name || "Unknown",
+                value: b.code || "",
+              })),
+            ]}
           />
           <Select
             id="currency"
             label="Currency"
             value={formData.currency}
-            onChange={(e) =>
-              setFormData({ ...formData, currency: e.target.value })
-            }
+            onChange={(e) => {
+              setFormData({
+                ...formData,
+                currency: e.target.value,
+                bankName: "",
+                bankCode: "",
+              });
+            }}
             options={currencyOptions}
           />
         </div>
@@ -117,50 +145,23 @@ export function AddBankAccountModal({
           leftSlot={<User size={14} />}
         />
 
-        <div className="grid grid-cols-2 gap-6">
-          <Input
-            id="account-number"
-            label="Account Number"
-            required
-            placeholder="10 digits"
-            value={formData.accountNumber}
-            onChange={(e) =>
-              setFormData({ ...formData, accountNumber: e.target.value })
-            }
-            leftSlot={<Landmark size={14} />}
-          />
-          <Input
-            id="bank-code"
-            label="Bank Code"
-            required
-            placeholder="e.g. 058"
-            value={formData.bankCode}
-            onChange={(e) =>
-              setFormData({ ...formData, bankCode: e.target.value })
-            }
-            leftSlot={<BadgeCheck size={14} />}
-          />
-        </div>
-
-        <label className="flex items-center gap-3 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={formData.isDefault}
-            onChange={(e) =>
-              setFormData({ ...formData, isDefault: e.target.checked })
-            }
-            className="w-4 h-4 rounded border-gray-300 text-gold focus:ring-gold"
-          />
-          <span className="text-xs font-bold text-gray-600">
-            Set as default bank account
-          </span>
-        </label>
+        <Input
+          id="account-number"
+          label="Account Number"
+          required
+          placeholder="10 digits"
+          value={formData.accountNumber}
+          onChange={(e) =>
+            setFormData({ ...formData, accountNumber: e.target.value })
+          }
+          leftSlot={<Landmark size={14} />}
+        />
 
         <div className="bg-amber-50 rounded p-6 flex gap-4 border border-amber-100/50">
           <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-amber-500 shrink-0">
             <span className="text-xs font-black">!</span>
           </div>
-          <p className="text-[10px] font-medium text-amber-700/80 leading-relaxed italic">
+          <p className="text-[10px] font-medium text-amber-700/80 leading-relaxed">
             Please ensure the bank details match your vendor registration
             documents to avoid payout delays.
           </p>

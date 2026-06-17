@@ -3,6 +3,7 @@ import type { ApiResponse } from "../types/auth.types";
 import type {
   AddBankAccountDTO,
   BankAccountResponseDTO,
+  BankResponseDTO,
 } from "../types/bank-accounts.types";
 
 const BASE = "/bank-accounts";
@@ -13,6 +14,17 @@ const BASE = "/bank-accounts";
  */
 export async function getBankAccounts(): Promise<BankAccountResponseDTO[]> {
   const response = await apiClient.get<ApiResponse<BankAccountResponseDTO[]>>(`${BASE}`);
+  return response.data.data;
+}
+
+/**
+ * GET /api/bank-accounts/all
+ * Get supported banks list from payment gateway
+ */
+export async function getSupportedBanks(currency = "NGN"): Promise<BankResponseDTO[]> {
+  const response = await apiClient.get<ApiResponse<BankResponseDTO[]>>(`${BASE}/all`, {
+    params: { currency },
+  });
   return response.data.data;
 }
 

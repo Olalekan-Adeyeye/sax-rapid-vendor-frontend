@@ -9,7 +9,7 @@ import {
   WalletDetailsResponseDTO,
   WalletFundRequestDTO,
   WithdrawRequestDTO,
-  ChangeCurrencyRequestDTO
+  UpdateWalletCurrencyDTO
 } from "../types/wallet.types";
 import { InitializePaymentResponseDTO } from "../types/payments.types";
 
@@ -42,10 +42,10 @@ export async function withdraw(data: WithdrawRequestDTO): Promise<void> {
 }
 
 /**
- * PUT /api/vendor/wallet/currency
- * Changes the vendor's wallet currency to either NGN or ZAR. Only allowed if balance is zero.
+ * PUT /api/Wallet/currency
+ * Changes the vendor's wallet currency. Only allowed if balance is zero.
  */
-export async function changeCurrency(data: ChangeCurrencyRequestDTO): Promise<void> {
-  const response = await apiClient.put<void>(`${BASE}/currency`, data);
+export async function changeCurrency(data: UpdateWalletCurrencyDTO): Promise<void> {
+  const response = await apiClient.put<void>("/Wallet/currency", data);
   return response.data;
 }

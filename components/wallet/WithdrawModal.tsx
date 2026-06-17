@@ -140,7 +140,6 @@ export function WithdrawModal({
               required
               leftSlot={<Building2 size={14} />}
               options={[
-                { label: "Select account", value: "" },
                 ...bankAccounts.map((acc) => ({
                   label: `${acc.bankName || ""} - ${acc.accountNumber || ""}${acc.isDefault ? " (Default)" : ""}`,
                   value: acc.id,
@@ -154,7 +153,7 @@ export function WithdrawModal({
           <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-amber-500 shrink-0">
             <span className="text-xs font-black">!</span>
           </div>
-          <p className="text-[10px] font-medium text-amber-700/80 leading-relaxed italic">
+          <p className="text-[10px] font-medium text-amber-700/80 leading-relaxed">
             Withdrawals are subject to 24h verification. Ensure your bank
             details precisely match your vendor registration documents to avoid
             delays.

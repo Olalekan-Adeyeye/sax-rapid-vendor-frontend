@@ -1,10 +1,14 @@
 export interface AddBankAccountDTO {
-  accountName: string;
-  accountNumber: string;
-  bankCode: string;
   bankName: string;
+  accountNumber: string;
+  accountName: string;
+  bankCode: string;
   currency?: string | null;
-  isDefault?: boolean;
+}
+
+export interface BankResponseDTO {
+  name: string | null;
+  code: string | null;
 }
 
 export interface BankAccountResponseDTO {

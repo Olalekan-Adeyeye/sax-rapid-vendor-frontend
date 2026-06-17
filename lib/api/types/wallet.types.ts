@@ -25,6 +25,7 @@ export interface WalletFundRequestDTO {
   amount: number;
   gateway: "Paystack" | "PayFast" | "Manual";
   callbackUrl?: string | null;
+  currency?: string | null;
 }
 
 export interface WithdrawRequestDTO {
@@ -51,6 +52,6 @@ export interface PagedWalletTransactionResponseDTO {
   hasNextPage: boolean;
 }
 
-export interface ChangeCurrencyRequestDTO {
-  currency: "NGN" | "ZAR";
+export interface UpdateWalletCurrencyDTO {
+  newCurrency: string | null;
 }
