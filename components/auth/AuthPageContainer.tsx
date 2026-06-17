@@ -72,7 +72,7 @@ export function AuthPageContainer({
           href="/"
           className="group w-fit relative z-20 transition-opacity hover:opacity-80"
         >
-          <Logo size="md" />
+          <Logo size="md" withBackground />
         </Link>
 
         <div className="relative z-10 mt-10">
@@ -115,6 +115,7 @@ export function AuthPageContainer({
               <Logo
                 size={mainPanel.mobileLogoSize || "md"}
                 className="items-start"
+                withBackground
               />
             </Link>
             {mainPanel.mobileHeaderExtra}
@@ -132,6 +133,7 @@ export function AuthPageContainer({
                 <Logo
                   size={mainPanel.mobileLogoSize || "md"}
                   className="items-start"
+                  withBackground
                 />
               </Link>
             </div>

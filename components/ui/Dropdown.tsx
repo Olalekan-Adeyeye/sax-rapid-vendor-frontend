@@ -230,11 +230,11 @@ export function DropdownItem({
 }: DropdownItemProps) {
   const { close } = useContext(DropdownContext);
 
-	const handleClick = (e: React.MouseEvent) => {
-		if (disabled) return;
-		onClick?.(e);
-		setTimeout(() => close(), 0);
-	};
+  const handleClick = (e: React.MouseEvent) => {
+    if (disabled) return;
+    onClick?.(e);
+    setTimeout(() => close(), 0);
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
@@ -263,5 +263,5 @@ export function DropdownItem({
 }
 
 export function DropdownDivider() {
-  return <div className="h-px bg-gray-50 my-1" />;
+  return <div className="h-px bg-gray-50" />;
 }

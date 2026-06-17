@@ -22,7 +22,11 @@ interface HeaderProps {
   onDesktopCollapseToggle?: () => void;
 }
 
-export function Header({ onMenuClick, isDesktopCollapsed = false, onDesktopCollapseToggle }: HeaderProps) {
+export function Header({
+  onMenuClick,
+  isDesktopCollapsed = false,
+  onDesktopCollapseToggle,
+}: HeaderProps) {
   const router = useRouter();
   const { user, setUser, setTwoFactorVerified } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -51,7 +55,6 @@ export function Header({ onMenuClick, isDesktopCollapsed = false, onDesktopColla
   const menuItems = [
     { label: "My Profile", icon: User, href: "/profile" },
     { label: "Account Settings", icon: Settings, href: "/settings" },
-    { label: "Billing & Plans", icon: CreditCard, href: "/billing" },
     { label: "Logout", icon: LogOut, action: handleLogout, variant: "danger" },
   ];
 
@@ -70,9 +73,15 @@ export function Header({ onMenuClick, isDesktopCollapsed = false, onDesktopColla
         <button
           onClick={onDesktopCollapseToggle}
           className="hidden lg:flex w-10 h-10 rounded bg-gray-50 items-center justify-center text-black hover:bg-gray-100 transition-colors shrink-0"
-          aria-label={isDesktopCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-label={
+            isDesktopCollapsed ? "Expand sidebar" : "Collapse sidebar"
+          }
         >
-          {isDesktopCollapsed ? <PanelLeft size={20} /> : <PanelLeftClose size={20} />}
+          {isDesktopCollapsed ? (
+            <PanelLeft size={20} />
+          ) : (
+            <PanelLeftClose size={20} />
+          )}
         </button>
 
         {/* Search Bar */}

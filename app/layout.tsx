@@ -25,11 +25,11 @@ export const metadata: Metadata = {
     template: "%s | Sax-RAPID Vendor Center",
   },
   description:
-    "Join SAX-RAPID — Nigeria's premier online marketplace. Expand your business reach with world-class logistics, real-time analytics, and guaranteed weekly payouts.",
+    "Join SAX-RAPID — A premier online marketplace. Expand your business reach with world-class logistics, real-time analytics, and guaranteed weekly payouts.",
   keywords: [
     "marketplace",
     "sell online",
-    "Nigeria ecommerce",
+    "Ecommerce",
     "vendor center",
     "SAX-RAPID",
   ],
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "SAX-RAPID | Online Marketplace",
-    description: "Nigeria's premier online marketplace for serious sellers.",
+    description: "A premier online marketplace for serious sellers.",
     siteName: "SAX-RAPID",
     images: [
       {
@@ -62,7 +62,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "SAX-RAPID Vendor Center",
-    description: "Reach millions of premium shoppers across Nigeria.",
+    description: "Reach millions of premium shoppers across the world.",
     creator: "@sax_rapid",
     images: [`/assets/icons/SRM-Logo.png`],
   },

@@ -47,15 +47,21 @@ export function Logo({
 				className="relative shrink-0"
 				style={{ width: currentSize.width, height: currentSize.height }}
 			>
-				<Image
-					src="/assets/icons/SaxRapid-Logo.png"
-					alt="SAX-RAPID Logo"
-					fill
-					className={`object-contain transition-all ${
-						withBackground ? "bg-black px-2 rounded" : ""
+				<div
+					className={`w-full h-full ${
+						withBackground
+							? "bg-black rounded p-2.5 flex items-center justify-center"
+							: ""
 					}`}
-					priority
-				/>
+				>
+					<Image
+						src="/assets/icons/SaxRapid-Logo.png"
+						alt="SAX-RAPID Logo"
+						fill
+						className={`object-contain transition-all`}
+						priority
+					/>
+				</div>
 			</div>
 			{showCaption && (
 				<span

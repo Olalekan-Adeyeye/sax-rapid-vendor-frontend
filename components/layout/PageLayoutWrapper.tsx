@@ -23,13 +23,17 @@ export default function PageLayoutWrapper({
         />
 
         {/* Main Content Area */}
-        <div className={`flex-1 flex flex-col transition-all duration-300 min-w-0 max-w-full ${
-          isDesktopCollapsed ? "lg:ml-[72px]" : "lg:ml-64"
-        }`}>
+        <div
+          className={`flex-1 flex flex-col transition-all duration-300 min-w-0 max-w-full ${
+            isDesktopCollapsed ? "lg:ml-20" : "lg:ml-64"
+          }`}
+        >
           <Header
             onMenuClick={() => setIsMobileMenuOpen(true)}
             isDesktopCollapsed={isDesktopCollapsed}
-            onDesktopCollapseToggle={() => setIsDesktopCollapsed((prev) => !prev)}
+            onDesktopCollapseToggle={() =>
+              setIsDesktopCollapsed((prev) => !prev)
+            }
           />
           <main className="flex-1 p-4 lg:p-10 w-full max-w-full overflow-x-hidden">
             {children}
