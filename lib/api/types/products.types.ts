@@ -35,13 +35,15 @@ export interface ProductResponseDTO {
 	id: string;
 	name: string | null;
 	description: string | null;
+	currency: string | null;
+	vendorProfileId: string;
 	vendorId: string;
 	vendorName?: string | null;
 	categoryId: number;
 	categoryName?: string | null;
 	brandId: number | null;
 	brandName?: string | null;
-	productType: "Simple" | "Variable";
+	productType: ProductType;
 	basePrice: number;
 	salePrice?: number | null;
 	salePriceStartDate?: string | null;
@@ -51,7 +53,7 @@ export interface ProductResponseDTO {
 	stockQuantity: number;
 	isActive: boolean;
 	isFeatured: boolean;
-	status: ProductStatus | null;
+	status: string | null;
 	weight: number;
 	dimensionLength: number | null;
 	dimensionWidth: number | null;
@@ -67,14 +69,46 @@ export interface ProductResponseDTO {
 	updatedAt: string | null;
 }
 
+export interface ProductListItemDto {
+	id: string;
+	name: string | null;
+	description: string | null;
+	basePrice: number;
+	salePrice: number | null;
+	salePriceStartDate: string | null;
+	salePriceEndDate: string | null;
+	effectivePrice: number;
+	sku: string | null;
+	currency: string | null;
+	status: ProductStatus;
+	stockQuantity: number;
+	isFeatured: boolean;
+	isNew: boolean;
+	averageRating: number;
+	reviewCount: number;
+	categoryId: number;
+	categoryName: string | null;
+	createdAt: string;
+	isBoosted: boolean;
+	vendorProfileId: string;
+	attributes: ProductAttributeResponseDTO[] | null;
+	images: ProductImageResponseDTO[] | null;
+	variations: ProductVariationResponseDTO[] | null;
+}
+
 export interface PagedProductResponseDTO {
 	items: ProductResponseDTO[] | null;
 	totalCount: number;
-	pageNumber: number;
+	pageIndex: number;
 	pageSize: number;
 	totalPages: number;
 	hasPreviousPage: boolean;
 	hasNextPage: boolean;
+}
+
+export interface CreateProductAttributeValueDTO {
+	name: string | null;
+	value: string | null;
 }
 
 export interface VariationAttributeDTO {
@@ -92,18 +126,13 @@ export interface CreateVariationDTO {
 	attributes: VariationAttributeDTO[] | null;
 }
 
-export interface CreateProductImageDTO {
-	imageUrl: string;
-	isPrimary: boolean;
-}
-		
 export interface CreateProductDTO {
 	name: string | null;
 	description: string | null;
 	categoryId: number;
 	brandId?: number | null;
-	productType: "Simple" | "Variable";
 	basePrice: number;
+	currency?: string | null;
 	salePrice?: number | null;
 	salePriceStartDate?: string | null;
 	salePriceEndDate?: string | null;
@@ -113,24 +142,22 @@ export interface CreateProductDTO {
 	dimensionWidth: number | null;
 	dimensionHeight: number | null;
 	sku: string | null;
+	attributes?: CreateProductAttributeValueDTO[] | null;
 	variations?: CreateVariationDTO[] | null;
-	images?: CreateProductImageDTO[] | null;
+	imageUrls?: string[] | null;
 }
 
 export interface UpdateProductDTO {
 	name: string | null;
 	description: string | null;
-	categoryId: number;
+	categoryId?: number | null;
 	brandId?: number | null;
-	productType?: "Simple" | "Variable";
-	basePrice: number;
+	basePrice?: number | null;
+	currency?: string | null;
 	salePrice?: number | null;
 	salePriceStartDate?: string | null;
 	salePriceEndDate?: string | null;
-	stockQuantity?: number;
 	sku: string | null;
-	variations?: CreateVariationDTO[] | null;
-	images?: CreateProductImageDTO[] | null;
 }
 
 export interface ProductQueryParams {
@@ -140,11 +167,17 @@ export interface ProductQueryParams {
 	MinPrice?: number;
 	MaxPrice?: number;
 	SearchTerm?: string;
+	Status?: ProductStatus;
+	LowStockOnly?: boolean;
+	SortBy?: string;
+	SortDirection?: "Asc" | "Desc";
+	IsFeatured?: boolean;
 	PageIndex?: number;
 	PageSize?: number;
 }
+
 export interface ProductStatsResponseDTO {
-	totalProducts: number;	
+	totalProducts: number;
 	activeProducts: number;
 	pendingApproval: number;
 	outOfStock: number;

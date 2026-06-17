@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, Suspense, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Plus,
   MoreVertical,
@@ -7,8 +7,6 @@ import {
   Trash2,
   ShoppingBag,
   ExternalLink,
-  CheckCircle,
-  XCircle,
   AlertCircle,
   RefreshCw,
 } from "lucide-react";
@@ -18,7 +16,7 @@ import Image from "next/image";
 import * as productsService from "@/lib/api/services/products";
 import * as categoriesService from "@/lib/api/services/categories";
 import { useAuth } from "@/lib/context/AuthContext";
-import { ProductResponseDTO } from "@/lib/api/types/products.types";
+import { ProductListItemDto } from "@/lib/api/types/products.types";
 import { CategoryResponseDTO } from "@/lib/api/types/categories.types";
 import { useToast } from "@/lib/context/ToastContext";
 import { getErrorMessage } from "@/lib/utils/errors";
@@ -51,7 +49,7 @@ export default function ProductsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] =
-    useState<ProductResponseDTO | null>(null);
+    useState<ProductListItemDto | null>(null);
 
   const categoryIdFilter = searchParams.get("categoryId");
   const sortFilter = searchParams.get("sort") || "newest";
@@ -65,23 +63,15 @@ export default function ProductsPage() {
   // ── Queries ──────────────────────────────────────────────────────────────
 
   const productsQuery = useQuery({
-    queryKey: [
-      "products",
-      user?.userId,
-      searchQuery,
-      categoryIdFilter,
-      currentPage,
-    ],
+    queryKey: ["my-products", user?.userId, searchQuery, categoryIdFilter, sortFilter, currentPage],
     queryFn: () =>
-      productsService.getProducts({
-        VendorId: user!.userId,
+      productsService.getMyProducts({
         SearchTerm: searchQuery || undefined,
         CategoryId: categoryIdFilter ? Number(categoryIdFilter) : undefined,
-        PageSize: PAGE_SIZE,
         PageIndex: currentPage,
+        PageSize: PAGE_SIZE,
       }),
     enabled: !!user?.userId,
-    placeholderData: (prev) => prev, // keep previous page data visible while loading next
   });
 
   const categoriesQuery = useQuery({
@@ -102,45 +92,20 @@ export default function ProductsPage() {
       );
       setIsDeleteModalOpen(false);
       setProductToDelete(null);
-      // Invalidate the products cache so the list refreshes automatically
-      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["my-products"] });
     },
     onError: (error) => {
       toast("Deletion Failed", getErrorMessage(error), "error");
     },
   });
 
-  const approveMutation = useMutation({
-    mutationFn: (id: string) => productsService.approveProduct(id),
-    onSuccess: () => {
-      toast("Product Approved", "The product is now active.", "success");
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-    },
-    onError: (error) => {
-      toast("Approval Failed", getErrorMessage(error), "error");
-    },
-  });
-
-  const rejectMutation = useMutation({
-    mutationFn: (id: string) => productsService.rejectProduct(id),
-    onSuccess: () => {
-      toast("Product Rejected", "The product has been rejected.", "success");
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-    },
-    onError: (error) => {
-      toast("Rejection Failed", getErrorMessage(error), "error");
-    },
-  });
-
   // ── Derived state ─────────────────────────────────────────────────────────
 
-  const products = productsQuery.data?.items ?? [];
-  const totalPages = productsQuery.data?.totalPages ?? 1;
-  // Fall back to items.length if the API returns totalCount: 0 unexpectedly
-  const totalCount = productsQuery.data?.totalCount || products.length;
+  const products = Array.isArray(productsQuery.data) ? productsQuery.data : [];
+  const totalCount = products.length;
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
   const categories: CategoryResponseDTO[] = categoriesQuery.data ?? [];
 
-  // Client-side sort on the current page's items (API has no sort param)
   const displayedProducts = useMemo(() => {
     return [...products].sort((a, b) => {
       if (sortFilter === "price_asc")
@@ -161,7 +126,7 @@ export default function ProductsPage() {
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
-  const confirmDelete = (product: ProductResponseDTO) => {
+  const confirmDelete = (product: ProductListItemDto) => {
     setProductToDelete(product);
     setIsDeleteModalOpen(true);
   };
@@ -378,13 +343,16 @@ export default function ProductsPage() {
                           {product.images && product.images.length > 0 ? (
                             <Image
                               src={
-                                product.images.find((img) => img.isPrimary)
-                                  ?.imageUrl ||
-                                product.images[0].imageUrl ||
+                                (typeof product.images[0] === "string"
+                                  ? product.images[0]
+                                  : product.images.find((img) => img.isPrimary)
+                                      ?.imageUrl ||
+                                    product.images[0].imageUrl) ||
                                 "/assets/icons/SaxRapid-Logo.png"
                               }
                               alt={product.name || "Product"}
                               fill
+                              unoptimized
                               className="object-cover relative z-10"
                             />
                           ) : (
@@ -537,33 +505,6 @@ export default function ProductsPage() {
                             </Button>
                           }
                         >
-                          <DropdownItem
-                            icon={
-                              <CheckCircle
-                                size={14}
-                                className="text-green-500"
-                              />
-                            }
-                            onClick={() => approveMutation.mutate(product.id)}
-                            disabled={
-                              approveMutation.isPending ||
-                              product.status === "Active"
-                            }
-                          >
-                            Approve Product
-                          </DropdownItem>
-                          {/* <DropdownItem
-																icon={
-																	<XCircle
-																		size={14}
-																		className="text-red-500"
-																	/>
-																}
-																onClick={() => rejectMutation.mutate(product.id)}
-																disabled={rejectMutation.isPending || product.status === "Rejected"}
-															>
-																Reject Product
-															</DropdownItem> */}
                           <DropdownDivider />
                           <DropdownItem
                             icon={

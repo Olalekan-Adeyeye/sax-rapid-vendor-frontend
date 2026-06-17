@@ -514,18 +514,12 @@ export default function AddProductPage() {
 				setIsUploading(false);
 			}
 
-			const imagePayload = uploadedImages.map((img) => ({
-				imageUrl: img.url,
-				isPrimary: img.isPrimary,
-			}));
-
 			const isSimple = data.type === "simple";
 			const payload: CreateProductDTO = {
 				name: data.name,
 				description: data.description,
 				categoryId: Number(data.categoryId),
 				brandId: data.brandId ? Number(data.brandId) : null,
-				productType: isSimple ? "Simple" : "Variable",
 				basePrice: Number(data.regularPrice) || 0,
 				salePrice: data.salePrice ? Number(data.salePrice) : null,
 				salePriceStartDate: data.saleStartDate || null,
@@ -536,7 +530,7 @@ export default function AddProductPage() {
 				dimensionWidth: data.width ? Number(data.width) : null,
 				dimensionHeight: data.height ? Number(data.height) : null,
 				sku: data.sku || null,
-				images: imagePayload,
+				imageUrls: uploadedImages.map((img) => img.url),
 				...(isSimple
 					? {}
 					: {

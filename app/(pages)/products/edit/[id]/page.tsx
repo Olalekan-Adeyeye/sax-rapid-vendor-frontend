@@ -588,40 +588,18 @@ export default function EditProductPage() {
 			}
 			setIsUploading(false);
 
-			const imagePayload = finalImages.map((url, idx) => ({
-				imageUrl: url,
-				isPrimary: idx === 0,
-			}));
-
-			const isSimple = data.type === "simple";
 			const payload: UpdateProductDTO = {
 				name: data.name,
 				description: data.description,
-				categoryId: Number(data.categoryId),
+				categoryId: Number(data.categoryId) || null,
 				brandId: data.brandId ? Number(data.brandId) : null,
-				productType: isSimple ? "Simple" : "Variable",
 				basePrice: Number(
-					isSimple ? data.regularPrice : data.regularPrice || 0,
+					data.regularPrice || 0,
 				),
-				salePrice: isSimple && data.salePrice ? Number(data.salePrice) : null,
+				salePrice: data.salePrice ? Number(data.salePrice) : null,
 				salePriceStartDate: data.saleStartDate || null,
 				salePriceEndDate: data.saleEndDate || null,
-				stockQuantity: isSimple ? (Number(data.stockQuantity) || 0) : 0,
 				sku: data.sku || null,
-				images: imagePayload,
-				...(isSimple
-					? {}
-					: {
-							variations: data.variations.map((v) => ({
-								sku: v.id,
-								price: Number(v.price),
-								salePrice: v.salePrice ? Number(v.salePrice) : undefined,
-								salePriceStartDate: v.saleStartDate || null,
-								salePriceEndDate: v.saleEndDate || null,
-								stockQuantity: Number(v.stock),
-								attributes: v.attributes || [],
-							})),
-						}),
 			};
 			await productsService.updateProduct(productId, payload);
 			toast("Success", "Product updated successfully", "success");

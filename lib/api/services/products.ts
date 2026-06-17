@@ -8,6 +8,7 @@ import type {
 	ProductQueryParams,
 	ProductVariationResponseDTO,
 	ProductStatsResponseDTO,
+	ProductListItemDto,
 } from "../types/products.types";
 
 const BASE_PATH = "/Products";
@@ -31,9 +32,30 @@ export async function getProductsByVendor(
 ): Promise<PagedProductResponseDTO> {
 	const response = await apiClient.get<ApiResponse<PagedProductResponseDTO>>(
 		`${BASE_PATH}/vendor/${vendorId}`,
-		{ params: { PageIndex: pageIndex, PageSize: pageSize } }
+		{ params: { pageIndex, pageSize } }
 	);
 	return response.data.data;
+}
+
+export async function getMyProducts(
+	params?: {
+		CategoryId?: number;
+		BrandId?: number;
+		Status?: string;
+		MinPrice?: number;
+		MaxPrice?: number;
+		SearchTerm?: string;
+		PageIndex?: number;
+		PageSize?: number;
+	}
+): Promise<ProductListItemDto[]> {
+	const response = await apiClient.get<
+		ApiResponse<ProductListItemDto[] | { items: ProductListItemDto[] }>
+	>(`${BASE_PATH}/my`, { params });
+	const data = response.data.data;
+	if (Array.isArray(data)) return data;
+	if (data && typeof data === "object" && "items" in data && Array.isArray(data.items)) return data.items;
+	return [];
 }
 
 export async function getProductVariations(id: string): Promise<ProductVariationResponseDTO[]> {
@@ -72,12 +94,3 @@ export async function getProductStats(): Promise<ProductStatsResponseDTO> {
 	const response = await apiClient.get<ApiResponse<ProductStatsResponseDTO>>(`${BASE_PATH}/stats`);
 	return response.data.data;
 }
-
-export async function approveProduct(id: string): Promise<void> {
-	await apiClient.patch(`${BASE_PATH}/${id}/approve`);
-}
-
-export async function rejectProduct(id: string): Promise<void> {
-	await apiClient.patch(`${BASE_PATH}/${id}/reject`);
-}
-
