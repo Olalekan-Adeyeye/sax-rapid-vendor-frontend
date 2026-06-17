@@ -4,26 +4,18 @@
  */
 
 export interface NotificationResponse {
-  id: string; // uuid
+  id: string;
   title: string;
-  message: string;
-  type: "Order" | "Wallet" | "Warning" | "Review" | "System" | "Admin";
+  body: string;
+  type: string;
+  referenceId?: string | null;
+  referenceType?: string | null;
   isRead: boolean;
-  createdAt: string; // ISO 8601 date-time
-  metadata?: Record<string, unknown>;
+  createdAt: string;
+  readAt?: string | null;
 }
 
 export interface NotificationCountResponse {
   totalCount: number;
   unreadCount: number;
-}
-
-export interface PagedNotificationsResponse {
-  items: NotificationResponse[];
-  totalCount: number;
-  pageIndex: number;
-  pageSize: number;
-  totalPages: number;
-  hasPreviousPage: boolean;
-  hasNextPage: boolean;
 }

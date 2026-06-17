@@ -6,7 +6,7 @@
 import apiClient from "../apiClient";
 import type {
   NotificationCountResponse,
-  PagedNotificationsResponse,
+  NotificationResponse,
 } from "../types/notifications.types";
 import type { ApiResponse } from "../types/auth.types";
 
@@ -14,14 +14,14 @@ const BASE = "/Notifications";
 
 /**
  * GET /api/Notifications
- * Returns a paginated list of notifications for the authenticated user.
+ * Returns a list of notifications for the authenticated user.
  */
 export async function getNotifications(
   page = 1,
   pageSize = 20,
   unreadOnly = false
-): Promise<PagedNotificationsResponse> {
-  const response = await apiClient.get<ApiResponse<PagedNotificationsResponse>>(BASE, {
+): Promise<NotificationResponse[]> {
+  const response = await apiClient.get<ApiResponse<NotificationResponse[]>>(BASE, {
     params: { page, pageSize, unreadOnly },
   });
   return response.data.data;
@@ -33,7 +33,11 @@ export async function getNotifications(
  */
 export async function getNotificationCount(): Promise<NotificationCountResponse> {
   const response = await apiClient.get<ApiResponse<NotificationCountResponse>>(`${BASE}/count`);
-  return response.data.data;
+  const raw = response.data as unknown;
+  if (raw && typeof raw === "object" && "data" in (raw as Record<string, unknown>)) {
+    return (raw as ApiResponse<NotificationCountResponse>).data;
+  }
+  return raw as NotificationCountResponse;
 }
 
 /**
