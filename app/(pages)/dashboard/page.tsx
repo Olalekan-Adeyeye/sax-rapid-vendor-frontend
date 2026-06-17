@@ -85,11 +85,11 @@ export default function DashboardOverview() {
 
   const notifications = useMemo(
     () =>
-      (notificationsData?.items || []).map((notification) => ({
+      (notificationsData || []).map((notification) => ({
         ...notification,
         relativeTime: getRelativeTime(notification.createdAt),
       })),
-    [notificationsData?.items],
+    [notificationsData],
   );
   const latestOrders = orders || [];
   const topSellerItems = topSellers?.items || [];
@@ -100,15 +100,17 @@ export default function DashboardOverview() {
         title="Vendor Performance"
         description="Live Dashboard Overview"
         actions={
-          <Button
-            variant="primary"
-            rounded="full"
-            size="sm"
-            disabled={loadingDashboardStats}
-            className="font-bold flex-1 sm:flex-none whitespace-nowrap"
-          >
-            Withdraw Funds
-          </Button>
+          <Link href="/withdrawals">
+            <Button
+              variant="primary"
+              rounded="full"
+              size="sm"
+              disabled={loadingDashboardStats}
+              className="font-bold flex-1 sm:flex-none whitespace-nowrap"
+            >
+              Withdraw Funds
+            </Button>
+          </Link>
         }
       />
 
@@ -117,19 +119,15 @@ export default function DashboardOverview() {
           icon={DollarSign}
           title="Total Revenue"
           value={
-            dashboardStatsError ? (
-              "N/A"
-            ) : (
-              formatCurrency(dashboardStats?.revenue || 0)
-            )
+            dashboardStatsError
+              ? "N/A"
+              : formatCurrency(dashboardStats?.revenue || 0)
           }
           isError={!!dashboardStatsError}
           detail={
-            dashboardStats?.currency ? (
-              `in ${dashboardStats.currency}`
-            ) : (
-              "Available earnings"
-            )
+            dashboardStats?.currency
+              ? `in ${dashboardStats.currency}`
+              : "Available earnings"
           }
           isLoading={loadingDashboardStats}
           variant="dark"
@@ -138,11 +136,9 @@ export default function DashboardOverview() {
           icon={ShoppingBag}
           title="Total Orders"
           value={
-            dashboardStatsError ? (
-              "N/A"
-            ) : (
-              (dashboardStats?.totalOrders || 0).toLocaleString()
-            )
+            dashboardStatsError
+              ? "N/A"
+              : (dashboardStats?.totalOrders || 0).toLocaleString()
           }
           isError={!!dashboardStatsError}
           isLoading={loadingDashboardStats}
@@ -152,11 +148,9 @@ export default function DashboardOverview() {
           icon={Package}
           title="Active Products"
           value={
-            dashboardStatsError ? (
-              "N/A"
-            ) : (
-              (dashboardStats?.activeProducts || 0).toLocaleString()
-            )
+            dashboardStatsError
+              ? "N/A"
+              : (dashboardStats?.activeProducts || 0).toLocaleString()
           }
           isError={!!dashboardStatsError}
           isLoading={loadingDashboardStats}
@@ -166,11 +160,9 @@ export default function DashboardOverview() {
           icon={Users}
           title="Unique Customers"
           value={
-            dashboardStatsError ? (
-              "N/A"
-            ) : (
-              (dashboardStats?.uniqueCustomers || 0).toLocaleString()
-            )
+            dashboardStatsError
+              ? "N/A"
+              : (dashboardStats?.uniqueCustomers || 0).toLocaleString()
           }
           isError={!!dashboardStatsError}
           isLoading={loadingDashboardStats}
@@ -316,7 +308,7 @@ export default function DashboardOverview() {
                       <p
                         className={`text-[10px] font-medium leading-relaxed line-clamp-2 ${!item.isRead ? "text-gray-700" : "text-gray-400"}`}
                       >
-                        {item.message}
+                        {item.body}
                       </p>
                     </div>
                   </div>

@@ -880,7 +880,7 @@ export default function AnalyticsPage() {
             ) : (
               <div className="h-40 bg-gray-50 rounded animate-pulse" />
             )}
-            <p className="text-[9px] font-bold text-gray-300 uppercase text-center pt-4 italic">
+            <p className="text-[9px] font-bold text-gray-300 uppercase text-center pt-4">
               * Category distribution calculated from active listings
             </p>
           </div>

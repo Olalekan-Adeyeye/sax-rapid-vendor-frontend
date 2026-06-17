@@ -391,10 +391,22 @@ export default function MessagesPage() {
                 ) : loadingMessages ? (
                   <div className="p-4 md:p-6 space-y-6">
                     {[1, 2, 3].map((item) => (
-                      <div key={item} className={`flex gap-3 ${item % 2 === 0 ? "justify-end" : "justify-start"}`}>
-                        {item % 2 !== 0 && <Skeleton circle className="w-7 h-7 bg-gray-100 shrink-0" />}
-                        <div className={`flex flex-col gap-2 ${item % 2 === 0 ? "items-end" : "items-start"}`}>
-                          <Skeleton className={`h-10 ${item % 2 === 0 ? "w-48" : "w-36"} bg-gray-100 rounded`} />
+                      <div
+                        key={item}
+                        className={`flex gap-3 ${item % 2 === 0 ? "justify-end" : "justify-start"}`}
+                      >
+                        {item % 2 !== 0 && (
+                          <Skeleton
+                            circle
+                            className="w-7 h-7 bg-gray-100 shrink-0"
+                          />
+                        )}
+                        <div
+                          className={`flex flex-col gap-2 ${item % 2 === 0 ? "items-end" : "items-start"}`}
+                        >
+                          <Skeleton
+                            className={`h-10 ${item % 2 === 0 ? "w-48" : "w-36"} bg-gray-100 rounded`}
+                          />
                           <Skeleton className="h-3 w-16" />
                         </div>
                       </div>
@@ -519,16 +531,6 @@ export default function MessagesPage() {
                   onSubmit={handleSendMessage}
                   className="flex items-center gap-2 md:gap-3"
                 >
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    disabled={sendMutation.isPending}
-                    className="!p-2 !md:p-3 !text-gray-400 !hover:text-gold !transition-colors !border-0 !bg-transparent"
-                  >
-                    <Paperclip size={18} />
-                  </Button>
-
                   <Input
                     id="message-input"
                     type="text"
@@ -539,16 +541,6 @@ export default function MessagesPage() {
                     className="!bg-gray-50 !border-gray-100 !rounded !px-3 !py-2 !text-sm !font-medium !focus:border-black"
                     outerClassName="!flex-1 !gap-0"
                   />
-
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    disabled={sendMutation.isPending}
-                    className="hidden sm:block !p-3 !text-gray-400 !hover:text-gold !transition-colors !border-0 !bg-transparent"
-                  >
-                    <Smile size={18} />
-                  </Button>
 
                   <Button
                     type="submit"
