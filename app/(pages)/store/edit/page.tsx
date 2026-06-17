@@ -21,6 +21,7 @@ import {
   getMyVendorProfile,
   updateVendorProfile,
 } from "@/lib/api/services/vendor";
+import { uploadFile } from "@/lib/api/services/files";
 import type {
   VendorProfileResponse,
   UpdateVendorProfileRequest,
@@ -38,6 +39,10 @@ export default function EditStoreProfile() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [bannerUploading, setBannerUploading] = useState(false);
+  const logoInputRef = React.useRef<HTMLInputElement>(null);
+  const bannerInputRef = React.useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState<UpdateVendorProfileRequest>({
     shopName: "",
@@ -85,6 +90,26 @@ export default function EditStoreProfile() {
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
 
+  const handleImageUpload = async (
+    file: File,
+    type: "logo" | "banner",
+  ) => {
+    const setLoading = type === "logo" ? setLogoUploading : setBannerUploading;
+    setLoading(true);
+    try {
+      const folder = "store";
+      const res = await uploadFile(file, folder);
+      if (res?.url) {
+        setFormData((prev) => ({ ...prev, [`${type}Url`]: res.url }));
+      }
+    } catch (err) {
+      console.error(`${type} upload failed:`, err);
+      toast("Upload Failed", `Could not upload ${type}. Please try again.`, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSave = async () => {
     try {
       setIsSaving(true);
@@ -125,7 +150,7 @@ export default function EditStoreProfile() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-12 pb-20">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
           <h2 className="text-2xl lg:text-4xl font-black tracking-tighter text-black">
             Edit Store Profile
@@ -159,7 +184,7 @@ export default function EditStoreProfile() {
       <div className="space-y-8">
         <div className="relative h-64 lg:h-80 w-full bg-gray-50 rounded-xl overflow-hidden group border border-gray-100">
           <Image
-            src={vendor.bannerUrl || GENERIC_BANNER}
+            src={formData.bannerUrl || GENERIC_BANNER}
             alt="Store Banner"
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-700 opacity-90"
@@ -171,6 +196,9 @@ export default function EditStoreProfile() {
               rounded="full"
               variant="outline"
               className="px-8 bg-white text-black border-none"
+              onClick={() => bannerInputRef.current?.click()}
+              disabled={bannerUploading}
+              loading={bannerUploading}
             >
               <Camera size={16} />
               Update Banner
@@ -181,13 +209,20 @@ export default function EditStoreProfile() {
           <div className="absolute bottom-8 left-8 flex items-end gap-6">
             <div className="relative w-32 h-32 lg:w-40 lg:h-40 bg-white border-4 border-white rounded overflow-hidden group/logo shadow-xl">
               <Image
-                src={vendor.logoUrl || DEFAULT_LOGO}
+                src={formData.logoUrl || DEFAULT_LOGO}
                 alt="Logo"
                 fill
                 className="object-contain p-4 group-hover/logo:scale-110 transition-transform duration-500"
               />
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/logo:opacity-100 transition-opacity bg-black/40 cursor-pointer">
-                <Camera size={24} className="text-white" />
+              <div
+                className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/logo:opacity-100 transition-opacity bg-black/40 cursor-pointer"
+                onClick={() => logoInputRef.current?.click()}
+              >
+                {logoUploading ? (
+                  <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Camera size={24} className="text-white" />
+                )}
               </div>
             </div>
             <div className="pb-4">
@@ -206,6 +241,27 @@ export default function EditStoreProfile() {
           </div>
         </div>
       </div>
+
+      <input
+        ref={logoInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleImageUpload(file, "logo");
+        }}
+      />
+      <input
+        ref={bannerInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleImageUpload(file, "banner");
+        }}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         <div className="lg:col-span-2 space-y-10">
