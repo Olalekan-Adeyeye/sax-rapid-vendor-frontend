@@ -64,6 +64,7 @@ export interface UserProfileResponse {
 export interface UpdateProfileRequest {
 	firstName: string;
 	lastName: string;
+	email?: string;
 	phoneNumber?: string | null;
 	profileImageUrl?: string | null;
 }
