@@ -28,7 +28,9 @@ export enum OrderStatus {
   Processing = "Processing",
   Shipped = "Shipped",
   Delivered = "Delivered",
+  Completed = "Completed",
   Cancelled = "Cancelled",
+  Disputed = "Disputed",
   Refunded = "Refunded",
   Failed = "Failed",
   OnHold = "OnHold",
@@ -90,6 +92,7 @@ export interface OrderResponseDTO {
   shippingState: string | null;
   shippingCountry: string | null;
   trackingNumber: string | null;
+  deliveryStatus: string | null;
   createdAt: string; // ISO 8601 date-time
   deliveredAt: string | null; // ISO 8601 date-time
   user: OrderUserResponseDTO | null;

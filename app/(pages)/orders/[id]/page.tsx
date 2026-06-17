@@ -11,20 +11,55 @@ import {
 	CreditCard,
 	User,
 	ExternalLink,
+	X,
+	AlertTriangle,
+	ChevronDown,
 } from "lucide-react";
 import * as ordersService from "@/lib/api/services/orders";
 import * as deliveryService from "@/lib/api/services/delivery";
 import { OrderResponseDTO, OrderStatus } from "@/lib/api/types/orders.types";
-import { DeliveryProvider, DeliveryStatus } from "@/lib/api/types/delivery.types";
+import { DeliveryProvider } from "@/lib/api/types/delivery.types";
+import { downloadInvoicePdf } from "@/lib/utils/invoice";
 import { formatCurrency } from "../../../../lib/utils/currency";
 import { formatDate } from "@/lib/utils/date";
 import { formatVariationDetails } from "@/lib/utils/product";
 import { useToast } from "@/lib/context/ToastContext";
 import { Button } from "@/components/ui/Button";
-import { Select } from "@/components/ui/Select";
+import { Dropdown, DropdownItem, DropdownDivider } from "@/components/ui/Dropdown";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
 import { ErrorComponent } from "@/components/ui/ErrorComponent";
 import { getErrorMessage } from "@/lib/utils/errors";
+
+function getStatusIcon(status: OrderStatus) {
+	switch (status) {
+		case OrderStatus.Confirmed: return <CheckCircle2 size={14} />;
+		case OrderStatus.Processing: return <Package size={14} />;
+		case OrderStatus.Shipped: return <Truck size={14} />;
+		case OrderStatus.Delivered: return <CheckCircle2 size={14} />;
+		case OrderStatus.Completed: return <CheckCircle2 size={14} />;
+		case OrderStatus.Cancelled: return <X size={14} />;
+		case OrderStatus.OnHold: return <Clock size={14} />;
+		case OrderStatus.Refunded: return <CreditCard size={14} />;
+		case OrderStatus.Disputed: return <AlertTriangle size={14} />;
+		case OrderStatus.Dispute: return <AlertTriangle size={14} />;
+		default: return null;
+	}
+}
+
+const VALID_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+	[OrderStatus.Pending]: [OrderStatus.Confirmed, OrderStatus.Cancelled],
+	[OrderStatus.Confirmed]: [OrderStatus.Processing, OrderStatus.Cancelled],
+	[OrderStatus.Processing]: [OrderStatus.Shipped, OrderStatus.OnHold, OrderStatus.Cancelled],
+	[OrderStatus.Shipped]: [OrderStatus.Delivered, OrderStatus.OnHold],
+	[OrderStatus.Delivered]: [OrderStatus.Completed, OrderStatus.Disputed],
+	[OrderStatus.Completed]: [],
+	[OrderStatus.Cancelled]: [],
+	[OrderStatus.Disputed]: [OrderStatus.OnHold, OrderStatus.Refunded],
+	[OrderStatus.Refunded]: [],
+	[OrderStatus.Failed]: [OrderStatus.Pending, OrderStatus.Cancelled],
+	[OrderStatus.OnHold]: [OrderStatus.Processing, OrderStatus.Cancelled],
+	[OrderStatus.Dispute]: [OrderStatus.OnHold, OrderStatus.Refunded],
+};
 
 export default function OrderDetailsPage() {
 	const params = useParams();
@@ -36,7 +71,6 @@ export default function OrderDetailsPage() {
 	const [loading, setLoading] = useState(true);
 	const [updating, setUpdating] = useState(false);
 	const [error, setError] = useState<string | null>(null);
-	const [deliveryProvider, setDeliveryProvider] = useState<DeliveryProvider>("Manual");
 
 	const fetchOrder = React.useCallback(async () => {
 		try {
@@ -74,11 +108,11 @@ export default function OrderDetailsPage() {
 		}
 	};
 
-	const handleRequestDelivery = async () => {
+	const handleRequestDelivery = async (provider: DeliveryProvider) => {
 		try {
 			setUpdating(true);
-			await deliveryService.requestDelivery(orderId, deliveryProvider);
-			toast("Delivery Requested", `Delivery has been requested via ${deliveryProvider}`, "success");
+			await deliveryService.requestDelivery(orderId, provider);
+			toast("Delivery Requested", `Delivery has been requested via ${provider}`, "success");
 		} catch {
 			toast("Error", "Failed to request delivery", "error");
 		} finally {
@@ -139,60 +173,78 @@ export default function OrderDetailsPage() {
 				</div>
 				<div className="flex flex-wrap items-center gap-3">
 					<Button
-						variant="outline"
-						size="sm"
-						onClick={() =>
-							toast(
-								"Coming Soon",
-								"Invoice generation is not available yet",
-								"info",
-							)
-						}
-						className="rounded-full px-6 text-xs font-bold"
-					>
-						Download Invoice
-					</Button>
-					<Button
-						variant="primary"
-						size="sm"
-						onClick={() => handleUpdateStatus(OrderStatus.Shipped)}
-						disabled={
-							updating ||
-							order.status === OrderStatus.Shipped ||
-							order.status === OrderStatus.Delivered
-						}
-						loading={updating}
-						className="rounded-full px-6 text-xs font-bold"
-					>
-						Mark as Shipped
-					</Button>
-					{order.status === OrderStatus.Shipped && (
-						<div className="flex items-center gap-2">
-							<Select
-								id="delivery-provider"
-								options={[
-									{ label: "Manual", value: "Manual" },
-									{ label: "Uber", value: "Uber" },
-									{ label: "Bolt", value: "Bolt" },
-								]}
-								value={deliveryProvider}
-								onChange={(e) => setDeliveryProvider(e.target.value as DeliveryProvider)}
-								className="!w-30! text-[10px]!"
-							/>
-							<Button
-								variant="black"
-								size="sm"
-								onClick={handleRequestDelivery}
-								disabled={updating}
-								loading={updating}
-								className="rounded-full px-4 text-[10px] font-bold"
-							>
-								Request Delivery
-							</Button>
-						</div>
-					)}
+					variant="outline"
+					size="sm"
+					onClick={() => { downloadInvoicePdf(order); }}
+					className="rounded-full px-6 text-xs font-bold"
+				>
+					Download Invoice
+				</Button>
 				</div>
 			</div>
+
+			{(() => {
+				const available = VALID_TRANSITIONS[order.status];
+				if (available.length === 0 && order.status !== OrderStatus.Shipped) return null;
+				return (
+					<div className="flex flex-wrap items-center justify-end gap-3">
+						{available.length > 0 && (
+							<Dropdown
+								trigger={
+									<Button variant="primary" size="sm" className="rounded-full px-5 text-xs font-bold">
+										Update Status <ChevronDown size={14} />
+									</Button>
+								}
+							>
+								<div className="px-4 py-2 text-[9px] font-black uppercase tracking-widest text-gray-400">
+									Update Status
+								</div>
+								<DropdownDivider />
+								{available.map((s) => (
+									<DropdownItem
+										key={s}
+										onClick={() => handleUpdateStatus(s)}
+										disabled={updating}
+										icon={getStatusIcon(s)}
+										variant={
+											[OrderStatus.Cancelled].includes(s)
+												? "danger"
+												: [OrderStatus.OnHold, OrderStatus.Dispute, OrderStatus.Disputed].includes(s)
+													? "warning"
+													: "default"
+										}
+									>
+										{s}
+									</DropdownItem>
+								))}
+							</Dropdown>
+						)}
+						{order.status === OrderStatus.Shipped && (
+							<Dropdown
+								trigger={
+									<Button variant="black" size="sm" className="rounded-full px-5 text-xs font-bold">
+										Request Delivery <ChevronDown size={14} />
+									</Button>
+								}
+							>
+								<div className="px-4 py-2 text-[9px] font-black uppercase tracking-widest text-gray-400">
+									Select Provider
+								</div>
+								<DropdownDivider />
+								<DropdownItem onClick={() => handleRequestDelivery("Manual")} icon={<Truck size={14} />}>
+									Manual
+								</DropdownItem>
+								<DropdownItem onClick={() => handleRequestDelivery("Uber")} icon={<Truck size={14} />}>
+									Uber
+								</DropdownItem>
+								<DropdownItem onClick={() => handleRequestDelivery("Bolt")} icon={<Truck size={14} />}>
+									Bolt
+								</DropdownItem>
+							</Dropdown>
+						)}
+					</div>
+				);
+			})()}
 
 			{/* Progress Tracker */}
 			<div className="bg-white border border-gray-100 rounded p-8 sm:p-10 overflow-hidden">
@@ -374,9 +426,16 @@ export default function OrderDetailsPage() {
 									<span className="text-gray-400 uppercase tracking-widest">
 										Phone
 									</span>
-									<span className="text-black">
-										{order.user?.phoneNumber || "N/A"}
-									</span>
+									{order.user?.phoneNumber ? (
+										<a
+											href={`tel:${order.user.phoneNumber}`}
+											className="text-black hover:text-gold transition-colors"
+										>
+											{order.user.phoneNumber}
+										</a>
+									) : (
+										<span className="text-black">N/A</span>
+									)}
 								</div>
 							</div>
 							{/* <button 
