@@ -69,6 +69,7 @@ export function ChangePasswordModal({
 						<Input
 							id="oldPassword"
 							type="password"
+							autoComplete="off"
 							{...register("oldPassword")}
 							error={errors.oldPassword?.message}
 							placeholder="Current Password"
@@ -83,6 +84,8 @@ export function ChangePasswordModal({
 							<Input
 								id="newPassword"
 								type="password"
+								autoComplete="new-password"
+								disableAutofill
 								{...register("newPassword")}
 								error={errors.newPassword?.message}
 								placeholder="New Password"
@@ -90,6 +93,8 @@ export function ChangePasswordModal({
 							<Input
 								id="confirmPassword"
 								type="password"
+								autoComplete="off"
+								disableAutofill
 								{...register("confirmPassword")}
 								error={errors.confirmPassword?.message}
 								placeholder="Confirm New Password"

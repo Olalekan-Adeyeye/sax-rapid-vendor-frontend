@@ -12,6 +12,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 	rightSlot?: React.ReactNode;
 	outerClassName?: string;
 	ref?: React.Ref<HTMLInputElement>;
+	disableAutofill?: boolean;
 }
 
 export function Input({
@@ -26,8 +27,12 @@ export function Input({
 	className = "",
 	outerClassName = "",
 	ref,
+	disableAutofill,
+	type,
 	...props
 }: InputProps) {
+	const effectiveType = disableAutofill && type === "password" ? "text" : type;
+
 	return (
 		<FormField
 			label={label}
@@ -48,9 +53,11 @@ export function Input({
 					id={id}
 					ref={ref}
 					required={required}
+					type={effectiveType}
 					className={`w-full bg-white border border-gray-200 focus:border-gold text-black text-sm font-medium rounded px-5 py-3.5 placeholder-gray-400 outline-none transition-all appearance-none 
 						${leftSlot ? "pl-12!" : "pl-5!"} 
 						${rightSlot ? "pr-12!" : "pl-4!"} 
+						${disableAutofill && type === "password" ? "[-webkit-text-security:disc] [input-security:disc]" : ""}
 						${className}`}
 					{...props}
 				/>

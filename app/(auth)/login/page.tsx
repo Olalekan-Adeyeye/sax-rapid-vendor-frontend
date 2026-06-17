@@ -59,17 +59,14 @@ export default function LoginPage() {
       if (response.token && response.refreshToken) {
         tokenStorage.setTokens(response.token, response.refreshToken);
       }
-      // LAX mode currently - to be enabled later
       // 4. Redirect path
-      // if (!response.isVerified) {
-      //   router.push("/verify");
-      // } else
-      // if (response.isTwoFactorEnabled) {
-      // 	router.push("/2fa");
-      // } else {
-      // 	router.push("/dashboard");
-      // }
-      router.push("/dashboard");
+      if (!response.isVerified) {
+        router.push("/verify");
+      } else if (response.isTwoFactorEnabled) {
+        router.push("/2fa");
+      } else {
+        router.push("/dashboard");
+      }
     } catch (err: unknown) {
       setUser(null);
       tokenStorage.clearTokens();

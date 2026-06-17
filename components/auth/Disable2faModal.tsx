@@ -76,6 +76,8 @@ export function Disable2faModal({
 						<Input
 							id="confirm-password"
 							type="password"
+							autoComplete="off"
+							disableAutofill
 							placeholder="••••••••"
 							value={password}
 							onChange={(e) => setPassword(e.target.value)}

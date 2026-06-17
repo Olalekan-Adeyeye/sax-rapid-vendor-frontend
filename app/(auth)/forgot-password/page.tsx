@@ -10,6 +10,10 @@ import {
   forgotPasswordSchema,
   ForgotPasswordFormValues,
 } from "@/lib/schemas/auth";
+import { forgotPassword } from "@/lib/api/services/auth";
+import { ApiError } from "@/lib/api/types/auth.types";
+import { useToast } from "@/lib/context/ToastContext";
+import axios from "axios";
 
 import { AuthPageContainer } from "@/components/auth/AuthPageContainer";
 
@@ -17,6 +21,7 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submittedEmail, setSubmittedEmail] = useState("");
+  const { toast } = useToast();
 
   const {
     register,
@@ -27,14 +32,22 @@ export default function ForgotPasswordPage() {
     defaultValues: { email: "" },
   });
 
-  const onSubmit = (data: ForgotPasswordFormValues) => {
+  const onSubmit = async (data: ForgotPasswordFormValues) => {
     setLoading(true);
     setSubmittedEmail(data.email);
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await forgotPassword({ email: data.email });
       setSubmitted(true);
-    }, 1500);
+      toast("Email Sent", "Check your inbox for the password reset code.", "success");
+    } catch (err: unknown) {
+      let message = "Failed to send reset email. Please try again.";
+      if (axios.isAxiosError<ApiError>(err)) {
+        message = err.response?.data?.message || message;
+      }
+      toast("Error", message, "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -69,7 +82,7 @@ export default function ForgotPasswordPage() {
         heading: submitted ? undefined : "Forgot Password?",
         subheading: submitted
           ? undefined
-          : "Enter your email and we'll send you a link to reset your password.",
+          : "Enter your email and we'll send you a code to reset your password.",
         bottomContent: submitted ? null : (
           <Link
             href="/login"
@@ -98,7 +111,7 @@ export default function ForgotPasswordPage() {
             />
 
             <Button type="submit" loading={loading} fullWidth className="py-5">
-              Send Reset Link
+              Send Reset Code
             </Button>
           </form>
         </div>
@@ -111,7 +124,7 @@ export default function ForgotPasswordPage() {
             Check Your Mail.
           </h2>
           <p className="text-gray-500 text-sm font-medium leading-relaxed mb-10">
-            We have sent a password recovery link to <br />
+            We have sent a password reset code to <br />
             <span className="text-black font-bold">{submittedEmail}</span>.
           </p>
           <div className="space-y-4">

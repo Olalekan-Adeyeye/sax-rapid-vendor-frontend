@@ -272,6 +272,8 @@ export default function SignupPage() {
             label="Password"
             id="password"
             type={showPass ? "text" : "password"}
+            autoComplete="new-password"
+          
             {...register("password")}
             error={errors.password?.message}
             leftSlot={<Lock size={16} className="text-gray-400" />}
@@ -290,6 +292,8 @@ export default function SignupPage() {
               label="Confirm Password"
               id="confirmPassword"
               type={showConfirmPass ? "text" : "password"}
+              autoComplete="off"
+              disableAutofill
               {...register("confirmPassword")}
               error={errors.confirmPassword?.message}
               leftSlot={<Lock size={16} className="text-gray-400" />}
