@@ -21,10 +21,10 @@ export async function getNotifications(
   pageSize = 20,
   unreadOnly = false
 ): Promise<NotificationResponse[]> {
-  const response = await apiClient.get<ApiResponse<NotificationResponse[]>>(BASE, {
+  const response = await apiClient.get<ApiResponse<{ items?: NotificationResponse[] | null }>>(BASE, {
     params: { page, pageSize, unreadOnly },
   });
-  return response.data.data;
+  return response.data.data.items ?? [];
 }
 
 /**
