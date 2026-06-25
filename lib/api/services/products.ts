@@ -9,6 +9,7 @@ import type {
 	ProductVariationResponseDTO,
 	ProductStatsResponseDTO,
 	ProductListItemDto,
+	ProductStatus,
 } from "../types/products.types";
 
 const BASE_PATH = "/Products";
@@ -41,7 +42,7 @@ export async function getMyProducts(
 	params?: {
 		CategoryId?: number;
 		BrandId?: number;
-		Status?: string;
+		Status?: ProductStatus;
 		MinPrice?: number;
 		MaxPrice?: number;
 		SearchTerm?: string;

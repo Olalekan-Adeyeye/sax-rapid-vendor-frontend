@@ -221,18 +221,6 @@ export default function NotificationsPage() {
                   />
                   Refresh
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    toast("Coming Soon", "Functionality coming soon", "info")
-                  }
-                  disabled={(notifications?.length || 0) === 0 || loading}
-                  className="px-6 rounded-full text-xs font-bold text-red-500 border-red-50 hover:bg-red-50 hover:border-red-100"
-                >
-                  <Trash2 size={14} />
-                  Clear all
-                </Button>
               </>
             }
           />

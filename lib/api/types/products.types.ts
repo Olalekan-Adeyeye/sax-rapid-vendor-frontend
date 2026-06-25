@@ -36,6 +36,7 @@ export interface ProductResponseDTO {
 	name: string | null;
 	description: string | null;
 	currency: string | null;
+	location: string | null;
 	vendorProfileId: string;
 	vendorId: string;
 	vendorName?: string | null;
@@ -80,6 +81,7 @@ export interface ProductListItemDto {
 	effectivePrice: number;
 	sku: string | null;
 	currency: string | null;
+	location: string | null;
 	status: ProductStatus;
 	stockQuantity: number;
 	isFeatured: boolean;
@@ -158,6 +160,14 @@ export interface UpdateProductDTO {
 	salePriceStartDate?: string | null;
 	salePriceEndDate?: string | null;
 	sku: string | null;
+	stockQuantity?: number | null;
+	weight?: number | null;
+	dimensionLength?: number | null;
+	dimensionWidth?: number | null;
+	dimensionHeight?: number | null;
+	imageUrls?: string[] | null;
+	attributes?: CreateProductAttributeValueDTO[] | null;
+	variations?: CreateVariationDTO[] | null;
 }
 
 export interface ProductQueryParams {
@@ -168,6 +178,10 @@ export interface ProductQueryParams {
 	MaxPrice?: number;
 	SearchTerm?: string;
 	Status?: ProductStatus;
+	Currency?: string;
+	Location?: string;
+	Country?: string;
+	City?: string;
 	LowStockOnly?: boolean;
 	SortBy?: string;
 	SortDirection?: "Asc" | "Desc";

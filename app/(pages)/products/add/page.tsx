@@ -203,6 +203,7 @@ export default function AddProductPage() {
 		register,
 		handleSubmit,
 		setValue,
+		getValues,
 		control,
 		formState: { errors },
 	} = form;
@@ -490,6 +491,7 @@ export default function AddProductPage() {
 	const createProductMutation = useMutation({
 		mutationFn: async (values: ProductFormValues) => {
 			const data = values as unknown as FlatProductValues;
+			const rawForm = getValues() as unknown as FlatProductValues;
 
 			// 1. Upload images first if any
 			const uploadedImages: { url: string; isPrimary: boolean }[] = [];
@@ -519,7 +521,7 @@ export default function AddProductPage() {
 				name: data.name,
 				description: data.description,
 				categoryId: Number(data.categoryId),
-				brandId: data.brandId ? Number(data.brandId) : null,
+				brandId: rawForm.brandId ? Number(rawForm.brandId) : null,
 				basePrice: Number(data.regularPrice) || 0,
 				salePrice: data.salePrice ? Number(data.salePrice) : null,
 				salePriceStartDate: data.saleStartDate || null,

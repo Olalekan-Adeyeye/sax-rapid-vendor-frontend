@@ -200,6 +200,7 @@ export default function EditProductPage() {
 		register,
 		handleSubmit,
 		setValue,
+		getValues,
 		reset,
 		control,
 		formState: { errors },
@@ -303,12 +304,14 @@ export default function EditProductPage() {
 				length: product.dimensionLength?.toString() || "",
 				width: product.dimensionWidth?.toString() || "",
 				height: product.dimensionHeight?.toString() || "",
+				stockQuantity: product.stockQuantity?.toString() || "",
 				attributes: [],
 				variations: [],
 				images: [],
 			} as unknown as ProductFormValues);
 
 			if (product.sku) setValue("sku", product.sku);
+			if (product.brandId) (setValue as unknown as (name: string, value: string) => void)("brandId", product.brandId.toString());
 
 			if (isVariable) {
 				setHasGeneratedVariations(true);
@@ -556,26 +559,25 @@ export default function EditProductPage() {
 
 	const onSubmit = async (values: ProductFormValues) => {
 		const data = values as unknown as FlatProductValues;
+		const rawForm = getValues() as unknown as FlatProductValues;
 		try {
 			setIsSubmitting(true);
 
 			// 1. Upload new images only
-			const finalImages: string[] = [];
+			const uploadedImageUrls: string[] = [];
 			setIsUploading(true);
 
 			for (let i = 0; i < galleryItems.length; i++) {
 				const item = galleryItems[i];
 				if (item.url) {
-					// Already exists on server
-					finalImages.push(item.url);
+					uploadedImageUrls.push(item.url);
 				} else if (item.file) {
-					// Needs upload
 					try {
 						const uploadedFile = await filesService.uploadFile(
 							item.file,
 							"products",
 						);
-						finalImages.push(uploadedFile.url);
+						uploadedImageUrls.push(uploadedFile.url);
 					} catch (error) {
 						console.error(`Failed to upload local image ${i}:`, error);
 						toast(
@@ -588,19 +590,42 @@ export default function EditProductPage() {
 			}
 			setIsUploading(false);
 
+			const isSimple = data.type === "simple";
 			const payload: UpdateProductDTO = {
 				name: data.name,
 				description: data.description,
 				categoryId: Number(data.categoryId) || null,
-				brandId: data.brandId ? Number(data.brandId) : null,
-				basePrice: Number(
-					data.regularPrice || 0,
-				),
+				brandId: rawForm.brandId ? Number(rawForm.brandId) : null,
+				basePrice: Number(data.regularPrice || 0),
 				salePrice: data.salePrice ? Number(data.salePrice) : null,
 				salePriceStartDate: data.saleStartDate || null,
 				salePriceEndDate: data.saleEndDate || null,
 				sku: data.sku || null,
+				stockQuantity: isSimple ? Number(data.stockQuantity) || 0 : null,
+				weight: Number(data.weight) || 0,
+				dimensionLength: data.length ? Number(data.length) : null,
+				dimensionWidth: data.width ? Number(data.width) : null,
+				dimensionHeight: data.height ? Number(data.height) : null,
+				imageUrls: uploadedImageUrls.length > 0 ? uploadedImageUrls : null,
+				...(isSimple
+					? {}
+					: {
+							attributes: data.attributes.map((attr) => ({
+								name: attr.name,
+								value: attr.values.join(", "),
+							})),
+							variations: data.variations.map((v) => ({
+								sku: v.id,
+								price: Number(v.price),
+								salePrice: v.salePrice ? Number(v.salePrice) : undefined,
+								salePriceStartDate: v.saleStartDate || null,
+								salePriceEndDate: v.saleEndDate || null,
+								stockQuantity: Number(v.stock),
+								attributes: v.attributes || [],
+							})),
+						}),
 			};
+
 			await productsService.updateProduct(productId, payload);
 			toast("Success", "Product updated successfully", "success");
 			router.push("/products");
