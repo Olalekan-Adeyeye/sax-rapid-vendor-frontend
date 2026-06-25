@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { tokenStorage } from "../api/apiClient";
@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 	const [isTwoFactorVerified, setIsTwoFactorVerified] = useState(() => {
 		if (typeof window !== "undefined") {
-			return sessionStorage.getItem("is2faVerified") === "true";
+			return localStorage.getItem("is2faVerified") === "true";
 		}
 		return false;
 	});
@@ -82,13 +82,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		await queryClient.invalidateQueries({ queryKey: ["auth", "vendor"] });
 	};
 
+	// Sync 2FA state across tabs via localStorage
+	useEffect(() => {
+		const handleStorage = (e: StorageEvent) => {
+			if (e.key === "is2faVerified") {
+				setIsTwoFactorVerified(e.newValue === "true");
+			}
+		};
+		window.addEventListener("storage", handleStorage);
+		return () => window.removeEventListener("storage", handleStorage);
+	}, []);
+
 	const setTwoFactorVerified = (value: boolean) => {
 		setIsTwoFactorVerified(value);
 		if (typeof window !== "undefined") {
 			if (value) {
-				sessionStorage.setItem("is2faVerified", "true");
+				localStorage.setItem("is2faVerified", "true");
 			} else {
-				sessionStorage.removeItem("is2faVerified");
+				localStorage.removeItem("is2faVerified");
 			}
 		}
 	};
