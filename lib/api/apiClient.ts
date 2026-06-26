@@ -143,6 +143,7 @@ apiClient.interceptors.response.use(
       } catch (refreshError) {
         flushQueue(refreshError, null);
         tokenStorage.clearTokens();
+        cookies.remove("sax_2fa");
         if (typeof window !== "undefined") {
           window.location.href = "/login";
         }

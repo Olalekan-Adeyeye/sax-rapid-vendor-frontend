@@ -1,9 +1,10 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { tokenStorage } from "../api/apiClient";
+import { cookies } from "../utils/cookies";
 import type { UserProfile } from "../api/types/auth.types";
 import { mapUserToProfile } from "../api/types/user.types";
 import { getUserProfile } from "../api/services/user";
@@ -31,7 +32,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 	const [isTwoFactorVerified, setIsTwoFactorVerified] = useState(() => {
 		if (typeof window !== "undefined") {
-			return localStorage.getItem("is2faVerified") === "true";
+			return cookies.get("sax_2fa") === "true";
 		}
 		return false;
 	});
@@ -82,24 +83,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		await queryClient.invalidateQueries({ queryKey: ["auth", "vendor"] });
 	};
 
-	// Sync 2FA state across tabs via localStorage
-	useEffect(() => {
-		const handleStorage = (e: StorageEvent) => {
-			if (e.key === "is2faVerified") {
-				setIsTwoFactorVerified(e.newValue === "true");
-			}
-		};
-		window.addEventListener("storage", handleStorage);
-		return () => window.removeEventListener("storage", handleStorage);
-	}, []);
-
 	const setTwoFactorVerified = (value: boolean) => {
 		setIsTwoFactorVerified(value);
 		if (typeof window !== "undefined") {
 			if (value) {
-				localStorage.setItem("is2faVerified", "true");
+				cookies.set("sax_2fa", "true");
 			} else {
-				localStorage.removeItem("is2faVerified");
+				cookies.remove("sax_2fa");
 			}
 		}
 	};
