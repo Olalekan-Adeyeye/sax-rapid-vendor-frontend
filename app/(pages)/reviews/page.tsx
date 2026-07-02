@@ -25,6 +25,7 @@ function ReviewsContent() {
   const router = useRouter();
   const productId = searchParams.get("productId");
 
+  const [searchInput, setSearchInput] = useState(searchParams.get("search") || "");
   const searchTerm = searchParams.get("search") || "";
   const sortFilter = searchParams.get("sort") || "newest";
   const ratingFilter = searchParams.get("rating") || "all";
@@ -196,8 +197,9 @@ function ReviewsContent() {
           <div className="relative flex-1 max-w-md">
             <SearchInput
               placeholder="Search feedback content..."
-              value={searchTerm}
-              onChange={(val) => {
+              value={searchInput}
+              onChange={setSearchInput}
+              onSearch={(val) => {
                 const params = new URLSearchParams(searchParams.toString());
                 if (val) params.set("search", val);
                 else params.delete("search");

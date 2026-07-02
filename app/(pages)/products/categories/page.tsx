@@ -23,6 +23,7 @@ import { Dropdown, DropdownItem } from "@/components/ui/Dropdown";
 
 export default function ProductCategoriesPage() {
   const queryClient = useQueryClient();
+  const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
   const router = useRouter();
@@ -111,8 +112,9 @@ export default function ProductCategoriesPage() {
             <div className="p-6 border-b border-gray-50 bg-gray-50/30">
               <SearchInput
                 placeholder="Search categories..."
-                value={searchQuery}
-                onChange={setSearchQuery}
+                value={searchInput}
+                onChange={setSearchInput}
+                onSearch={setSearchQuery}
                 variant="white"
                 focusColor="gold"
                 fullWidth

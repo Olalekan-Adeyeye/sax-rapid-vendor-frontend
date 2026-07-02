@@ -91,6 +91,7 @@ export default function OrdersPage() {
   const router = useRouter();
   const { toast } = useToast();
 
+  const [searchInput, setSearchInput] = useState(searchParams.get("search") || "");
   const searchQuery = searchParams.get("search") || "";
   const sortFilter = searchParams.get("sort") || "newest";
   const shippingFilter = searchParams.get("shipping") || "all";
@@ -201,8 +202,9 @@ export default function OrdersPage() {
               <div className="relative flex-1 max-w-md">
                 <SearchInput
                   placeholder="Search by order ID, customer..."
-                  value={searchQuery}
-                  onChange={(val) => {
+                  value={searchInput}
+                  onChange={setSearchInput}
+                  onSearch={(val) => {
                     const params = new URLSearchParams(searchParams.toString());
                     if (val) params.set("search", val);
                     else params.delete("search");

@@ -40,6 +40,8 @@ export default function MessagesPage() {
     null,
   );
   const [newMessage, setNewMessage] = React.useState("");
+  const [searchInput, setSearchInput] = React.useState("");
+  const [searchQuery, setSearchQuery] = React.useState("");
 
   // Queries
   const {
@@ -67,6 +69,17 @@ export default function MessagesPage() {
   const conversations = React.useMemo(
     () => conversationsData || [],
     [conversationsData],
+  );
+  const filteredConversations = React.useMemo(
+    () =>
+      conversations.filter((c) => {
+        const q = searchQuery.toLowerCase();
+        return (
+          c.buyerName.toLowerCase().includes(q) ||
+          c.vendorName.toLowerCase().includes(q)
+        );
+      }),
+    [conversations, searchQuery],
   );
   const messages = messagesData?.items || [];
   const conversationsErrorMsg = conversationsError
@@ -237,6 +250,9 @@ export default function MessagesPage() {
               variant="muted"
               fullWidth
               focusColor="gold"
+              value={searchInput}
+              onChange={setSearchInput}
+              onSearch={setSearchQuery}
               disabled={loadingConversations}
             />
           </div>
@@ -252,9 +268,9 @@ export default function MessagesPage() {
                   {conversationsErrorMsg}
                 </p>
               </div>
-            ) : conversations.length > 0 ? (
+            ) : filteredConversations.length > 0 ? (
               <div className="divide-y divide-gray-50">
-                {conversations.map((chat) => (
+                {filteredConversations.map((chat) => (
                   <div
                     key={chat.id}
                     onClick={() => setSelectedChatId(chat.id)}

@@ -19,6 +19,8 @@ export default function PromotionsPage() {
   const [isCampaignModalOpen, setIsCampaignModalOpen] = useState(false);
   const [isFeaturedModalOpen, setIsFeaturedModalOpen] = useState(false);
   const [isPromoTypePickerOpen, setIsPromoTypePickerOpen] = useState(false);
+  const [searchInput, setSearchInput] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Queries
   const { data: coupons, isLoading } = useQuery({
@@ -27,6 +29,9 @@ export default function PromotionsPage() {
   });
 
   const couponList: Coupon[] = coupons || [];
+  const filteredCoupons = couponList.filter((c) =>
+    c.code?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false,
+  );
 
 
   if (isLoading && !couponList.length) {
@@ -63,6 +68,9 @@ export default function PromotionsPage() {
               placeholder="Search promotions..."
               variant="muted"
               focusColor="gold"
+              value={searchInput}
+              onChange={setSearchInput}
+              onSearch={setSearchQuery}
               disabled={isLoading}
             />
           </div>
@@ -89,8 +97,8 @@ export default function PromotionsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {couponList.length > 0 ? (
-                couponList.map((coupon) => (
+              {filteredCoupons.length > 0 ? (
+                filteredCoupons.map((coupon) => (
                   <tr
                     key={coupon.id}
                     className="hover:bg-gray-50/50 transition-colors group"

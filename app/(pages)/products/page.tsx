@@ -45,7 +45,8 @@ export default function ProductsPage() {
   const queryClient = useQueryClient();
 
   // Local UI state — these don't belong in the server cache
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [committedSearch, setCommittedSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] =
@@ -63,10 +64,10 @@ export default function ProductsPage() {
   // ── Queries ──────────────────────────────────────────────────────────────
 
   const productsQuery = useQuery({
-    queryKey: ["my-products", user?.userId, searchQuery, categoryIdFilter, sortFilter, currentPage],
+    queryKey: ["my-products", user?.userId, committedSearch, categoryIdFilter, sortFilter, currentPage],
     queryFn: () =>
       productsService.getMyProducts({
-        SearchTerm: searchQuery || undefined,
+        SearchTerm: committedSearch || undefined,
         CategoryId: categoryIdFilter ? Number(categoryIdFilter) : undefined,
         PageIndex: currentPage,
         PageSize: PAGE_SIZE,
@@ -184,9 +185,10 @@ export default function ProductsPage() {
           <div className="relative flex-1 max-w-md">
             <SearchInput
               placeholder="Search by product name, SKU..."
-              value={searchQuery}
-              onChange={(val) => {
-                setSearchQuery(val);
+              value={searchInput}
+              onChange={setSearchInput}
+              onSearch={(val) => {
+                setCommittedSearch(val);
                 setCurrentPage(1);
               }}
               variant="muted"

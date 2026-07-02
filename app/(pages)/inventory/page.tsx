@@ -17,6 +17,7 @@ import { Loader2 } from "lucide-react";
 import Link from "next/link";
 
 export default function InventoryManagementPage() {
+	const [searchInput, setSearchInput] = React.useState("");
 	const [searchQuery, setSearchQuery] = React.useState("");
 
 	const { data: vendor } = useQuery({
@@ -113,8 +114,9 @@ export default function InventoryManagementPage() {
 					focusColor="gold"
 					fullWidth
 					className="max-w-md"
-					value={searchQuery}
-					onChange={setSearchQuery}
+					value={searchInput}
+					onChange={setSearchInput}
+					onSearch={setSearchQuery}
 					disabled={loadingStats || loadingProducts}
 					/>
 				</div>

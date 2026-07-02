@@ -7,6 +7,20 @@ import { SearchInput } from "@/components/ui/SearchInput";
 import { PageHeader } from "@/components/ui/PageHeader";
 
 export default function ProductAttributesPage() {
+	const allAttributes = [
+		{ name: "Size", values: ["S", "M", "L", "XL", "XXL"], type: "Selectable" },
+		{ name: "Color", values: ["Red", "Blue", "Black", "Gold", "White"], type: "Color Swatch" },
+		{ name: "Material", values: ["Leather", "Cotton", "Premium Metal", "Sustainable Wood"], type: "Selectable" },
+		{ name: "Weight", values: ["500g", "1kg", "2.5kg", "5kg", "10kg"], type: "Selectable" },
+		{ name: "Capacity", values: ["128GB", "256GB", "512GB", "1TB"], type: "Selectable" },
+		{ name: "Length", values: ["12\"", "14\"", "16\"", "18\"", "22\"", "30\""], type: "Selectable" },
+	];
+	const [searchInput, setSearchInput] = React.useState("");
+	const [searchQuery, setSearchQuery] = React.useState("");
+	const filteredAttributes = allAttributes.filter((a) =>
+		a.name.toLowerCase().includes(searchQuery.toLowerCase()),
+	);
+
 	return (
 		<div className="space-y-10">
 			<PageHeader
@@ -31,20 +45,16 @@ export default function ProductAttributesPage() {
 						<div className="p-6 border-b border-gray-50 bg-gray-50/30">
 							<SearchInput
 								placeholder="Search attributes..."
+								value={searchInput}
+								onChange={setSearchInput}
+								onSearch={setSearchQuery}
 								variant="white"
 								focusColor="gold"
 								fullWidth
 							/>
 						</div>
 						<div className="divide-y divide-gray-50">
-							{[
-								{ name: "Size", values: ["S", "M", "L", "XL", "XXL"], type: "Selectable" },
-								{ name: "Color", values: ["Red", "Blue", "Black", "Gold", "White"], type: "Color Swatch" },
-								{ name: "Material", values: ["Leather", "Cotton", "Premium Metal", "Sustainable Wood"], type: "Selectable" },
-								{ name: "Weight", values: ["500g", "1kg", "2.5kg", "5kg", "10kg"], type: "Selectable" },
-								{ name: "Capacity", values: ["128GB", "256GB", "512GB", "1TB"], type: "Selectable" },
-								{ name: "Length", values: ["12\"", "14\"", "16\"", "18\"", "22\"", "30\""], type: "Selectable" },
-							].map((attr, i) => (
+							{filteredAttributes.map((attr, i) => (
 								<div key={i} className="p-6 lg:p-8 hover:bg-gray-50/50 transition-colors group">
 									<div className="flex items-center justify-between mb-4">
 										<div className="flex items-center gap-4">
