@@ -135,7 +135,7 @@ export default function VendorCenter() {
               </h1>
               <p className="text-gray-300 text-xl mb-10 max-w-lg leading-relaxed font-medium">
                 Reach millions of premium shoppers across the world with
-                world-class logistics, real-time analytics, and weekly payouts
+                world-class logistics, real-time analytics, and payouts
                 built for serious sellers.
               </p>
               <div className="flex flex-wrap gap-4">
@@ -194,7 +194,7 @@ export default function VendorCenter() {
           {[...Array(3)].flatMap((_, outerIndex) =>
             [
               "5 Million Buyers",
-              "Weekly Payouts",
+              "Payouts",
               "Rapid Nationwide Delivery",
               "24/7 Seller Support",
               "Real-time Analytics",
@@ -392,18 +392,18 @@ export default function VendorCenter() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
             <div className="bg-gray-50 border border-gray-100 rounded p-8 flex flex-col">
               <p className="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400 mb-4">
-                Basic
+                Listings
               </p>
-              <div className="text-5xl font-black text-black mb-2">5%</div>
+              <div className="text-5xl font-black text-black mb-2">Free</div>
               <p className="text-sm text-gray-500 font-medium mb-8">
-                Commission per sale
+                No cost to list your products
               </p>
               <ul className="space-y-3 mb-8 flex-1">
                 {[
-                  "Free product listings",
-                  "Standard analytics",
-                  "Email support",
-                  "Weekly payouts",
+                  "Unlimited product uploads",
+                  "High-res images & videos",
+                  "Category & attribute setup",
+                  "Bulk import tools",
                 ].map((f) => (
                   <li
                     key={f}
@@ -415,7 +415,7 @@ export default function VendorCenter() {
                 ))}
               </ul>
               <Button variant="outline" fullWidth asChild>
-                <Link href="/signup">Get Started</Link>
+                <Link href="/signup">Start Listing</Link>
               </Button>
             </div>
 
@@ -424,19 +424,19 @@ export default function VendorCenter() {
                 Popular
               </span>
               <p className="text-[10px] font-black uppercase tracking-[0.25em] text-gold/60 mb-4">
-                Pro
+                Onboarding
               </p>
-              <div className="text-5xl font-black text-gold mb-2">8%</div>
+              <div className="text-5xl font-black text-gold mb-2">Fast</div>
               <p className="text-sm text-gray-400 font-medium mb-8">
-                Commission per sale
+                Get selling in minutes
               </p>
               <ul className="space-y-3 mb-8 flex-1">
                 {[
-                  "Free product listings",
-                  "Advanced analytics & insights",
-                  "Priority 24/7 support",
-                  "Daily payouts",
-                  "Promoted listing credits",
+                  "Quick KYC verification",
+                  "Instant store setup",
+                  "Easy product uploads",
+                  "Built-in delivery network",
+                  "Seller dashboard access",
                 ].map((f) => (
                   <li
                     key={f}
@@ -448,26 +448,26 @@ export default function VendorCenter() {
                 ))}
               </ul>
               <Button variant="primary" fullWidth asChild>
-                <Link href="/signup">Get Started</Link>
+                <Link href="/signup">Start Selling</Link>
               </Button>
             </div>
 
             <div className="bg-gray-50 border border-gray-100 rounded p-8 flex flex-col">
               <p className="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400 mb-4">
-                Enterprise
+                Support
               </p>
-              <div className="text-5xl font-black text-black mb-2">15%</div>
+              <div className="text-5xl font-black text-black mb-2">24/7</div>
               <p className="text-sm text-gray-500 font-medium mb-8">
-                Commission per sale
+                Round-the-clock assistance
               </p>
               <ul className="space-y-3 mb-8 flex-1">
                 {[
-                  "Bulk listing tools",
-                  "Custom analytics dashboard",
-                  "Dedicated account manager",
-                  "Same-day payouts",
-                  "API access",
-                  "Volume discounts available",
+                  "Dedicated vendor support",
+                  "Live chat & email",
+                  "Comprehensive help centre",
+                  "Onboarding assistance",
+                  "Seller community access",
+                  "Account management",
                 ].map((f) => (
                   <li
                     key={f}
@@ -479,7 +479,7 @@ export default function VendorCenter() {
                 ))}
               </ul>
               <Button variant="outline" fullWidth asChild>
-                <Link href="/signup">Contact Sales</Link>
+                <Link href="/signup">Get Started</Link>
               </Button>
             </div>
           </div>
@@ -492,7 +492,7 @@ export default function VendorCenter() {
               },
               {
                 icon: <DollarSign size={20} />,
-                label: "Weekly Payouts",
+                label: "Payouts",
               },
               {
                 icon: <TrendingUp size={20} />,

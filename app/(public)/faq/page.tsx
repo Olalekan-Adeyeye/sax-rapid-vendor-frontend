@@ -34,7 +34,7 @@ const FAQ_ITEMS = [
       },
       {
         q: "When do I get paid?",
-        a: "Basic sellers receive weekly payouts every Friday. Pro sellers enjoy daily payouts, and Enterprise sellers get same-day settlements.",
+        a: "Basic sellers receive payouts every Friday. Pro sellers enjoy daily payouts, and Enterprise sellers get same-day settlements.",
       },
       {
         q: "Are there any hidden fees?",

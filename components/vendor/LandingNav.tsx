@@ -28,14 +28,14 @@ export function LandingNav({ navLinks }: LandingNavProps) {
 		<>
 			{/* Mobile Navigation Overlay */}
 			<div
-				className={`fixed inset-0 bg-[#ffffff] z-9999 transition-all duration-500 lg:hidden flex flex-col ${
+				className={`fixed inset-0 bg-black z-9999 transition-all duration-500 lg:hidden flex flex-col ${
 					isMenuOpen
 						? "translate-x-0 opacity-100"
 						: "translate-x-full opacity-0 pointer-events-none"
 				}`}
 			>
 				<button
-					className="absolute top-4 right-6 p-2 text-black hover:bg-gray-100 rounded-full transition-colors z-10001"
+					className="absolute top-4 right-6 p-2 text-white hover:bg-white/10 rounded-full transition-colors z-10001"
 					onClick={() => setIsMenuOpen(false)}
 					aria-label="Close Menu"
 				>
@@ -49,7 +49,7 @@ export function LandingNav({ navLinks }: LandingNavProps) {
 						</Link>
 
 						<div className="space-y-6 mt-8">
-							<p className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-400">
+							<p className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-500">
 								Navigation
 							</p>
 							<nav className="flex flex-col gap-6">
@@ -58,7 +58,7 @@ export function LandingNav({ navLinks }: LandingNavProps) {
 										key={l.label}
 										href={l.href}
 										onClick={() => setIsMenuOpen(false)}
-										className="text-1xl font-black tracking-tighter text-black hover:text-gold transition-colors"
+										className="text-1xl font-black tracking-tighter text-white hover:text-gold transition-colors"
 									>
 										{l.label}
 									</Link>
@@ -68,14 +68,14 @@ export function LandingNav({ navLinks }: LandingNavProps) {
 					</div>
 
 					<div className="space-y-6 mb-8">
-						<p className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-400">
+						<p className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-500">
 							Account
 						</p>
 						<div className="flex flex-col gap-4">
 							<Link
 								href="/login"
 								onClick={() => setIsMenuOpen(false)}
-								className="text-1xl font-black tracking-tighter text-black flex items-center justify-between group"
+								className="text-1xl font-black tracking-tighter text-white flex items-center justify-between group"
 							>
 								Log in
 								<span className="text-gold group-hover:translate-x-2 transition-transform">
@@ -90,8 +90,8 @@ export function LandingNav({ navLinks }: LandingNavProps) {
 						</div>
 					</div>
 
-					<div className="mt-auto space-y-6 pt-6 border-t border-gray-100">
-						<div className="flex flex-col gap-4 text-[10px] font-black uppercase tracking-widest text-gray-500">
+					<div className="mt-auto space-y-6 pt-6 border-t border-white/10">
+						<div className="flex flex-col gap-4 text-[10px] font-black uppercase tracking-widest text-gray-400">
 							<Link href="/signup" onClick={() => setIsMenuOpen(false)}>
 								Become a Seller
 							</Link>
@@ -107,7 +107,7 @@ export function LandingNav({ navLinks }: LandingNavProps) {
 			</div>
 
 			{/* Header */}
-			<header className="bg-white/95 backdrop-blur-md border-b border-gray-100 sticky top-0 z-50">
+			<header className="bg-black border-b border-white/10 sticky top-0 z-50">
 				<div className="max-w-7xl mx-auto px-6 h-16 md:h-20 flex items-center justify-between">
 					<Link
 						href="/"
@@ -116,12 +116,12 @@ export function LandingNav({ navLinks }: LandingNavProps) {
 						<Logo size="md" withBackground />
 					</Link>
 
-					<nav className="hidden lg:flex items-center gap-10 text-[11px] font-black uppercase tracking-widest text-gray-400">
+					<nav className="hidden lg:flex items-center gap-10 text-[11px] font-black uppercase tracking-widest text-gray-300">
 						{navLinks.map((l) => (
 							<Link
 								key={l.label}
 								href={l.href}
-								className="hover:text-black transition-colors"
+								className="hover:text-white transition-colors"
 							>
 								{l.label}
 							</Link>
@@ -132,7 +132,7 @@ export function LandingNav({ navLinks }: LandingNavProps) {
 						<div className="hidden md:flex items-center gap-4">
 							<Link
 								href="/login"
-								className="text-[11px] font-black uppercase tracking-widest text-gray-500 hover:text-black transition-all"
+								className="text-[11px] font-black uppercase tracking-widest text-gray-300 hover:text-white transition-all"
 							>
 								Login
 							</Link>
@@ -142,7 +142,7 @@ export function LandingNav({ navLinks }: LandingNavProps) {
 						</div>
 
 						<button
-							className="lg:hidden p-2 text-black hover:bg-gray-100 rounded transition-colors z-50"
+							className="lg:hidden p-2 text-white hover:bg-white/10 rounded transition-colors z-50"
 							onClick={() => setIsMenuOpen(!isMenuOpen)}
 							aria-label="Toggle Menu"
 						>

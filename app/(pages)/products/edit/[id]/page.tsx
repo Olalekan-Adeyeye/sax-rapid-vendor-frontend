@@ -149,8 +149,8 @@ export default function EditProductPage() {
 
 	const currencySymbol = useMemo(() => {
 		const code = user?.countryCode?.toUpperCase();
-		if (code === "NG") return "₦";
-		if (code === "ZA") return "R";
+		if (code === "+234") return "₦";
+		if (code === "+27") return "R";
 		return "$";
 	}, [user?.countryCode]);
 
@@ -378,8 +378,10 @@ export default function EditProductPage() {
 	}, [productId, reset, setValue]);
 
 	useEffect(() => {
-		fetchCats();
-		fetchProduct();
+		setTimeout(() => {
+			fetchCats();
+			fetchProduct();
+		}, 0);
 	}, [fetchCats, fetchProduct]);
 
 	const flattenedCategories = useMemo(() => {

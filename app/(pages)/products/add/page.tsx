@@ -139,8 +139,8 @@ export default function AddProductPage() {
 
 	const currencySymbol = useMemo(() => {
 		const code = user?.countryCode?.toUpperCase();
-		if (code === "NG") return "₦";
-		if (code === "ZA") return "R";
+		if (code === "+234") return "₦";
+		if (code === "+27") return "R";
 		return "$";
 	}, [user?.countryCode]);
 
