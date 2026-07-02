@@ -28,7 +28,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	const queryClient = useQueryClient();
-	const token = typeof window !== "undefined" ? tokenStorage.getToken() : null;
+	const [token, setToken] = useState<string | null>(() =>
+		typeof window !== "undefined" ? tokenStorage.getToken() : null,
+	);
 
 	const [isTwoFactorVerified, setIsTwoFactorVerified] = useState(() => {
 		if (typeof window !== "undefined") {
@@ -46,6 +48,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	const {
 		data: vendorData,
 		isPending: vendorPending,
+		isFetching: vendorFetching,
 		isError: isVendorError,
 		error: vendorError,
 	} = useQuery({
@@ -55,7 +58,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	});
 
 	const loading = !!token && userPending;
-  const vendorLoading = !!userProfile && vendorPending;
+	const vendorLoading = !!userProfile && (vendorPending || vendorFetching);
 
 	const user = userProfile ?? null;
 	const vendorProfile =
@@ -67,6 +70,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 	const setUser = (userData: UserProfile | null) => {
 		queryClient.setQueryData(["auth", "user"], userData);
+		setToken(tokenStorage.getToken());
 	};
 
 	const updateUser = (data: Partial<UserProfile>) => {
