@@ -18,6 +18,8 @@ export default function VerifyPage() {
 	const router = useRouter();
 	const { user, refreshProfile } = useAuth();
 	const { toast } = useToast();
+	const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+	const email = user?.email || searchParams?.get("email") || "";
 	const [loading, setLoading] = useState(false);
 	const [resending, setResending] = useState(false);
 	const [timer, setTimer] = useState(5);
@@ -46,7 +48,7 @@ export default function VerifyPage() {
 		setLoading(true);
 		try {
 			const response = await verifyOtp({
-				email: user?.email || "",
+				email,
 				otpCode: data.otp,
 			});
 
@@ -74,10 +76,10 @@ export default function VerifyPage() {
 	};
 
 	const handleResend = async () => {
-		if (!user?.email) return;
+		if (!email) return;
 		setResending(true);
 		try {
-			await resendOtp({ email: user.email });
+			await resendOtp({ email });
 			toast("OTP Resent", "A new code has been sent to your email.", "success");
 			setTimer(45);
 		} catch {

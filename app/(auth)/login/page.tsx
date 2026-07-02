@@ -70,6 +70,18 @@ export default function LoginPage() {
     } catch (err: unknown) {
       setUser(null);
       tokenStorage.clearTokens();
+
+      if (axios.isAxiosError<ApiError>(err) && err.response?.status === 403) {
+        const email = data.email;
+        toast(
+          "Email Not Verified",
+          "Please verify your email address before logging in.",
+          "error",
+        );
+        router.push(`/verify?email=${encodeURIComponent(email)}`);
+        return;
+      }
+
       const message = axios.isAxiosError<ApiError>(err)
         ? err.response?.data?.message || err.message
         : "An unexpected error occurred. Please try again.";

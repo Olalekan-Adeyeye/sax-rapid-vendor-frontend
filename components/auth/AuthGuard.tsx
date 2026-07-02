@@ -53,9 +53,9 @@ export function AuthGuard({ children }: AuthGuardProps) {
     if (isPublic) return pathname;
 
     // 4. Partially ready users on protected routes: Enforce the Auth Flow
-    if (!user) return "/login";
-    if (!user.isVerified) return "/verify"; //LAX for development purpose
-    if (user.isTwoFactorEnabled && !isTwoFactorVerified) return "/2fa";
+    if (!user && !isAuthFlow) return "/login";
+    if (user && !user.isVerified) return "/verify";
+    if (user && user.isTwoFactorEnabled && !isTwoFactorVerified) return "/2fa";
     if (vendorProfile === null) return "/onboarding";
 
     return pathname;
