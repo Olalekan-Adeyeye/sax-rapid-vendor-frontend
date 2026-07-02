@@ -56,7 +56,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
     if (!user && !isAuthFlow) return "/login";
     if (user && !user.isVerified) return "/verify";
     if (user && user.isTwoFactorEnabled && !isTwoFactorVerified) return "/2fa";
-    if (vendorProfile === null) return "/onboarding";
+    if (user && vendorProfile === null) return "/onboarding";
 
     return pathname;
   }, [
