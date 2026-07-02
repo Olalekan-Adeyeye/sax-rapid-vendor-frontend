@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import { ApiError } from "@/lib/api/types/auth.types";
+import { ApiError, mapAuthToProfile } from "@/lib/api/types/auth.types";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useToast } from "@/lib/context/ToastContext";
 import { verifyOtp, resendOtp } from "@/lib/api/services/auth";
@@ -16,7 +16,7 @@ import { AuthPageContainer } from "@/components/auth/AuthPageContainer";
 
 export default function VerifyPage() {
 	const router = useRouter();
-	const { user, refreshProfile } = useAuth();
+	const { user, setUser, refreshProfile } = useAuth();
 	const { toast } = useToast();
 	const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
 	const email = user?.email || searchParams?.get("email") || "";
@@ -57,7 +57,10 @@ export default function VerifyPage() {
 				tokenStorage.setTokens(response.token, response.refreshToken);
 			}
 
-			// 2. Refresh profile state
+			// 2. Immediately set user in cache so AuthGuard can see it
+			setUser(mapAuthToProfile(response));
+
+			// 3. Refresh profile state
 			await refreshProfile();
 
 			toast("Success", "Email verified successfully!", "success");
