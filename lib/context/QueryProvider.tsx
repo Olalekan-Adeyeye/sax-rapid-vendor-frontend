@@ -15,7 +15,7 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
             retry: 1,
             refetchOnMount: true,
             refetchOnReconnect: true,
-            refetchOnWindowFocus: true,
+            refetchOnWindowFocus: false,
           },
         },
       }),

@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     template: "%s | Sax-RAPID Vendor Center",
   },
   description:
-    "Join SAX-RAPID — A premier online marketplace. Expand your business reach with world-class logistics, real-time analytics, and guaranteed weekly payouts.",
+    "Join SAX-RAPID — A premier online marketplace. Expand your business reach with world-class logistics, real-time analytics, and guaranteed payouts.",
   keywords: [
     "marketplace",
     "sell online",
