@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/context/AuthContext";
 import { tokenStorage } from "@/lib/api/apiClient";
 import {
@@ -28,6 +29,7 @@ export function Header({
   onDesktopCollapseToggle,
 }: HeaderProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { user, setUser, setTwoFactorVerified } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -49,6 +51,7 @@ export function Header({
     tokenStorage.clearTokens();
     setTwoFactorVerified(false);
     setUser(null);
+    queryClient.clear();
     router.push("/login");
   };
 

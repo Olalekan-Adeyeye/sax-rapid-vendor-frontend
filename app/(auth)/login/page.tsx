@@ -3,7 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { Lightbulb, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, AlertCircle } from "lucide-react";
 import Image from "next/image";
 import { login } from "@/lib/api/services/auth";
 import { useRouter } from "next/navigation";
@@ -89,20 +89,7 @@ export default function LoginPage() {
           </>
         ),
         description: "Log in to your account and manage your shop.",
-        extraContent: (
-          <div className="bg-white border border-gray-100 rounded p-6">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-10 h-10 rounded bg-gold flex items-center justify-center text-black">
-                <Lightbulb size={20} fill="currentColor" />
-              </div>
-              <p className="text-xs font-bold text-black">Daily Tip</p>
-            </div>
-            <p className="text-xs text-gray-400 leading-relaxed font-medium capitalize">
-              &quot;Update your stock levels early to maintain your high seller
-              score.&quot;
-            </p>
-          </div>
-        ),
+
       }}
       mainPanel={{
         heading: "Sign In.",

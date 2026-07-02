@@ -30,7 +30,13 @@ interface AuthPageContainerProps {
 
 /**
  * Standardized container for Authentication pages.
- * Handles the responsive two-column layout with decorative elements.
+ *
+ * Desktop:
+ * - Left sidebar stays fixed (doesn't scroll)
+ * - Right panel scrolls independently
+ *
+ * Mobile:
+ * - Entire page scrolls normally
  */
 export function AuthPageContainer({
   children,
@@ -39,7 +45,6 @@ export function AuthPageContainer({
 }: AuthPageContainerProps) {
   const defaultCopyright = "© 2026 SAX-RAPID · Official Merchant Hub";
 
-  // Support for default visuals if leftPanel is not provided
   const lp = leftPanel || {
     title: (
       <>
@@ -56,117 +61,134 @@ export function AuthPageContainer({
   const footerTextValue = lp.footerText || defaultCopyright;
 
   return (
-    <div className="min-h-screen bg-[#fcfcfc] flex font-sans antialiased overflow-hidden text-black">
-      {/* ── LEFT PANEL (DESKTOP) ─────────────────────────── */}
-      <div
-        className={`hidden lg:flex flex-col w-120 shrink-0 bg-[#f8f8f8] border-r border-gray-200/50 p-16 relative overflow-hidden ${lp.leftPanelClass || ""}`}
+    <main className="flex h-screen overflow-hidden bg-[#fcfcfc] font-sans antialiased text-black">
+      {/* ======================================================
+          DESKTOP SIDEBAR (Never Scrolls)
+      ====================================================== */}
+      <aside
+        className={`hidden lg:flex h-full w-96 shrink-0 flex-col border-r border-white/10 bg-black p-12 ${lp.leftPanelClass ?? ""}`}
       >
-        {/* Decorative Background Blobs */}
-        <div className="absolute top-0 right-0 w-100 h-100 bg-gold/20 rounded-full blur-[100px] pointer-events-none" />
-        <div className="absolute top-0 right-0 w-80 h-80 bg-vibrant-pink/20 rounded-full -mr-32 -mt-32" />
-        <div className="absolute bottom-0 left-0 w-100 h-100 bg-vibrant-blue/15 rounded-full -ml-40 -mb-40" />
-        <div className="absolute top-1/2 -left-20 w-56 h-56 bg-vibrant-purple/20 rounded-full" />
-        <div className="absolute top-1/4 -right-10 w-40 h-40 bg-gold/40 rounded-full" />
-
         <Link
           href="/"
-          className="group w-fit relative z-20 transition-opacity hover:opacity-80"
+          className="relative z-20 w-fit transition-opacity hover:opacity-80"
         >
           <Logo size="md" withBackground />
         </Link>
 
         <div className="relative z-10 mt-10">
-          <div className="w-12 h-1.5 bg-gold rounded-full mb-10" />
+          <div className="mb-10 h-1.5 w-12 rounded-full bg-gold" />
+
           <h2
-            className={`text-5xl font-black text-black leading-[1.1] tracking-tighter mb-6 ${!lp.hideTitleUnderline ? "underline decoration-gold/50" : ""}`}
+            className={`mb-6 text-5xl font-black leading-[1.1] tracking-tighter text-white ${
+              !lp.hideTitleUnderline ? "underline decoration-gold/50" : ""
+            }`}
           >
             {lp.title}
           </h2>
-          <p className="text-gray-600 text-base leading-relaxed max-w-sm mb-12 font-medium">
+
+          <p className="mb-12 max-w-sm text-base font-medium leading-relaxed text-gray-400">
             {lp.description}
           </p>
 
           {lp.extraContent}
         </div>
 
-        <p className="mt-auto pt-16 text-[10px] font-black uppercase tracking-widest text-gray-300 relative z-10">
+        {/* <p className="mt-auto pt-16 text-[10px] font-black uppercase tracking-widest text-gray-600">
           {footerTextValue}
-        </p>
-      </div>
+        </p> */}
+      </aside>
 
-      {/* ── MAIN CONTENT ───────────────────────── */}
-      <div
-        className={`flex-1 flex flex-col ${
+      {/* ======================================================
+          RIGHT PANEL (Scrollable)
+      ====================================================== */}
+      <section
+        className={`flex min-h-0 flex-1 flex-col overflow-y-auto ${
           mainPanel.gradientClass ||
           "bg-[radial-gradient(circle_at_bottom_left,var(--tw-gradient-stops))] from-gold/10 via-white to-white"
-        } ${mainPanel.maxWidthClass ? "lg:px-20" : "items-center justify-center p-8 lg:px-20 lg:py-12"} ${
-          mainPanel.containerClass || ""
-        }`}
+        } ${mainPanel.containerClass ?? ""}`}
       >
-        {/* Mobile Header */}
+        {/* ==========================
+            MOBILE HEADER
+        ========================== */}
         {(mainPanel.stickyMobileHeader || mainPanel.mobileHeaderExtra) && (
           <div
-            className={`lg:hidden w-full flex items-center justify-between py-2 px-4 -mx-4 mb-8 bg-white/90 backdrop-blur-md z-30 transition-all ${mainPanel.stickyMobileHeader ? "sticky top-0" : ""} ${mainPanel.showMobileHeaderBorder ? "border-b border-gray-100" : ""}`}
+            className={`lg:hidden ${
+              mainPanel.stickyMobileHeader ? "sticky top-0 z-30" : ""
+            } ${
+              mainPanel.showMobileHeaderBorder ? "border-b border-white/10" : ""
+            }`}
           >
-            <Link
-              href="/"
-              className="transition-opacity hover:opacity-80 inline-block"
-            >
-              <Logo
-                size={mainPanel.mobileLogoSize || "md"}
-                className="items-start"
-                withBackground
-              />
-            </Link>
-            {mainPanel.mobileHeaderExtra}
-          </div>
-        )}
-
-        <div className={`w-full ${mainPanel.maxWidthClass || "max-w-sm"}`}>
-          {/* Default Mobile Logo (Non-sticky fallback) */}
-          {!mainPanel.stickyMobileHeader && !mainPanel.mobileHeaderExtra && (
-            <div className="mb-10 lg:hidden text-left">
-              <Link
-                href="/"
-                className="transition-opacity hover:opacity-80 inline-block"
-              >
+            <div className="flex items-center justify-between bg-black px-4 py-2">
+              <Link href="/" className="transition-opacity hover:opacity-80">
                 <Logo
                   size={mainPanel.mobileLogoSize || "md"}
                   className="items-start"
                   withBackground
                 />
               </Link>
+
+              {mainPanel.mobileHeaderExtra}
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Form Header */}
-          {(mainPanel.heading || mainPanel.subheading) && (
-            <div className="mb-10">
-              {mainPanel.heading && (
-                <h1 className="text-4xl font-black text-black tracking-tighter mb-2">
-                  {mainPanel.heading}
-                </h1>
-              )}
-              {mainPanel.subheading && (
-                <p className="text-gray-500 text-sm font-medium">
-                  {mainPanel.subheading}
-                </p>
-              )}
-            </div>
-          )}
+        {/* ==========================
+            PAGE CONTENT
+        ========================== */}
+        <div
+          className={` ${
+            mainPanel.maxWidthClass
+              ? "p-8 lg:px-20 lg:py-12"
+              : "flex flex-col items-center justify-center p-8 lg:px-20 lg:py-12"
+          }`}
+        >
+          <div className={`w-full ${mainPanel.maxWidthClass || "max-w-sm"}`}>
+            {/* Mobile Logo */}
+            {!mainPanel.stickyMobileHeader && !mainPanel.mobileHeaderExtra && (
+              <div className="mb-10 lg:hidden">
+                <Link
+                  href="/"
+                  className="inline-block transition-opacity hover:opacity-80"
+                >
+                  <Logo
+                    size={mainPanel.mobileLogoSize || "md"}
+                    className="items-start"
+                    withBackground
+                  />
+                </Link>
+              </div>
+            )}
 
-          {/* Form / Page Content */}
-          {children}
+            {/* Heading */}
+            {(mainPanel.heading || mainPanel.subheading) && (
+              <div className="mb-10">
+                {mainPanel.heading && (
+                  <h1 className="mb-2 text-4xl font-black tracking-tighter text-black">
+                    {mainPanel.heading}
+                  </h1>
+                )}
 
-          {/* Bottom Links (e.g. "Create Account") */}
-          {mainPanel.bottomContent}
+                {mainPanel.subheading && (
+                  <p className="text-sm font-medium text-gray-500">
+                    {mainPanel.subheading}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Main Content */}
+            {children}
+
+            {/* Bottom Content */}
+            {mainPanel.bottomContent}
+          </div>
+
+          {/* Mobile Footer */}
+          <p className="mt-auto pt-16 text-center text-[10px] font-black uppercase tracking-widest text-gray-300 lg:hidden">
+            {footerTextValue}
+          </p>
         </div>
-
-        {/* Mobile Footer */}
-        <p className="mt-auto pt-16 text-[10px] font-black uppercase tracking-widest text-gray-300 lg:hidden text-center">
-          {footerTextValue || defaultCopyright}
-        </p>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }

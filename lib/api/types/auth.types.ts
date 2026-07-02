@@ -29,7 +29,7 @@ export interface RegisterRequest {
 	email?: string | null;
 	firstName?: string | null;
 	lastName?: string | null;
-	/** ISO country code e.g. "NG", "ZA" */
+	/** Country identifier (phone dial code from countries API) e.g. "+234", "+27" */
 	countryCode?: string | null;
 	phoneNumber?: string | null;
 	password?: string | null;

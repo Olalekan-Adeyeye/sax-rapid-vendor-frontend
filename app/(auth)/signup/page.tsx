@@ -48,7 +48,7 @@ export default function SignupPage() {
   const countryOptions = countries.map((c) => ({
     label: c.isComingSoon ? `${c.name || ""} (Coming Soon)` : c.name || "",
     value: c.code || "",
-    code: c.phoneCode || "",
+    code: c.code || "",
     disabled: c.isComingSoon || !c.isActive,
   }));
 
@@ -61,7 +61,7 @@ export default function SignupPage() {
   } = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
-      countryCode: "NG",
+      countryCode: "+234",
       firstName: "",
       lastName: "",
       email: "",
@@ -116,9 +116,7 @@ export default function SignupPage() {
         "Your account was created successfully. Let's verify your email.",
         "success",
       );
-      // LAX mode currently - to be enabled later
-      // router.push("/verify");
-      router.push("/login");
+      router.push("/verify");
     } catch (err: unknown) {
       setUser(null);
       tokenStorage.clearTokens();
@@ -143,24 +141,6 @@ export default function SignupPage() {
         ),
         description:
           "Join the thousands of sellers growing their business with us.",
-        extraContent: (
-          <div className="space-y-8">
-            {[
-              "Reach over 5 Million buyers",
-              "We handle your delivery",
-              "Get paid every week",
-              "Get help to grow your sales",
-            ].map((perk) => (
-              <div
-                key={perk}
-                className="flex items-center gap-4 text-xs font-black uppercase tracking-widest text-gray-400"
-              >
-                <Sparkle size={14} className=" fill-current" />
-                {perk}
-              </div>
-            ))}
-          </div>
-        ),
       }}
       mainPanel={{
         heading: "Create Account.",
@@ -273,7 +253,6 @@ export default function SignupPage() {
             id="password"
             type={showPass ? "text" : "password"}
             autoComplete="new-password"
-          
             {...register("password")}
             error={errors.password?.message}
             leftSlot={<Lock size={16} className="text-gray-400" />}

@@ -47,10 +47,9 @@ export default function TwoFactorPage() {
     verificationMutation.mutate({ code: data.code });
   };
 
-  const errorMessage =
-    verificationMutation.error
-      ? getErrorMessage(verificationMutation.error)
-      : null;
+  const errorMessage = verificationMutation.error
+    ? getErrorMessage(verificationMutation.error)
+    : null;
 
   return (
     <AuthPageContainer
@@ -109,11 +108,6 @@ export default function TwoFactorPage() {
               },
             })}
           />
-          {verificationMutation.isPending && (
-            <p className="text-[10px] font-medium text-gray-400">
-              Verifying code...
-            </p>
-          )}
         </div>
 
         <div className="flex flex-col gap-6">
