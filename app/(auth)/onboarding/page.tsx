@@ -280,13 +280,6 @@ export default function OnboardingPage() {
 
   const currentStepData = STEPS[step];
 
-  useEffect(() => {
-    window.scrollTo({
-      top: 0,
-      behavior: "instant",
-    });
-  }, [step]);
-
   return (
     <AuthPageContainer
       leftPanel={{
