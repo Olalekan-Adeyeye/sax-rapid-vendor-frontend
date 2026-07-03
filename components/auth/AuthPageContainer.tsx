@@ -110,27 +110,27 @@ export function AuthPageContainer({
         {/* ==========================
             MOBILE HEADER
         ========================== */}
-        {(mainPanel.stickyMobileHeader || mainPanel.mobileHeaderExtra) && (
-          <div
-            className={`w-full lg:hidden ${
-              mainPanel.stickyMobileHeader ? "sticky top-0 z-30" : ""
-            } ${
-              mainPanel.showMobileHeaderBorder ? "border-b border-white/10" : ""
-            }`}
-          >
-            <div className="flex items-center justify-between bg-black px-4 sm:px-6 py-3">
-              <Link href="/" className="transition-opacity hover:opacity-80">
-                <Logo
-                  size={mainPanel.mobileLogoSize || "md"}
-                  className="items-start"
-                  withBackground
-                />
-              </Link>
+        {/* {(mainPanel.stickyMobileHeader || mainPanel.mobileHeaderExtra) && ( */}
+        <div
+          className={`w-full lg:hidden ${
+            mainPanel.stickyMobileHeader ? "sticky top-0 z-30" : ""
+          } ${
+            mainPanel.showMobileHeaderBorder ? "border-b border-white/10" : ""
+          }`}
+        >
+          <div className="flex items-center justify-between bg-black px-4 sm:px-6 py-3">
+            <Link href="/" className="transition-opacity hover:opacity-80">
+              <Logo
+                size={mainPanel.mobileLogoSize || "md"}
+                className="items-start"
+                withBackground
+              />
+            </Link>
 
-              {mainPanel.mobileHeaderExtra}
-            </div>
+            {mainPanel.mobileHeaderExtra}
           </div>
-        )}
+        </div>
+        {/* )} */}
 
         {/* ==========================
             PAGE CONTENT
@@ -144,7 +144,7 @@ export function AuthPageContainer({
         >
           <div className={`w-full ${mainPanel.maxWidthClass || "max-w-sm"}`}>
             {/* Mobile Logo */}
-            {!mainPanel.stickyMobileHeader && !mainPanel.mobileHeaderExtra && (
+            {/* {!mainPanel.stickyMobileHeader && !mainPanel.mobileHeaderExtra && (
               <div className="mb-10 lg:hidden">
                 <Link
                   href="/"
@@ -157,7 +157,7 @@ export function AuthPageContainer({
                   />
                 </Link>
               </div>
-            )}
+            )} */}
 
             {/* Heading */}
             {(mainPanel.heading || mainPanel.subheading) && (
