@@ -119,6 +119,7 @@ export default function OnboardingPage() {
     handleSubmit,
     trigger,
     setValue,
+    setError,
     control,
     reset,
     formState: { errors },
@@ -203,7 +204,13 @@ export default function OnboardingPage() {
   };
 
   const onSubmit = async (data: OnboardingFormValues) => {
-    if (step === 5 && !data.agreedToTerms) return;
+    if (step === 5 && !data.agreedToTerms) {
+      setError("agreedToTerms", {
+        type: "manual",
+        message: "You must agree to the terms and conditions",
+      });
+      return;
+    }
 
     if (step < STEPS.length - 1) {
       await next();
@@ -341,7 +348,7 @@ export default function OnboardingPage() {
       <div key={`header-${step}`} className="mb-8 lg:mb-12">
         <div className="inline-flex items-center gap-2 text-gold text-sm font-bold mb-4 lg:mb-6 hover:border-gold transition-colors">
           <currentStepData.icon size={12} />
-          Step {step + 1}/6 · {currentStepData.title}
+          Step {step + 1}/{STEPS.length} · {currentStepData.title}
         </div>
         <h1 className="text-4xl lg:text-5xl font-black text-black leading-tight mb-3 lg:mb-4 tracking-tighter">
           {currentStepData.heading}
