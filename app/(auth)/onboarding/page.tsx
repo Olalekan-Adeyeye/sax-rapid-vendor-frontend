@@ -7,7 +7,12 @@ import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { TextArea } from "@/components/ui/TextArea";
 import { FileUpload } from "@/components/ui/FileUpload";
-import { LocationPicker } from "@/components/ui/LocationPicker";
+import dynamic from "next/dynamic";
+
+const LocationPicker = dynamic(
+  () => import("@/components/ui/LocationPicker").then((m) => m.LocationPicker),
+  { ssr: false },
+);
 import {
   Store,
   ShieldCheck,
