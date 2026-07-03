@@ -112,13 +112,13 @@ export function AuthPageContainer({
         ========================== */}
         {(mainPanel.stickyMobileHeader || mainPanel.mobileHeaderExtra) && (
           <div
-            className={`lg:hidden ${
+            className={`w-full lg:hidden ${
               mainPanel.stickyMobileHeader ? "sticky top-0 z-30" : ""
             } ${
               mainPanel.showMobileHeaderBorder ? "border-b border-white/10" : ""
             }`}
           >
-            <div className="flex items-center justify-between bg-black px-4 py-2">
+            <div className="flex items-center justify-between bg-black px-6 py-3">
               <Link href="/" className="transition-opacity hover:opacity-80">
                 <Logo
                   size={mainPanel.mobileLogoSize || "md"}
