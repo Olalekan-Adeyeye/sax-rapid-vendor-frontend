@@ -13,6 +13,7 @@ import { getMyVendorProfile } from "@/lib/api/services/vendor";
 import { Button } from "@/components/ui/Button";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { EmptyState } from "@/components/common/EmptyState";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
 
@@ -198,14 +199,7 @@ export default function InventoryManagementPage() {
 							</div>
 						))
 					) : (
-						<div className="p-20 text-center">
-							<div className="w-16 h-16 rounded bg-gray-50 flex items-center justify-center text-gray-200 border border-gray-100 mx-auto mb-4">
-								<PackageOpen size={32} />
-							</div>
-							<p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
-								No inventory records found
-							</p>
-						</div>
+						<EmptyState icon={PackageOpen} title="No inventory records found" />
 					)}
 				</div>
 			</div>

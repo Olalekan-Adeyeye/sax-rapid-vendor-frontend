@@ -2,6 +2,7 @@
 
 import {
   AlertCircle,
+  BarChart3,
   Bell,
   DollarSign,
   Eye,
@@ -14,6 +15,8 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { FullPageLoader } from "@/components/common/FullPageLoader";
+import { EmptyState } from "@/components/common/EmptyState";
 import { getNotifications } from "@/lib/api/services/notifications";
 import { getVendorOrders } from "@/lib/api/services/orders";
 import {
@@ -93,6 +96,11 @@ export default function DashboardOverview() {
   );
   const latestOrders = orders || [];
   const topSellerItems = topSellers?.items || [];
+
+  const isInitialLoading = loadingDashboardStats && !dashboardStats;
+  if (isInitialLoading) {
+    return <FullPageLoader label="Loading dashboard..." icon={BarChart3} />;
+  }
 
   return (
     <div className="space-y-10 lg:space-y-14">
@@ -381,11 +389,7 @@ export default function DashboardOverview() {
                   </div>
                 ))
               ) : topSellersError || topSellerItems.length === 0 ? (
-                <div className="py-10 text-center">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                    No data available
-                  </p>
-                </div>
+                <EmptyState icon={Package} title="No data available" className="py-10" />
               ) : (
                 topSellerItems.slice(0, 4).map((product) => {
                   const share = dashboardStats?.revenue
@@ -542,11 +546,8 @@ export default function DashboardOverview() {
                 ))
               ) : (
                 <tr>
-                  <td
-                    colSpan={7}
-                    className="px-8 py-20 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest"
-                  >
-                    No orders found yet
+                  <td colSpan={7}>
+                    <EmptyState icon={ShoppingBag} title="No orders found yet" />
                   </td>
                 </tr>
               )}

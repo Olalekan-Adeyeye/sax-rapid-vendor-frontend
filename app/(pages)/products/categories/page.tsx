@@ -17,6 +17,7 @@ import { SearchInput } from "@/components/ui/SearchInput";
 import * as categoriesService from "@/lib/api/services/categories";
 import { getErrorMessage } from "@/lib/utils/errors";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
+import { EmptyState } from "@/components/common/EmptyState";
 import { ErrorComponent } from "@/components/ui/ErrorComponent";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Dropdown, DropdownItem } from "@/components/ui/Dropdown";
@@ -122,9 +123,7 @@ export default function ProductCategoriesPage() {
             </div>
             <div className="divide-y divide-gray-50">
               {filteredCategories.length === 0 ? (
-                <div className="p-8 text-center text-gray-400 text-[10px] font-black uppercase tracking-widest">
-                  No categories found
-                </div>
+                <EmptyState icon={Layers} title="No categories found" />
               ) : (
                 filteredCategories.map((cat) => (
                   <div

@@ -16,6 +16,8 @@ import {
   PieChart as PieChartIcon,
 } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { FullPageLoader } from "@/components/common/FullPageLoader";
+import { EmptyState } from "@/components/common/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency } from "@/lib/utils/currency";
 import {
@@ -156,6 +158,12 @@ export default function AnalyticsPage() {
     if (!stats?.totalOrders || !productStats?.totalViews) return 0;
     return ((stats.totalOrders / productStats.totalViews) * 100).toFixed(2);
   }, [stats, productStats]);
+
+  const isInitialLoading =
+    loadingStats && !stats && !statsError;
+  if (isInitialLoading) {
+    return <FullPageLoader label="Loading analytics..." icon={BarChart3} />;
+  }
 
   return (
     <div className="space-y-12 pb-20">
@@ -398,12 +406,7 @@ export default function AnalyticsPage() {
                 </div>
               </div>
             ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 rounded border-2 border-dashed border-gray-100">
-                <BarChart3 size={32} className="text-gray-200 mb-4" />
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                  No performance data for this period
-                </p>
-              </div>
+              <EmptyState icon={BarChart3} title="No performance data for this period" />
             )}
           </div>
         </div>
@@ -654,10 +657,8 @@ export default function AnalyticsPage() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={5} className="px-8 py-20 text-center">
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                        No Sales Data
-                      </p>
+                    <td colSpan={5}>
+                      <EmptyState icon={Package} title="No Sales Data" />
                     </td>
                   </tr>
                 )}
@@ -726,11 +727,7 @@ export default function AnalyticsPage() {
                 </div>
               ))
             ) : (
-              <div className="py-10 text-center">
-                <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">
-                  No Recent Activity
-                </p>
-              </div>
+              <EmptyState icon={ShoppingBag} title="No Recent Activity" className="py-10" />
             )}
           </div>
 

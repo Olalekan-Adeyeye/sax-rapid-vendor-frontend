@@ -22,7 +22,8 @@ import { useToast } from "@/lib/context/ToastContext";
 import { getErrorMessage } from "@/lib/utils/errors";
 import { ErrorComponent } from "@/components/ui/ErrorComponent";
 import { SearchInput } from "@/components/ui/SearchInput";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { FullPageLoader } from "@/components/common/FullPageLoader";
+import { EmptyState } from "@/components/common/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Pagination } from "@/components/ui/Pagination";
 import { Select } from "@/components/ui/Select";
@@ -150,8 +151,11 @@ export default function ProductsPage() {
 
   const isInitialLoading = productsQuery.isLoading;
   const isError = productsQuery.isError && products.length === 0;
-  // isFetching is true on page transitions — show subtle inline spinner
   const isFetching = productsQuery.isFetching;
+
+  if (isInitialLoading) {
+    return <FullPageLoader label="Loading products..." icon={ShoppingBag} />;
+  }
 
   return (
     <div className="space-y-10">
@@ -294,43 +298,20 @@ export default function ProductsPage() {
                   </td>
                 </tr>
               ) : isFetching && products.length === 0 ? (
-                [1, 2, 3, 4].map((row) => (
-                  <tr key={row}>
-                    <td className="px-8 py-5">
-                      <div className="flex items-center gap-4">
-                        <Skeleton className="w-12 h-12 bg-gray-100 shrink-0 rounded" />
-                        <div className="space-y-2">
-                          <Skeleton className="h-4 w-36 bg-gray-100" />
-                          <Skeleton className="h-3 w-16" />
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-8 py-5">
-                      <Skeleton className="h-4 w-24 bg-gray-100" />
-                    </td>
-                    <td className="px-8 py-5">
-                      <Skeleton className="h-4 w-20 bg-gray-100" />
-                    </td>
-                    <td className="px-8 py-5">
-                      <Skeleton className="h-4 w-16 bg-gray-100" />
-                    </td>
-                    <td className="px-8 py-5">
-                      <Skeleton className="h-4 w-28 bg-gray-100" />
-                    </td>
-                    <td className="px-8 py-5">
-                      <Skeleton className="h-5 w-16 bg-gray-100 rounded-full" />
-                    </td>
-                    <td className="px-8 py-5">
-                      <Skeleton className="h-4 w-20 bg-gray-100 ml-auto" />
-                    </td>
-                  </tr>
-                ))
+                <tr>
+                  <td colSpan={7} className="px-8 py-20 text-center">
+                    <div className="flex flex-col items-center justify-center gap-4">
+                      <div className="w-12 h-12 border-4 border-gold border-t-transparent rounded-full animate-spin" />
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                        Loading products...
+                      </p>
+                    </div>
+                  </td>
+                </tr>
               ) : displayedProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-8 py-10 text-center">
-                    <p className="text-xs font-bold text-gray-400">
-                      No products found.
-                    </p>
+                  <td colSpan={7}>
+                    <EmptyState icon={ShoppingBag} title="No products found" />
                   </td>
                 </tr>
               ) : (

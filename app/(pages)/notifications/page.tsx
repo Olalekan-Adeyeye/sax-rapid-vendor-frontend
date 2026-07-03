@@ -28,7 +28,8 @@ import { useToast } from "@/lib/context/ToastContext";
 import { ErrorComponent } from "@/components/ui/ErrorComponent";
 import { getErrorMessage } from "@/lib/utils/errors";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { FullPageLoader } from "@/components/common/FullPageLoader";
+import { EmptyState } from "@/components/common/EmptyState";
 
 const typeConfig: Record<string, { icon: React.ElementType; color: string }> = {
   General: { icon: Bell, color: "bg-gray-400" },
@@ -149,25 +150,10 @@ export default function NotificationsPage() {
     }
   };
 
-  const renderNotificationSkeletons = () => (
-    <div className="divide-y divide-gray-50">
-      {[1, 2, 3, 4].map((item) => (
-        <div key={item} className="p-6 lg:p-8">
-          <div className="flex items-start gap-6">
-            <Skeleton circle className="w-10 h-10 bg-gray-100 shrink-0" />
-            <div className="flex-1 space-y-3">
-              <div className="flex justify-between items-center gap-6">
-                <Skeleton className="h-4 w-1/4 bg-gray-100" />
-                <Skeleton className="h-3 w-12" />
-              </div>
-              <Skeleton className="h-3 w-full" />
-              <Skeleton className="h-3 w-2/3" />
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+  const isInitialLoading = loadingNotifications && notifications.length === 0;
+  if (isInitialLoading) {
+    return <FullPageLoader label="Loading notifications..." icon={Bell} />;
+  }
 
   return (
     <div className="space-y-10">
@@ -186,7 +172,7 @@ export default function NotificationsPage() {
               <span className="flex items-center gap-4">
                 Notifications
                 {loadingCount ? (
-                  <Skeleton circle className="h-6 w-8 bg-gold/20" />
+                  <div className="w-8 h-6 bg-gold/20 rounded animate-pulse" />
                 ) : counts.unread > 0 ? (
                   <span className="inline-flex items-center justify-center px-2 py-1 text-[10px] font-black bg-gold text-black rounded-full min-w-6">
                     {counts.unread}
@@ -202,7 +188,7 @@ export default function NotificationsPage() {
                   size="sm"
                   onClick={handleMarkAllRead}
                   loading={markAllReadMutation.isPending}
-                  disabled={counts.unread === 0 || loading}
+                  disabled={counts.unread === 0 || loadingNotifications}
                   className="px-6 rounded-full text-xs font-bold"
                 >
                   <CheckCircle size={14} />
@@ -226,9 +212,7 @@ export default function NotificationsPage() {
           />
 
           <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm shadow-gray-100/50">
-            {loading ? (
-              renderNotificationSkeletons()
-            ) : notifications?.length > 0 ? (
+            {notifications?.length > 0 ? (
               <div className="divide-y divide-gray-50">
                 {notifications.map((item) => {
                   const Config = typeConfig[item.type] || typeConfig.System;
@@ -297,31 +281,26 @@ export default function NotificationsPage() {
                 })}
               </div>
             ) : (
-              <div className="p-20 flex flex-col items-center justify-center text-center">
-                <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6 text-gray-200">
-                  <Inbox size={40} />
-                </div>
-                <h3 className="text-2xl font-black text-black tracking-tight">
-                  No Notifications Yet
-                </h3>
-                <p className="text-gray-500 text-sm mt-3 max-w-xs font-medium leading-relaxed">
-                  When you have activities like new orders, payouts or reviews,
-                  they will appear here.
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-8 rounded-full px-8 gap-2 font-bold"
-                  onClick={handleRefresh}
-                  disabled={fetchingNotifications}
-                >
-                  <RefreshCw
-                    size={16}
-                    className={fetchingNotifications ? "animate-spin" : ""}
-                  />
-                  {fetchingNotifications ? "Refreshing..." : "Refresh List"}
-                </Button>
-              </div>
+              <EmptyState
+                icon={Inbox}
+                title="No Notifications Yet"
+                description="When you have activities like new orders, payouts or reviews, they will appear here."
+                action={
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full px-8 gap-2 font-bold"
+                    onClick={handleRefresh}
+                    disabled={fetchingNotifications}
+                  >
+                    <RefreshCw
+                      size={16}
+                      className={fetchingNotifications ? "animate-spin" : ""}
+                    />
+                    {fetchingNotifications ? "Refreshing..." : "Refresh List"}
+                  </Button>
+                }
+              />
             )}
           </div>
         </>

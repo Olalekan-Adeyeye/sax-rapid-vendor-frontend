@@ -3,6 +3,8 @@ import React, { useState, useMemo, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { FullPageLoader } from "@/components/common/FullPageLoader";
+import { EmptyState } from "@/components/common/EmptyState";
 import {
   MessageSquare,
   Star,
@@ -25,7 +27,9 @@ function ReviewsContent() {
   const router = useRouter();
   const productId = searchParams.get("productId");
 
-  const [searchInput, setSearchInput] = useState(searchParams.get("search") || "");
+  const [searchInput, setSearchInput] = useState(
+    searchParams.get("search") || "",
+  );
   const searchTerm = searchParams.get("search") || "";
   const sortFilter = searchParams.get("sort") || "newest";
   const ratingFilter = searchParams.get("rating") || "all";
@@ -97,14 +101,7 @@ function ReviewsContent() {
   }, [sortedReviews, currentPage]);
 
   if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-100 gap-4">
-        <Loader2 className="w-10 h-10 animate-spin text-gold" />
-        <p className="text-xs font-black uppercase tracking-widest text-gray-400">
-          Loading marketplace feedback...
-        </p>
-      </div>
-    );
+    return <FullPageLoader label="Loading reviews..." icon={Star} />;
   }
 
   return (
@@ -314,24 +311,11 @@ function ReviewsContent() {
               </div>
             ))
           ) : (
-            <div className="p-6  text-center flex flex-col items-center gap-4">
-              <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center text-gray-100 border border-gray-100">
-                <MessageSquare size={40} />
-              </div>
-              <div>
-                <h3 className="text-sm font-black text-black uppercase tracking-widest">
-                  No Feedback Yet
-                </h3>
-                <p className="text-[10px] font-bold text-gray-400 mt-1 uppercase">
-                  Reviews for your products will appear here once buyers leave
-                  their thoughts
-                </p>
-              </div>
-            </div>
+            <EmptyState icon={MessageSquare} title="No Feedback Yet" />
           )}
         </div>
 
-        {totalPages > 1 && (  
+        {totalPages > 1 && (
           <div className="px-8 py-4 border-t border-gray-50 bg-gray-50/20">
             <Pagination
               currentPage={currentPage}

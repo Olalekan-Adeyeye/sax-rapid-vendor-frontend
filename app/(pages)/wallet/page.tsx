@@ -20,6 +20,7 @@ import { getRelativeTime } from "@/lib/utils/date";
 import { ErrorComponent } from "@/components/ui/ErrorComponent";
 import { getErrorMessage } from "@/lib/utils/errors";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
+import { EmptyState } from "@/components/common/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { WithdrawModal } from "@/components/wallet/WithdrawModal";
 import Link from "next/link";
@@ -193,19 +194,7 @@ export default function WalletPage() {
                       </Button>
                     </div>
                   ) : transactions.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-100 space-y-4">
-                      <div className="w-16 h-16 bg-gray-50 rounded flex items-center justify-center text-gray-300 mx-auto">
-                        <Clock size={32} />
-                      </div>
-                      <div className="text-center">
-                        <h4 className="text-lg font-black uppercase tracking-tight text-black">
-                          No Transactions
-                        </h4>
-                        <p className="text-sm text-gray-400 mt-1">
-                          Your wallet activity will be listed here.
-                        </p>
-                      </div>
-                    </div>
+                    <EmptyState icon={Clock} title="No Transactions" description="Your wallet activity will be listed here." />
                   ) : (
                     transactions.map((t, i) => {
                       const isCredit =

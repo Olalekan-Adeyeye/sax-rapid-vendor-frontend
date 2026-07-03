@@ -18,7 +18,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { ErrorComponent } from "@/components/ui/ErrorComponent";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { FullPageLoader } from "@/components/common/FullPageLoader";
 import { useToast } from "@/lib/context/ToastContext";
 import * as productsService from "@/lib/api/services/products";
 import { ProductResponseDTO } from "@/lib/api/types/products.types";
@@ -85,6 +85,10 @@ export default function SingleProductPage() {
 
   const isVariable = product?.productType === "Variable";
 
+  if (loading) {
+    return <FullPageLoader label="Loading product details..." icon={Package} />;
+  }
+
   return (
     <div className="max-w-6xl mx-auto space-y-12 pb-24">
       {/* Back Button & Header */}
@@ -102,12 +106,7 @@ export default function SingleProductPage() {
           </span>
         </button>
 
-        {loading ? (
-          <div className="space-y-3">
-            <Skeleton className="h-8 w-72 bg-gray-100" />
-            <Skeleton className="h-4 w-48 bg-gray-100" />
-          </div>
-        ) : error || !product ? (
+        {error || !product ? (
           <ErrorComponent
             title="Product Not Found"
             message={error || "The requested product could not be located."}
@@ -157,45 +156,7 @@ export default function SingleProductPage() {
       )}
 
       {/* Main Content Grid */}
-      {loading ? (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          <div className="lg:col-span-5 space-y-6">
-            <Skeleton className="aspect-square bg-gray-100 rounded" />
-            <div className="grid grid-cols-5 gap-3">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <Skeleton
-                  key={i}
-                  className="aspect-square bg-gray-100 rounded"
-                />
-              ))}
-            </div>
-          </div>
-          <div className="lg:col-span-7 space-y-10">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-gray-100 border border-gray-100 rounded overflow-hidden">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="bg-white p-6 space-y-3">
-                  <Skeleton className="h-3 w-16 bg-gray-100" />
-                  <Skeleton className="h-6 w-24 bg-gray-100" />
-                </div>
-              ))}
-            </div>
-            <div className="bg-white border border-gray-50 rounded p-8 space-y-8">
-              <div className="flex flex-wrap gap-12">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="space-y-4">
-                    <Skeleton className="h-3 w-20 bg-gray-100" />
-                    <Skeleton className="h-4 w-32 bg-gray-100" />
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="space-y-4">
-              <Skeleton className="h-3 w-24 bg-gray-100" />
-              <Skeleton className="h-24 w-full bg-gray-100 rounded" />
-            </div>
-          </div>
-        </div>
-      ) : product ? (
+      {product ? (
         <>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
             {/* Left Column: Visuals */}

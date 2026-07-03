@@ -13,6 +13,7 @@ import { getVendorCoupons } from "@/lib/api/services/coupons";
 import type { Coupon } from "@/lib/api/types/coupons.types";
 import { formatDate } from "@/lib/utils/date";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
+import { EmptyState } from "@/components/common/EmptyState";
 
 export default function PromotionsPage() {
   const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
@@ -35,7 +36,7 @@ export default function PromotionsPage() {
 
 
   if (isLoading && !couponList.length) {
-    return <FullPageLoader />;
+    return <FullPageLoader label="Loading promotions..." icon={Tag} />;
   }
 
   return (
@@ -139,13 +140,8 @@ export default function PromotionsPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="px-8 py-20 text-center">
-                    <div className="flex flex-col items-center gap-3">
-                      <Tag size={32} className="text-gray-100" />
-                      <p className="text-xs font-bold text-gray-300">
-                        No promotion history found
-                      </p>
-                    </div>
+                  <td colSpan={6}>
+                    <EmptyState icon={Tag} title="No promotion history found" />
                   </td>
                 </tr>
               )}

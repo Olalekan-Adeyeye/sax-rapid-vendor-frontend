@@ -27,6 +27,7 @@ import { useToast } from "@/lib/context/ToastContext";
 import { ErrorComponent } from "@/components/ui/ErrorComponent";
 import { getErrorMessage } from "@/lib/utils/errors";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
+import { EmptyState } from "@/components/common/EmptyState";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Pagination } from "@/components/ui/Pagination";
@@ -376,7 +377,7 @@ export default function OrdersPage() {
                                 }
                               >
                                 Contact Customer
-                              </DropdownItem>
+                              </DropdownItem> 
                               <DropdownDivider />
                               {order.status !== OrderStatus.Cancelled &&
                                 order.status !== OrderStatus.Delivered && (
@@ -404,13 +405,8 @@ export default function OrdersPage() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={7} className="px-8 py-20 text-center">
-                        <div className="w-16 h-16 rounded bg-gray-50 flex items-center justify-center text-gray-200 border border-gray-100 mx-auto mb-4">
-                          <ShoppingBag size={32} />
-                        </div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
-                          No orders found
-                        </p>
+                      <td colSpan={7}>
+                        <EmptyState icon={ShoppingBag} title="No orders found" />
                       </td>
                     </tr>
                   )}

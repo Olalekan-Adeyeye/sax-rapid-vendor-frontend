@@ -30,7 +30,8 @@ import { Input } from "@/components/ui/Input";
 import Image from "next/image";
 import { getErrorMessage } from "@/lib/utils/errors";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { FullPageLoader } from "@/components/common/FullPageLoader";
+import { EmptyState } from "@/components/common/EmptyState";
 
 export default function MessagesPage() {
   const { user } = useAuth();
@@ -196,24 +197,10 @@ export default function MessagesPage() {
     [messages],
   );
 
-  const renderConversationSkeletons = () => (
-    <div className="divide-y divide-gray-50">
-      {[1, 2, 3, 4].map((item) => (
-        <div key={item} className="p-5">
-          <div className="flex items-start gap-4">
-            <Skeleton circle className="w-10 h-10 bg-gray-100 shrink-0" />
-            <div className="flex-1 space-y-2 min-w-0">
-              <div className="flex justify-between items-center gap-6">
-                <Skeleton className="h-4 w-1/3 bg-gray-100" />
-                <Skeleton className="h-3 w-12" />
-              </div>
-              <Skeleton className="h-3 w-full" />
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+  const isInitialLoading = loadingConversations && conversations.length === 0;
+  if (isInitialLoading) {
+    return <FullPageLoader label="Loading messages..." icon={MessageSquare} />;
+  }
 
   return (
     <div className="space-y-8 lg:space-y-10">
@@ -258,7 +245,9 @@ export default function MessagesPage() {
           </div>
           <div className="flex-1 overflow-y-auto no-scrollbar">
             {loadingConversations ? (
-              renderConversationSkeletons()
+              <div className="flex items-center justify-center h-full py-20">
+                <Loader2 className="w-8 h-8 animate-spin text-gold" />
+              </div>
             ) : conversationsErrorMsg ? (
               <div className="p-8 text-center">
                 <p className="text-sm font-bold text-red-600 mb-2">
@@ -317,11 +306,7 @@ export default function MessagesPage() {
                 ))}
               </div>
             ) : (
-              <div className="p-12 text-center">
-                <p className="text-xs font-bold text-gray-400 leading-relaxed">
-                  No active conversations found
-                </p>
-              </div>
+              <EmptyState icon={MessageSquare} title="No active conversations found" className="py-12" />
             )}
           </div>
         </div>
@@ -405,28 +390,8 @@ export default function MessagesPage() {
                     </Button>
                   </div>
                 ) : loadingMessages ? (
-                  <div className="p-4 md:p-6 space-y-6">
-                    {[1, 2, 3].map((item) => (
-                      <div
-                        key={item}
-                        className={`flex gap-3 ${item % 2 === 0 ? "justify-end" : "justify-start"}`}
-                      >
-                        {item % 2 !== 0 && (
-                          <Skeleton
-                            circle
-                            className="w-7 h-7 bg-gray-100 shrink-0"
-                          />
-                        )}
-                        <div
-                          className={`flex flex-col gap-2 ${item % 2 === 0 ? "items-end" : "items-start"}`}
-                        >
-                          <Skeleton
-                            className={`h-10 ${item % 2 === 0 ? "w-48" : "w-36"} bg-gray-100 rounded`}
-                          />
-                          <Skeleton className="h-3 w-16" />
-                        </div>
-                      </div>
-                    ))}
+                  <div className="flex items-center justify-center h-full py-20">
+                    <Loader2 className="w-8 h-8 animate-spin text-gold" />
                   </div>
                 ) : messages.length > 0 ? (
                   <>
@@ -532,12 +497,7 @@ export default function MessagesPage() {
                     )}
                   </>
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-20 text-center opacity-40">
-                    <MessageSquare size={48} className="text-gray-300 mb-4" />
-                    <p className="text-xs font-bold uppercase tracking-widest">
-                      No messages in this conversation
-                    </p>
-                  </div>
+                  <EmptyState icon={MessageSquare} title="No messages in this conversation" className="py-20 opacity-40" />
                 )}
               </div>
 

@@ -30,6 +30,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
+import { EmptyState } from "@/components/common/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { BoostTypePickerModal } from "@/components/promotions/BoostTypePickerModal";
 import { getErrorMessage } from "@/lib/utils/errors";
@@ -286,12 +287,7 @@ export default function BoostAdsPage() {
 							);
 						})
 					) : (
-						<div className="p-20 flex flex-col items-center justify-center text-center space-y-4">
-							<AlertCircle className="w-8 h-8 text-gray-200" />
-							<p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-								No active promotions found
-							</p>
-						</div>
+						<EmptyState icon={AlertCircle} title="No active promotions found" />
 					)}
 				</div>
 			</div>

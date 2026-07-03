@@ -702,7 +702,7 @@ export default function EditProductPage() {
 
 	if (isFetching) {
 		return (
-			<FullPageLoader label="Retrieving Product Details..." icon={RefreshCw} />
+			<FullPageLoader label="Loading product details..." icon={RefreshCw} />
 		);
 	}
 

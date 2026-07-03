@@ -27,7 +27,8 @@ import { ApiError } from "@/lib/api/types/auth.types";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { FullPageLoader } from "@/components/common/FullPageLoader";
+import { EmptyState } from "@/components/common/EmptyState";
 
 type TabType = "your-plan" | "plans-pricing";
 
@@ -126,124 +127,7 @@ export default function SubscriptionPlansPage() {
   };
 
   if (loading) {
-    return (
-      <div className="space-y-12 pb-20">
-        <PageHeader
-          title="Subscription"
-          description="Manage your marketplace presence"
-        />
-        <div className="flex items-center gap-2 bg-gray-50 p-1.5 rounded-full border border-gray-100 w-fit">
-          <Skeleton circle className="h-9 w-28" />
-          <Skeleton circle className="h-9 w-28" />
-        </div>
-
-        {activeTab === "your-plan" ? (
-          <div className="bg-white border border-gray-100 rounded p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-l-[3px] border-l-gold">
-            <div className="flex items-center gap-4 min-w-0">
-              <Skeleton className="w-10 h-10 bg-black shrink-0" />
-              <div className="space-y-2 min-w-0">
-                <Skeleton circle className="h-3 w-24" />
-                <Skeleton className="h-5 w-48 max-w-full" />
-                <Skeleton circle className="h-3 w-32" />
-              </div>
-            </div>
-            <Skeleton className="h-11 w-28 shrink-0" />
-          </div>
-        ) : (
-          <div className="space-y-12">
-            <div>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-                <div>
-                  <Skeleton className="h-6 w-40" />
-                  <Skeleton circle className="h-3 w-52 mt-2" />
-                </div>
-                <div className="bg-gray-50 p-1 rounded-full flex items-center border border-gray-100 shrink-0">
-                  <Skeleton circle className="h-9 w-20" />
-                  <Skeleton circle className="h-9 w-20" />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {[1, 2, 3].map((item) => {
-                  const isPremium = item === 2;
-                  return (
-                    <div
-                      key={item}
-                      className={`relative flex flex-col p-8 rounded border ${isPremium ? "bg-black text-white border-black" : "bg-white text-black border-gray-100"}`}
-                    >
-                      {isPremium && (
-                        <Skeleton className="absolute -top-3 left-1/2 h-6 w-28 -translate-x-1/2 rounded-full bg-gold/80" />
-                      )}
-                      <Skeleton
-                        className={`w-10 h-10 mb-5 ${isPremium ? "bg-white/10" : "bg-gold/10"}`}
-                      />
-                      <div className="space-y-3 mb-6">
-                        <Skeleton
-                          circle
-                          className={`h-4 w-28 ${isPremium ? "bg-white/15" : "bg-gray-100"}`}
-                        />
-                        <Skeleton
-                          circle
-                          className={`h-3 w-full ${isPremium ? "bg-white/10" : "bg-gray-50"}`}
-                        />
-                        <Skeleton
-                          circle
-                          className={`h-3 w-3/4 ${isPremium ? "bg-white/10" : "bg-gray-50"}`}
-                        />
-                      </div>
-                      <div className="space-y-2 mb-8">
-                        <Skeleton
-                          className={`h-9 w-36 ${isPremium ? "bg-white/15" : "bg-gray-50"}`}
-                        />
-                        <Skeleton
-                          circle
-                          className={`h-3 w-20 ${isPremium ? "bg-white/10" : "bg-gray-50"}`}
-                        />
-                      </div>
-                      <div className="flex-1 space-y-3 mb-8">
-                        {[1, 2, 3, 4].map((feature) => (
-                          <div
-                            key={feature}
-                            className="flex items-center gap-3"
-                          >
-                            <Skeleton
-                              circle
-                              className={`w-4 h-4 ${isPremium ? "bg-white/10" : "bg-gray-100"}`}
-                            />
-                            <Skeleton
-                              circle
-                              className={`h-3 ${feature === 1 ? "w-32" : feature === 2 ? "w-28" : "w-24"} ${isPremium ? "bg-white/10" : "bg-gray-50"}`}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                      <Skeleton
-                        className={`h-12 w-full rounded-full border-2 ${isPremium ? "border-white/20 bg-white/5" : "border-gray-100 bg-white"}`}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-            <div className="bg-gray-50 border border-gray-100 rounded p-6 flex flex-col sm:flex-row items-center justify-between gap-5">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded bg-black flex items-center justify-center text-gold shrink-0">
-                  <Zap size={18} fill="currentColor" />
-                </div>
-                <div>
-                  <h4 className="text-sm font-black uppercase tracking-tighter text-black">
-                    Enterprise solution?
-                  </h4>
-                  <p className="text-xs font-medium text-gray-400 mt-0.5">
-                    Talk to our team for volume plans and custom integrations.
-                  </p>
-                </div>
-              </div>
-              <Skeleton className="h-11 w-40 shrink-0 rounded-full" />
-            </div>
-          </div>
-        )}
-      </div>
-    );
+    return <FullPageLoader label="Loading subscriptions..." icon={Zap} />;
   }
 
   return (
@@ -504,11 +388,7 @@ export default function SubscriptionPlansPage() {
                   </table>
                 </div>
               ) : (
-                <div className="p-12 text-center flex flex-col items-center">
-                  <History size={32} className="text-gray-100 mb-3" />
-                  <h4 className="font-black uppercase tracking-widest text-black text-xs">No History</h4>
-                  <p className="text-xs font-medium text-gray-400 mt-1">Your billing history will appear here</p>
-                </div>
+                <EmptyState icon={History} title="No History" description="Your billing history will appear here" />
               )}
             </div>
           </>
@@ -687,11 +567,7 @@ export default function SubscriptionPlansPage() {
                 })}
               </div>
             ) : (
-              <div className="py-20 text-center border-2 border-dashed border-gray-100 rounded">
-                <p className="text-xs font-bold text-gray-400">
-                  No plans available right now
-                </p>
-              </div>
+              <EmptyState icon={Zap} title="No plans available right now" />
             )}
 
             {/* ── Enterprise CTA ── */}

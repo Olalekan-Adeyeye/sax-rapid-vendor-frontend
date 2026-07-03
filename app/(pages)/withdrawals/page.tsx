@@ -16,6 +16,7 @@ import { formatCurrency } from "@/lib/utils/currency";
 import { formatDate } from "@/lib/utils/date";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { EmptyState } from "@/components/common/EmptyState";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/lib/context/ToastContext";
@@ -216,13 +217,8 @@ export default function PayoutsPage() {
               </div>
             ))
           ) : (
-            <div className="col-span-full py-12 text-center border border-dashed border-gray-200 rounded">
-              <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center text-gray-300 mx-auto mb-3">
-                <CreditCard size={20} />
-              </div>
-              <p className="text-xs font-bold text-gray-400">
-                No bank accounts added yet
-              </p>
+            <div className="col-span-full">
+              <EmptyState icon={CreditCard} title="No bank accounts added yet" className="py-12" />
             </div>
           )}
         </div>
@@ -307,13 +303,8 @@ export default function PayoutsPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="px-8 py-20 text-center">
-                    <div className="w-16 h-16 rounded bg-gray-50 flex items-center justify-center text-gray-200 border border-gray-100 mx-auto mb-4">
-                      <Banknote size={32} />
-                    </div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
-                      No payout records found
-                    </p>
+                  <td colSpan={5}>
+                    <EmptyState icon={Banknote} title="No payout records found" />
                   </td>
                 </tr>
               )}
