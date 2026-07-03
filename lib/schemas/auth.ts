@@ -128,7 +128,9 @@ export const onboardingSchema = z
 		state: z.string().min(1, "State is required"),
 		suite: z.string().optional(),
 		idType: z.string().min(1, "Identification type is required"),
-		idFile: z.any().optional(),
+		idFile: z.any().refine((v) => v instanceof File, {
+			message: "Government ID document is required",
+		}),
 		bizFile: z.any().optional(),
 		description: z.string().optional(),
 		agreedToTerms: z.boolean().refine((val) => val === true, {
