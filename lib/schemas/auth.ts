@@ -137,17 +137,29 @@ export const onboardingSchema = z
 			message: "You must agree to the terms",
 		}),
 	})
-	.refine(
-		(data) => {
-			if (data.accountType === "business") {
-				return !!data.companyName && !!data.businessRegNumber;
-			}
-			return true;
-		},
-		{
-			message: "Business details are required for company accounts",
-			path: ["businessRegNumber"],
-		},
-	);
+	.superRefine((data, ctx) => {
+		if (data.accountType !== "business") return;
+		if (!data.companyName) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				message: "Company name is required for business accounts",
+				path: ["companyName"],
+			});
+		}
+		if (!data.businessRegNumber) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				message: "Business registration number is required for business accounts",
+				path: ["businessRegNumber"],
+			});
+		}
+		if (!(data.bizFile instanceof File)) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				message: "Business registration document is required for business accounts",
+				path: ["bizFile"],
+			});
+		}
+	});
 
 export type OnboardingFormValues = z.infer<typeof onboardingSchema>;

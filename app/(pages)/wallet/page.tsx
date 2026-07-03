@@ -149,38 +149,6 @@ export default function WalletPage() {
                   </div>
                 </div>
               )}
-
-              <div className="bg-white border border-gray-100 rounded p-8 space-y-8">
-                <h4 className="text-xs font-bold text-gold pb-6 border-b border-gray-50 flex items-center gap-3">
-                  <Coins size={14} className="text-gold" />
-                  Shortcuts
-                </h4>
-                <div className="grid grid-cols-2 gap-4">
-                  {[
-                    { label: "Pay Subs", icon: Plus },
-                    { label: "Boost Ads", icon: ArrowUpRight },
-                    {
-                      label: "Withdraw",
-                      icon: CreditCard,
-                    },
-                    { label: "Sync", icon: Clock, action: handleActionSuccess },
-                  ].map((action, i) => (
-                    <Button
-                      key={i}
-                      onClick={action.action}
-                      variant="ghost"
-                      className="flex flex-col items-center gap-3 p-6 h-auto bg-gray-50 border-transparent hover:border-gold hover:bg-white group"
-                    >
-                      <div className="w-10 h-10 rounded bg-white flex items-center justify-center text-gray-400 group-hover:text-gold group-hover:scale-110 transition-all border border-transparent group-hover:border-gold/30">
-                        <action.icon size={18} />
-                      </div>
-                      <span className="text-xs font-bold text-black">
-                        {action.label}
-                      </span>
-                    </Button>
-                  ))}
-                </div>
-              </div>
             </div>
 
             {/* History Section */}

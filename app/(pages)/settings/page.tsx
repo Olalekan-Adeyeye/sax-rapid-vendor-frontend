@@ -80,15 +80,6 @@ export default function AccountSettingsPage() {
     }
   };
 
-  const handleRemoveAvatar = () => {
-    updateMutation.mutate({
-      firstName: user?.firstName || "",
-      lastName: user?.lastName || "",
-      email: user?.email,
-      profileImageUrl: null,
-    });
-  };
-
   const {
     register,
     handleSubmit,
@@ -215,16 +206,7 @@ export default function AccountSettingsPage() {
               onChange={handleAvatarSelect}
               className="hidden"
             />
-            {user?.avatarUrl && (
-              <button
-                type="button"
-                onClick={handleRemoveAvatar}
-                className="text-[9px] font-black uppercase tracking-widest text-red-400 hover:text-red-600 transition-colors"
-              >
-                <Trash2 size={12} className="inline mr-1" />
-                Remove Photo
-              </button>
-            )}
+           
             <div>
               <h4 className="text-sm font-bold text-black">
                 {user?.firstName && user?.lastName
