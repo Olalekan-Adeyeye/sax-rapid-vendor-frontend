@@ -301,7 +301,7 @@ export default function OnboardingPage() {
       mainPanel={{
         gradientClass:
           "bg-[radial-gradient(circle_at_top_right,var(--tw-gradient-stops))] from-gold/10 via-white to-white font-sans relative",
-        containerClass: "px-4 lg:px-20",
+        containerClass: "lg:px-20",
         maxWidthClass:
           "w-full max-w-2xl mx-auto flex-1 flex flex-col justify-center py-8 lg:py-16",
         stickyMobileHeader: true,
@@ -341,7 +341,7 @@ export default function OnboardingPage() {
       <div key={`header-${step}`} className="mb-8 lg:mb-12">
         <div className="inline-flex items-center gap-2 text-gold text-sm font-bold mb-4 lg:mb-6 hover:border-gold transition-colors">
           <currentStepData.icon size={12} />
-          Step {step + 1}/5 · {currentStepData.title}
+          Step {step + 1}/6 · {currentStepData.title}
         </div>
         <h1 className="text-4xl lg:text-5xl font-black text-black leading-tight mb-3 lg:mb-4 tracking-tighter">
           {currentStepData.heading}

@@ -118,7 +118,7 @@ export function AuthPageContainer({
               mainPanel.showMobileHeaderBorder ? "border-b border-white/10" : ""
             }`}
           >
-            <div className="flex items-center justify-between bg-black px-6 py-3">
+            <div className="flex items-center justify-between bg-black px-4 sm:px-6 py-3">
               <Link href="/" className="transition-opacity hover:opacity-80">
                 <Logo
                   size={mainPanel.mobileLogoSize || "md"}
@@ -138,7 +138,7 @@ export function AuthPageContainer({
         <div
           className={` ${
             mainPanel.maxWidthClass
-              ? "p-8 lg:px-20 lg:py-12"
+              ? "p-4 sm:p-6 lg:px-20 lg:py-12"
               : "flex flex-col items-center justify-center p-8 lg:px-20 lg:py-12"
           }`}
         >
