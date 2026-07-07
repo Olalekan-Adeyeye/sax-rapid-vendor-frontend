@@ -1,50 +1,55 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-/**
- * Next.js Middleware (root/proxy.ts)
- * Handles server-side redirections based on authentication cookies.
- */
-export default function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  const token = request.cookies.get("sax_access_token")?.value;
+const TOKEN_KEY = "sax_access_token";
 
-  const PUBLIC_ROUTES = [
-    "/",
-    "/login",
-    "/signup",
-    "/forgot-password",
-    "/reset-password",
-    "/verify",
-    "/2fa",
-    "/onboarding",
-    "/faq",
-    "/resources",
-  ];
-  const isPublicRoute = PUBLIC_ROUTES.some(
+const PUBLIC_ROUTES = [
+  "/",
+  "/login",
+  "/signup",
+  "/forgot-password",
+  "/reset-password",
+  "/verify",
+  "/2fa",
+  "/onboarding",
+  "/faq",
+  "/resources",
+];
+
+function isPublicOrAuthRoute(pathname: string): boolean {
+  return PUBLIC_ROUTES.some(
     (route) => pathname === route || pathname.startsWith(route + "/"),
   );
-
-  // 1. If trying to access a protected route without a token
-  if (!token && !isPublicRoute) {
-    return NextResponse.redirect(new URL("/", request.url));
-  }
-
-  return NextResponse.next();
 }
 
-// ─── Matcher ──────────────────────────────────────────────────────────────────
-// Optimize performance by excluding static assets and common patterns
+export function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const token = request.cookies.get(TOKEN_KEY)?.value;
+
+  const requestHeaders = new Headers(request.headers);
+
+  if (token) {
+    requestHeaders.set("x-auth-token", token);
+  }
+
+  requestHeaders.set(
+    "x-auth-status",
+    token ? "authenticated" : "unauthenticated",
+  );
+
+  if (!token && !isPublicOrAuthRoute(pathname)) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("from", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  return NextResponse.next({
+    request: { headers: requestHeaders },
+  });
+}
+
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - assets (public assets)
-     */
     "/((?!api|_next/static|_next/image|favicon.ico|assets).*)",
   ],
 };
