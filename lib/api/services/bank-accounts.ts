@@ -4,6 +4,7 @@ import type {
   AddBankAccountDTO,
   BankAccountResponseDTO,
   BankResponseDTO,
+  ResolveAccountResponseDTO,
 } from "../types/bank-accounts.types";
 
 const BASE = "/bank-accounts";
@@ -53,4 +54,20 @@ export async function setDefaultBankAccount(bankAccountId: string): Promise<void
  */
 export async function deleteBankAccount(bankAccountId: string): Promise<void> {
   await apiClient.delete(`${BASE}/${bankAccountId}`);
+}
+
+/**
+ * GET /api/finance/banks/resolve
+ * Resolve/validate a bank account number against a bank code
+ */
+export async function resolveBankAccount(
+  accountNumber: string,
+  bankCode: string,
+  currency = "NGN",
+): Promise<ResolveAccountResponseDTO> {
+  const response = await apiClient.get<ApiResponse<ResolveAccountResponseDTO>>(
+    "/finance/banks/resolve",
+    { params: { accountNumber, bankCode, currency } },
+  );
+  return response.data.data;
 }

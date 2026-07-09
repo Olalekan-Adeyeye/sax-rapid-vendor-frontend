@@ -1,12 +1,11 @@
 "use client";
 import React, { useState } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { Plus, Tag, Rocket, Star, BarChart3 } from "lucide-react";
+import { Plus, Tag, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { CreateCouponModal } from "@/components/promotions/CreateCouponModal";
 import { CreateCampaignModal } from "@/components/promotions/CreateCampaignModal";
-import { ConfigureFeaturedModal } from "@/components/promotions/ConfigureFeaturedModal";
 import { PromotionTypePickerModal } from "@/components/promotions/PromotionTypePickerModal";
 import { useQuery } from "@tanstack/react-query";
 import { getVendorCoupons } from "@/lib/api/services/coupons";
@@ -18,7 +17,6 @@ import { EmptyState } from "@/components/common/EmptyState";
 export default function PromotionsPage() {
   const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
   const [isCampaignModalOpen, setIsCampaignModalOpen] = useState(false);
-  const [isFeaturedModalOpen, setIsFeaturedModalOpen] = useState(false);
   const [isPromoTypePickerOpen, setIsPromoTypePickerOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");

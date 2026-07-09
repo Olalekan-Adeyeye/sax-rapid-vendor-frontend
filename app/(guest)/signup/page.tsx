@@ -8,12 +8,10 @@ import {
   Mail,
   Lock,
   User,
-  Sparkle,
   Check,
   Phone,
   AlertCircle,
 } from "lucide-react";
-import Image from "next/image";
 import axios from "axios";
 import { register as registerUser } from "@/lib/api/services/auth";
 import * as locationsService from "@/lib/api/services/locations";

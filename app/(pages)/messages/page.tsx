@@ -4,9 +4,6 @@ import {
   User,
   Send,
   MoreHorizontal,
-  Phone,
-  Paperclip,
-  Smile,
   MessageSquare,
   Loader2,
   Inbox,
@@ -27,7 +24,7 @@ import { useToast } from "@/lib/context/ToastContext";
 import { Button } from "@/components/ui/Button";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { Input } from "@/components/ui/Input";
-import Image from "next/image";
+
 import { getErrorMessage } from "@/lib/utils/errors";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
@@ -82,7 +79,7 @@ export default function MessagesPage() {
       }),
     [conversations, searchQuery],
   );
-  const messages = messagesData?.items || [];
+  const messages = React.useMemo(() => messagesData?.items || [], [messagesData]);
   const conversationsErrorMsg = conversationsError
     ? getErrorMessage(conversationsError)
     : null;
@@ -133,7 +130,7 @@ export default function MessagesPage() {
     try {
       await refetchConversations();
       toast("Refreshed", "Conversation list updated", "success");
-    } catch (err) {
+    } catch {
       toast("Refresh Failed", "Could not sync conversations", "error");
     }
   };
@@ -156,20 +153,22 @@ export default function MessagesPage() {
     };
   };
 
-  // Group messages by date
-  const groupMessagesByDate = (msgs: typeof messages) => {
-    const groups: { [key: string]: typeof messages } = {};
-    msgs.forEach((msg) => {
-      const date = new Date(msg.createdAt).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
+  const groupedMessages = React.useMemo(() => {
+    const groupMessagesByDate = (msgs: typeof messages) => {
+      const groups: { [key: string]: typeof messages } = {};
+      msgs.forEach((msg) => {
+        const date = new Date(msg.createdAt).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+        if (!groups[date]) groups[date] = [];
+        groups[date].push(msg);
       });
-      if (!groups[date]) groups[date] = [];
-      groups[date].push(msg);
-    });
-    return groups;
-  };
+      return groups;
+    };
+    return groupMessagesByDate(messages);
+  }, [messages]);
 
   // Check if message should show avatar (first in group or after different sender)
   const shouldShowAvatar = (index: number, msgs: typeof messages) => {
@@ -191,11 +190,6 @@ export default function MessagesPage() {
       day: "numeric",
     });
   };
-
-  const groupedMessages = React.useMemo(
-    () => groupMessagesByDate(messages),
-    [messages],
-  );
 
   const isInitialLoading = loadingConversations && conversations.length === 0;
   if (isInitialLoading) {

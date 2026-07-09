@@ -57,7 +57,7 @@ function ReviewsContent() {
     enabled: !!productId,
   });
 
-  const reviews = reviewsData?.items || [];
+  const reviews = useMemo(() => reviewsData?.items || [], [reviewsData]);
   const loading = loadingReviews || loadingSummary || loadingProduct;
 
   const handleFilterChange = (params: URLSearchParams) => {

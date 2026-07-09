@@ -48,7 +48,7 @@ const STEPS = [
   {
     title: "Setup",
     heading: "Basic Settings.",
-    subheading: "Where are you from and what are you selling?",
+    subheading: "Who are you and what describes you?",
     icon: Globe,
   },
   {
@@ -463,7 +463,7 @@ export default function OnboardingPage() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="text-lg font-bold text-black">
-                        Country & Account Type
+                        Account Type
                       </h3>
                       <Globe size={20} className="text-gray-200" />
                     </div>

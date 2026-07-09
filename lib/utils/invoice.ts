@@ -22,13 +22,28 @@ export async function downloadInvoicePdf(
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
   const reg = await doc.embedFont(StandardFonts.Helvetica);
 
+  // ── embed logo ──
+  const logoUrl = "/assets/icons/Sax-Rapid-Logo1.png";
+  const logoResp = await fetch(logoUrl);
+  const logoBuf = await logoResp.arrayBuffer();
+  const logoImage = await doc.embedPng(logoBuf);
+
   let page = doc.addPage([PW, PH]);
   let y = PH - 40;
 
-  // ── black top bar ──
+  // ── black top bar with logo ──
   page.drawRectangle({ x: 0, y: PH - 40, width: PW, height: 40, color: BLACK });
-  page.drawText("SAX RAPID — OFFICIAL INVOICE", {
+  const logoAspect = logoImage.width / logoImage.height;
+  const logoH = 22;
+  const logoW = logoH * logoAspect;
+  page.drawImage(logoImage, {
     x: M,
+    y: PH - 31,
+    width: logoW,
+    height: logoH,
+  });
+  page.drawText("OFFICIAL INVOICE", {
+    x: M + logoW + 8,
     y: PH - 27,
     size: 9,
     font: bold,
@@ -164,8 +179,16 @@ export async function downloadInvoicePdf(
   const checkPage = (needed: number) => {
     if (y - needed < 90) {
       page = doc.addPage([PW, PH]);
-      page.drawText("SAX RAPID \u2014 INVOICE (continued)", {
-        x: M,
+      const miniW = logoW * 0.6;
+        const miniH = logoH * 0.6;
+        page.drawImage(logoImage, {
+          x: M,
+          y: PH - 34,
+          width: miniW,
+          height: miniH,
+        });
+        page.drawText("INVOICE (continued)", {
+          x: M + miniW + 6,
         y: PH - 30,
         size: 9,
         font: bold,

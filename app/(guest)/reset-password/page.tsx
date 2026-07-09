@@ -1,9 +1,8 @@
 "use client";
 import { useState, Suspense } from "react";
-import Link from "next/link";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { Lock, Eye, EyeOff, CheckCircle2, KeyRound, Mail } from "lucide-react";
+import { Lock, Eye, EyeOff, KeyRound, Mail } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useSearchParams } from "next/navigation";

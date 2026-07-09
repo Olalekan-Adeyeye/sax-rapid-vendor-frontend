@@ -26,23 +26,43 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+interface ServerAuthData {
+	user: UserProfile | null;
+	vendorProfile: VendorProfileResponse | null;
+	token: string | null;
+	isTwoFactorVerified: boolean;
+}
+
+export const AuthProvider = ({
+	children,
+	serverAuth,
+}: {
+	children: ReactNode;
+	serverAuth?: ServerAuthData;
+}) => {
 	const queryClient = useQueryClient();
-	const [token, setToken] = useState<string | null>(() =>
-		typeof window !== "undefined" ? tokenStorage.getToken() : null,
-	);
+	const [token, setToken] = useState<string | null>(() => {
+		if (serverAuth?.token) return serverAuth.token;
+		return typeof window !== "undefined" ? tokenStorage.getToken() : null;
+	});
 
 	const [isTwoFactorVerified, setIsTwoFactorVerified] = useState(() => {
+		if (serverAuth?.isTwoFactorVerified !== undefined) {
+			return serverAuth.isTwoFactorVerified;
+		}
 		if (typeof window !== "undefined") {
 			return cookies.get("sax_2fa") === "true";
 		}
 		return false;
 	});
 
+	const hasServerUser =
+		serverAuth?.user !== undefined && serverAuth?.user !== null;
+
 	const { data: userProfile, isPending: userPending } = useQuery({
 		queryKey: ["auth", "user"],
 		queryFn: () => getUserProfile().then(mapUserToProfile),
-		enabled: !!token,
+		enabled: !!token && !hasServerUser,
 	});
 
 	const {
@@ -54,19 +74,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	} = useQuery({
 		queryKey: ["auth", "vendor"],
 		queryFn: getMyVendorProfile,
-		enabled: !!userProfile,
+		enabled: !!token && serverAuth?.vendorProfile === undefined,
 	});
 
-	const loading = !!token && userPending;
-	const vendorLoading = !!userProfile && (vendorPending || vendorFetching);
+	const loading = !!token && userPending && !hasServerUser;
+	const vendorLoading =
+		!!token &&
+		((vendorPending || vendorFetching) && serverAuth?.vendorProfile === undefined);
 
-	const user = userProfile ?? null;
+	const user = hasServerUser ? serverAuth.user : (userProfile ?? null);
 	const vendorProfile =
-		isVendorError &&
-		axios.isAxiosError(vendorError) &&
-		vendorError.response?.status === 404
-			? null
-			: vendorData;
+		serverAuth?.vendorProfile !== undefined
+			? serverAuth.vendorProfile
+			: isVendorError &&
+				  axios.isAxiosError(vendorError) &&
+				  vendorError.response?.status === 404
+				? null
+				: vendorData;
 
 	const setUser = (userData: UserProfile | null) => {
 		queryClient.setQueryData(["auth", "user"], userData);

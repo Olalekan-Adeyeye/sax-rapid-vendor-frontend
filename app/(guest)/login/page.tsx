@@ -4,7 +4,6 @@ import Link from "next/link";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
-import Image from "next/image";
 import { login } from "@/lib/api/services/auth";
 import { useRouter } from "next/navigation";
 import axios from "axios";
@@ -59,14 +58,8 @@ export default function LoginPage() {
       if (response.token && response.refreshToken) {
         tokenStorage.setTokens(response.token, response.refreshToken);
       }
-      // 4. Redirect path
-      if (!response.isVerified) {
-        router.push("/verify");
-      } else if (response.isTwoFactorEnabled) {
-        router.push("/2fa");
-      } else {
-        router.push("/dashboard");
-      }
+      // 4. Server-side layouts handle progression redirects
+      router.push("/dashboard");
     } catch (err: unknown) {
       setUser(null);
       tokenStorage.clearTokens();
