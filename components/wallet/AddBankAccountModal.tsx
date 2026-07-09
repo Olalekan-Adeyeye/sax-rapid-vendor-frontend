@@ -168,7 +168,8 @@ export function AddBankAccountModal({
           placeholder="10 digits"
           value={formData.accountNumber}
           onChange={(e) => {
-            setFormData({ ...formData, accountNumber: e.target.value });
+            const val = e.target.value;
+            setFormData({ ...formData, accountNumber: val, ...(val.length !== 10 && { accountName: "" }) });
             setResolved(null);
           }}
           onBlur={(e) => handleResolveAccount(e.target.value)}
@@ -185,6 +186,7 @@ export function AddBankAccountModal({
         <Input
           id="account-name"
           label="Account Name"
+          disabled
           required
           placeholder="Auto-filled on verification"
           value={formData.accountName}

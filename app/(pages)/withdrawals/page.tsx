@@ -9,6 +9,7 @@ import {
   Check,
   Plus,
 } from "lucide-react";
+import { StatCard } from "@/components/dashboard/StatCard";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as walletService from "@/lib/api/services/wallet";
 import * as bankAccountService from "@/lib/api/services/bank-accounts";
@@ -90,30 +91,6 @@ export default function PayoutsPage() {
       (w.id && w.id.toLowerCase().includes(searchQuery.toLowerCase())),
   );
 
-  const stats = [
-    {
-      label: "Available Balance",
-      value: wallet?.balance || 0,
-      detail: "Ready for payout",
-      icon: Banknote,
-      color: "text-gold",
-    },
-    {
-      label: "Pending Balance",
-      value: wallet?.pendingBalance || 0,
-      detail: "Awaiting settlement",
-      icon: Clock,
-      color: "text-gray-400",
-    },
-    {
-      label: "Total Balance",
-      value: (wallet?.balance || 0) + (wallet?.pendingBalance || 0),
-      detail: "Combined value",
-      icon: CheckCircle,
-      color: "text-green-500",
-    },
-  ];
-
   return (
     <div className="space-y-10">
       <PageHeader
@@ -132,28 +109,29 @@ export default function PayoutsPage() {
         }
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {stats.map((stat, i) => (
-          <div
-            key={i}
-            className="bg-white border border-gray-100 rounded p-6 lg:p-8 hover:border-gold transition-all group"
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className="w-10 h-10 rounded bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-gold group-hover:text-black transition-all">
-                <stat.icon size={20} />
-              </div>
-            </div>
-            <p className="text-xs font-bold text-gray-500 mb-1 transition-colors">
-              {stat.label}
-            </p>
-            <h3
-              className={`text-2xl lg:text-3xl font-black tracking-tighter mb-2 ${stat.color}`}
-            >
-              {loadingWallet ? "..." : formatCurrency(stat.value)}
-            </h3>
-            <p className="text-[10px] font-bold text-gray-400">{stat.detail}</p>
-          </div>
-        ))}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+        <StatCard
+          icon={Banknote}
+          title="Available Balance"
+          value={formatCurrency(wallet?.balance || 0)}
+          detail="Ready for payout"
+          isLoading={loadingWallet}
+        />
+        <StatCard
+          icon={Clock}
+          title="Pending Balance"
+          value={formatCurrency(wallet?.pendingBalance || 0)}
+          detail="Awaiting settlement"
+          isLoading={loadingWallet}
+          variant="dark"
+        />
+        <StatCard
+          icon={CheckCircle}
+          title="Total Balance"
+          value={formatCurrency((wallet?.balance || 0) + (wallet?.pendingBalance || 0))}
+          detail="Combined value"
+          isLoading={loadingWallet}
+        />
       </div>
 
       <div className="bg-white border border-gray-100 rounded overflow-hidden">

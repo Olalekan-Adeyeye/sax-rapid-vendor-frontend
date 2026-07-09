@@ -120,24 +120,19 @@ export default function AnalyticsPage() {
       value: loadingStats ? "..." : formatCurrency(stats?.revenue || 0),
       detail: stats?.currency ? `in ${stats.currency}` : "Total earnings",
       icon: DollarSign,
-      color: "text-gold",
-      bg: "bg-gold/5",
+      dark: true,
     },
     {
       label: "Total Orders",
       value: loadingStats ? "..." : (stats?.totalOrders || 0).toLocaleString(),
       detail: "Completed sales",
       icon: ShoppingBag,
-      color: "text-blue-500",
-      bg: "bg-blue-500/5",
     },
     {
       label: "Pending Orders",
       value: loadingOrders ? "..." : pendingOrdersCount.toLocaleString(),
       detail: "Awaiting processing",
       icon: RefreshCw,
-      color: "text-amber-500",
-      bg: "bg-amber-500/5",
     },
     {
       label: "Unique Customers",
@@ -146,8 +141,6 @@ export default function AnalyticsPage() {
         : (stats?.uniqueCustomers || 0).toLocaleString(),
       detail: "Total reach",
       icon: Users,
-      color: "text-green-500",
-      bg: "bg-green-500/5",
     },
   ];
 
@@ -217,28 +210,52 @@ export default function AnalyticsPage() {
         {statCards.map((stat, i) => (
           <div
             key={i}
-            className="bg-white border border-gray-100 rounded p-8 hover:border-gold transition-all duration-500 group relative overflow-hidden"
+            className={`rounded p-6 transition-all duration-300 group border relative overflow-hidden ${
+              stat.dark
+                ? "bg-black border-black text-white hover:border-gold/40"
+                : "bg-white border-gray-100 text-black hover:bg-gold hover:border-gold"
+            }`}
           >
             <div
-              className={`absolute -right-6 -top-6 w-24 h-24 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-700 blur-2xl ${stat.bg}`}
+              className={`absolute -right-6 -top-6 w-24 h-24 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-700 blur-2xl ${
+                stat.dark ? "bg-gold/10" : "bg-black/5"
+              }`}
             />
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-start justify-between mb-4">
               <div
-                className={`w-12 h-12 rounded flex items-center justify-center transition-all duration-500 ${stat.bg} ${stat.color} group-hover:bg-black group-hover:text-gold`}
+                className={`w-10 h-10 rounded flex items-center justify-center transition-all duration-300 ${
+                  stat.dark
+                    ? "bg-white/10 text-gold group-hover:bg-gold group-hover:text-black"
+                    : "bg-gray-50 text-gray-400 group-hover:bg-black/10 group-hover:text-black"
+                }`}
               >
-                <stat.icon size={22} />
+                <stat.icon size={20} />
               </div>
-              <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest group-hover:text-gold transition-colors">
+              <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest group-hover:text-gold transition-colors duration-300">
                 Live
               </div>
             </div>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 group-hover:text-gray-500 transition-colors">
+            <p
+              className={`text-xs font-bold mb-1.5 transition-colors duration-300 ${
+                stat.dark
+                  ? "text-gray-500 group-hover:text-gold"
+                  : "text-gray-500 group-hover:text-black/70"
+              }`}
+            >
               {stat.label}
             </p>
-            <h3 className="text-3xl font-black text-black tracking-tighter mb-2 transition-transform duration-500 group-hover:translate-x-1">
+            <h3
+              className={`text-2xl lg:text-3xl font-black tracking-tighter mb-2 transition-colors duration-300 flex items-center gap-2 ${
+                stat.dark ? "text-white" : "group-hover:text-black"
+              }`}
+            >
               {stat.value}
             </h3>
-            <p className="text-[10px] font-bold text-gray-300 group-hover:text-gray-400 transition-colors">
+            <p
+              className={`text-[10px] font-bold transition-colors duration-300 ${
+                stat.dark ? "text-gray-500" : "text-gray-500 group-hover:text-black/60"
+              }`}
+            >
               {stat.detail}
             </p>
           </div>
