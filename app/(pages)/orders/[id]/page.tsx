@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	ArrowLeft,
 	Package,
@@ -69,6 +69,7 @@ export default function OrderDetailsPage() {
 	const { toast } = useToast();
 
 	const [updating, setUpdating] = useState(false);
+	const queryClient = useQueryClient();
 
 	const {
 		data: order,
@@ -86,7 +87,7 @@ export default function OrderDetailsPage() {
 			const updated = await ordersService.updateOrderStatus(orderId, {
 				status: newStatus,
 			});
-			setOrder(updated);
+			queryClient.setQueryData(["order", orderId], updated);
 			toast("Success", `Order status updated to ${newStatus}`, "success");
 		} catch {
 			toast("Error", "Failed to update order status", "error");

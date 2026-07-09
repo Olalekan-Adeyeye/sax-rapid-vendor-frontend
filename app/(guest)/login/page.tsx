@@ -58,16 +58,8 @@ export default function LoginPage() {
       if (response.token && response.refreshToken) {
         tokenStorage.setTokens(response.token, response.refreshToken);
       }
-      // 4. Redirect path
-      if (!response.isVerified) {
-        router.push("/verify");
-      } else if (response.vendorProfile === null) {
-        router.push("/onboarding");
-      } else if (response.isTwoFactorEnabled) {
-        router.push("/2fa");
-      } else {
-        router.push("/dashboard");
-      }
+      // 4. Server-side layouts handle progression redirects
+      router.push("/dashboard");
     } catch (err: unknown) {
       setUser(null);
       tokenStorage.clearTokens();
@@ -102,6 +94,7 @@ export default function LoginPage() {
           </>
         ),
         description: "Log in to your account and manage your shop.",
+
       }}
       mainPanel={{
         heading: "Sign In.",

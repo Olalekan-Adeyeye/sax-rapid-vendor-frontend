@@ -94,6 +94,7 @@ export default function EditStoreProfile() {
   };
 
   const handleSave = async () => {
+    if (!formData) return;
     try {
       setIsSaving(true);
       await updateVendorProfile(formData);
