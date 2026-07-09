@@ -15,8 +15,10 @@ export default async function PublicLayout({
   if (
     session.token &&
     session.user &&
+    session.user.isVerified &&
     session.vendorProfile !== null &&
-    session.vendorProfile.verificationStatus === "Verified"
+    session.vendorProfile.verificationStatus === "Verified" &&
+    (!session.user.isTwoFactorEnabled || session.isTwoFactorVerified)
   ) {
     redirect("/dashboard");
   }

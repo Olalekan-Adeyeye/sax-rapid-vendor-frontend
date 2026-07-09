@@ -226,3 +226,9 @@ export function getCurrencySymbol(currencyCode: string): string {
   const country = countries.find((c) => c.currency === currencyCode);
   return country?.currencySymbol ?? currencyCode;
 }
+
+export function getCountryByPhoneCode(phoneCode: string): CountryData | undefined {
+  return countries.find(
+    (c) => c.phoneCode === phoneCode || c.phoneCode.startsWith(phoneCode + "-"),
+  );
+}
