@@ -40,10 +40,21 @@ export async function getCurrentUser(
       headers: { Authorization: `Bearer ${token}` },
       next: { revalidate: 0 },
     });
-    if (!response.ok) return null;
-    const json: ApiResponse<unknown> = await response.json();
-    if (!json.success || !json.data) return null;
-    return mapUserToProfile(json.data as UserProfileResponse);
+    if (response.ok) {
+      const json: ApiResponse<unknown> = await response.json();
+      if (json.success && json.data) {
+        return mapUserToProfile(json.data as UserProfileResponse);
+      }
+    }
+    if (response.status === 403) {
+      try {
+        const errorBody = await response.json();
+        if (errorBody?.data) {
+          return mapUserToProfile(errorBody.data as UserProfileResponse);
+        }
+      } catch {}
+    }
+    return null;
   } catch {
     return null;
   }
