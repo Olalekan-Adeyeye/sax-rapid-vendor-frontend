@@ -1,30 +1,32 @@
 import { Metadata } from "next";
+import { AuthProvider } from "@/lib/context/AuthContext";
 import { redirect } from "next/navigation";
 import { getServerSession } from "@/lib/auth";
-import { AuthProvider } from "@/lib/context/AuthContext";
 
 export const metadata: Metadata = {
-  title: "Verify Your Identity",
-  description:
-    "One last step to secure your SAX-RAPID vendor account. Enter the OTP sent to your email to verify your identity.",
-  keywords: [
-    "OTP verification",
-    "account security",
-    "SAX-RAPID verify",
-    "identity verification",
-  ],
+  description: "Log in or sign up to your SAX-RAPID Vendor account.",
 };
 
-export default async function VerifyLayout({
+export default async function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const session = await getServerSession();
 
-  if (session.token && session.user?.isVerified) {
+  if (!session.token) {
+    redirect("/login");
+  }
+
+  if (
+    session.user &&
+    session.user.isVerified &&
+    session.vendorProfile !== null &&
+    (!session.user.isTwoFactorEnabled || session.isTwoFactorVerified)
+  ) {
     redirect("/dashboard");
   }
+
   return (
     <AuthProvider
       serverAuth={{
