@@ -12,7 +12,12 @@ export default async function PublicLayout({
 }) {
   const session = await getServerSession();
 
-  if (session.token && session.user && session.vendorProfile !== null) {
+  if (
+    session.token &&
+    session.user &&
+    session.vendorProfile !== null &&
+    session.vendorProfile.verificationStatus === "Verified"
+  ) {
     redirect("/dashboard");
   }
 

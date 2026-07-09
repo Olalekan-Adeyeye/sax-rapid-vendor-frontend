@@ -19,6 +19,7 @@ export default async function GuestLayout({
     session.user &&
     session.user.isVerified &&
     session.vendorProfile !== null &&
+    session.vendorProfile.verificationStatus === "Verified" &&
     (!session.user.isTwoFactorEnabled || session.isTwoFactorVerified)
   ) {
     redirect("/dashboard");

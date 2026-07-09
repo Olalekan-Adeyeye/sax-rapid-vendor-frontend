@@ -42,9 +42,11 @@ export default async function PageLayout({
           isTwoFactorVerified: session.isTwoFactorVerified,
         }}
       >
-        <VendorVerificationStatus
-          status={session.vendorProfile.verificationStatus}
-        />
+        <div className="min-h-screen">
+          <VendorVerificationStatus
+            status={session.vendorProfile.verificationStatus}
+          />
+        </div>
       </AuthProvider>
     );
   }
