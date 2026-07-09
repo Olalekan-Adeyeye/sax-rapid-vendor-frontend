@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AuthProvider } from "@/lib/context/AuthContext";
 import { getServerSession } from "@/lib/auth";
+import VendorVerificationStatus from "@/components/vendor/VendorVerificationStatus";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 
 export const metadata: Metadata = {
@@ -29,6 +30,23 @@ export default async function PageLayout({
 
   if (session.vendorProfile === null) {
     redirect("/onboarding");
+  }
+
+  if (session.vendorProfile.verificationStatus !== "Verified") {
+    return (
+      <AuthProvider
+        serverAuth={{
+          user: session.user,
+          vendorProfile: session.vendorProfile,
+          token: session.token,
+          isTwoFactorVerified: session.isTwoFactorVerified,
+        }}
+      >
+        <VendorVerificationStatus
+          status={session.vendorProfile.verificationStatus}
+        />
+      </AuthProvider>
+    );
   }
 
   return (

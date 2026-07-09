@@ -4,7 +4,6 @@ import Link from "next/link";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
-import Image from "next/image";
 import { login } from "@/lib/api/services/auth";
 import { useRouter } from "next/navigation";
 import axios from "axios";
@@ -62,6 +61,8 @@ export default function LoginPage() {
       // 4. Redirect path
       if (!response.isVerified) {
         router.push("/verify");
+      } else if (response.vendorProfile === null) {
+        router.push("/onboarding");
       } else if (response.isTwoFactorEnabled) {
         router.push("/2fa");
       } else {
@@ -101,7 +102,6 @@ export default function LoginPage() {
           </>
         ),
         description: "Log in to your account and manage your shop.",
-
       }}
       mainPanel={{
         heading: "Sign In.",

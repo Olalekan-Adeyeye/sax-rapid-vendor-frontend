@@ -9,7 +9,6 @@ import {
   Package,
   Tag,
   BarChart3,
-  ArrowUpRight,
   ShoppingBag,
   Activity,
   Settings2,

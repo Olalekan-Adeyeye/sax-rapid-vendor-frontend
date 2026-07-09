@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
+import { cache } from "react";
 import type { UserProfile, ApiResponse } from "@/lib/api/types/auth.types";
 import type { VendorProfileResponse } from "@/lib/api/types/vendor.types";
 import { mapUserToProfile, type UserProfileResponse } from "@/lib/api/types/user.types";
@@ -65,7 +66,7 @@ export async function getServerVendor(
   }
 }
 
-export async function getServerSession(): Promise<AuthSession> {
+export const getServerSession = cache(async (): Promise<AuthSession> => {
   const token = await getServerToken();
   if (!token) {
     return { user: null, token: null, vendorProfile: null, isTwoFactorVerified: false };
@@ -83,7 +84,7 @@ export async function getServerSession(): Promise<AuthSession> {
     vendorProfile,
     isTwoFactorVerified,
   };
-}
+});
 
 export function requireAuth(): never {
   redirect("/login");

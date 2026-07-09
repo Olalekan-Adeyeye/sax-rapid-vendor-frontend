@@ -3,7 +3,6 @@ import React, { useEffect, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   UserCog,
-  Bell,
   Shield,
   ShieldCheck,
   Lock,
@@ -11,7 +10,6 @@ import {
   Loader2,
   Upload,
   LoaderCircle,
-  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import Image from "next/image";
@@ -27,7 +25,8 @@ import { updateUserProfile } from "@/lib/api/services/user";
 import { uploadFile } from "@/lib/api/services/files";
 import { setupTwoFactor } from "@/lib/api/services/auth";
 import { getErrorMessage } from "@/lib/utils/errors";
-import { UserProfile } from "@/lib/api/types/auth.types";
+
+
 import { ChangePasswordModal } from "@/components/auth/ChangePasswordModal";
 import { TwoFactorSetupModal } from "@/components/auth/TwoFactorSetupModal";
 import { Disable2faModal } from "@/components/auth/Disable2faModal";

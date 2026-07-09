@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Store,
   Camera,
@@ -14,8 +14,8 @@ import {
 import { Button } from "@/components/ui/Button";
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getErrorMessage } from "@/lib/utils/errors";
 import {
   getMyVendorProfile,
@@ -23,7 +23,6 @@ import {
 } from "@/lib/api/services/vendor";
 import { uploadFile } from "@/lib/api/services/files";
 import type {
-  VendorProfileResponse,
   UpdateVendorProfileRequest,
 } from "@/lib/api/types/vendor.types";
 import { useToast } from "@/lib/context/ToastContext";
@@ -35,53 +34,37 @@ import { ErrorComponent } from "@/components/ui/ErrorComponent";
 export default function EditStoreProfile() {
   const router = useRouter();
   const { toast } = useToast();
-  const [vendor, setVendor] = useState<VendorProfileResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
   const [bannerUploading, setBannerUploading] = useState(false);
   const logoInputRef = React.useRef<HTMLInputElement>(null);
   const bannerInputRef = React.useRef<HTMLInputElement>(null);
 
-  const [formData, setFormData] = useState<UpdateVendorProfileRequest>({
-    shopName: "",
-    description: "",
-    storeAddress: "",
-    storeCity: "",
-    storeState: "",
-    businessRegistrationNumber: "",
-    companyName: "",
+  const [formData, setFormData] = useState<UpdateVendorProfileRequest | null>(null);
+
+  const {
+    data: vendor,
+    isLoading: loading,
+    error: fetchError,
+  } = useQuery({
+    queryKey: ["vendor-profile"],
+    queryFn: getMyVendorProfile,
   });
 
-  const fetchVendor = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await getMyVendorProfile();
-      setVendor(data);
-      setFormData({
-        shopName: data.shopName || "",
-        description: data.description || "",
-        storeAddress: data.storeAddress || "",
-        storeCity: data.storeCity || "",
-        storeState: data.storeState || "",
-        businessRegistrationNumber: data.businessRegistrationNumber || "",
-        companyName: data.companyName || "",
-        logoUrl: data.logoUrl,
-        bannerUrl: data.bannerUrl,
-      });
-    } catch (err) {
-      console.error("Failed to fetch vendor profile:", err);
-      setError("Failed to load store profile. Please try again later.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchVendor();
-  }, [fetchVendor]);
+  if (vendor && !formData) {
+    setFormData({
+      shopName: vendor.shopName || "",
+      description: vendor.description || "",
+      storeAddress: vendor.storeAddress || "",
+      storeCity: vendor.storeCity || "",
+      storeState: vendor.storeState || "",
+      businessRegistrationNumber: vendor.businessRegistrationNumber || "",
+      companyName: vendor.companyName || "",
+      logoUrl: vendor.logoUrl,
+      bannerUrl: vendor.bannerUrl,
+    });
+  }
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -131,21 +114,18 @@ export default function EditStoreProfile() {
   const GENERIC_BANNER = "/assets/images/signup_bg.png";
   const DEFAULT_LOGO = "/assets/icons/SaxRapid-Logo.png";
 
-  if (loading) {
-    return <FullPageLoader label="Loading store data..." icon={Store} />;
-  }
-
-  if (error || !vendor) {
+  if (fetchError) {
     return (
       <ErrorComponent
         title="Failed to Load Store Profile"
-        message={
-          error ||
-          "We couldn't retrieve your store details. Please check your internet connection and try again."
-        }
-        onRetry={fetchVendor}
+        message={getErrorMessage(fetchError)}
+        onRetry={() => queryClient.invalidateQueries({ queryKey: ["vendor-profile"] })}
       />
     );
+  }
+
+  if (loading || !vendor || !formData) {
+    return <FullPageLoader label="Loading store data..." icon={Store} />;
   }
 
   return (

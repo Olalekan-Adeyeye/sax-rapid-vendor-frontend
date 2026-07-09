@@ -1,6 +1,7 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import {
 	ArrowLeft,
 	Package,
@@ -17,7 +18,7 @@ import {
 } from "lucide-react";
 import * as ordersService from "@/lib/api/services/orders";
 import * as deliveryService from "@/lib/api/services/delivery";
-import { OrderResponseDTO, OrderStatus } from "@/lib/api/types/orders.types";
+import { OrderStatus } from "@/lib/api/types/orders.types";
 import { DeliveryProvider } from "@/lib/api/types/delivery.types";
 import { downloadInvoicePdf } from "@/lib/utils/invoice";
 import { formatCurrency } from "../../../../lib/utils/currency";
@@ -67,31 +68,17 @@ export default function OrderDetailsPage() {
 	const router = useRouter();
 	const { toast } = useToast();
 
-	const [order, setOrder] = useState<OrderResponseDTO | null>(null);
-	const [loading, setLoading] = useState(true);
 	const [updating, setUpdating] = useState(false);
-	const [error, setError] = useState<string | null>(null);
 
-	const fetchOrder = React.useCallback(async () => {
-		try {
-			setLoading(true);
-			setError(null);
-			const data = await ordersService.getOrderById(orderId);
-			setOrder(data);
-		} catch (err) {
-			console.error("Failed to fetch order:", err);
-			setError(getErrorMessage(err));
-			toast("Error", "Could not load order details", "error");
-		} finally {
-			setLoading(false);
-		}
-	}, [orderId, toast]);
-
-	useEffect(() => {
-		if (orderId) {
-			fetchOrder();
-		}
-	}, [orderId, fetchOrder]);
+	const {
+		data: order,
+		isLoading: loading,
+		error: fetchError,
+	} = useQuery({
+		queryKey: ["order", orderId],
+		queryFn: () => ordersService.getOrderById(orderId),
+		enabled: !!orderId,
+	});
 
 	const handleUpdateStatus = async (newStatus: OrderStatus) => {
 		try {
@@ -124,15 +111,16 @@ export default function OrderDetailsPage() {
 		return <FullPageLoader label="Loading order details..." icon={Package} />;
 	}
 
-	if (error || !order) {
+	if (fetchError || !order) {
 		return (
 			<ErrorComponent
-				title={error ? "Failed to load Order" : "Order Not Found"}
+				title={fetchError ? "Failed to load Order" : "Order Not Found"}
 				message={
-					error ||
-					"The order you are looking for does not exist or has been removed."
+					fetchError
+						? getErrorMessage(fetchError)
+						: "The order you are looking for does not exist or has been removed."
 				}
-				onRetry={fetchOrder}
+				onRetry={() => {}}
 			/>
 		);
 	}

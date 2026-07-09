@@ -6,8 +6,6 @@ import { Button } from "@/components/ui/Button";
 import { BenefitCard } from "@/components/vendor/BenefitCard";
 import { StepItem } from "@/components/vendor/StepItem";
 import { Logo } from "@/components/common/Logo";
-import { LandingNav } from "@/components/vendor/LandingNav";
-import { NAV_LINKS } from "@/lib/constants/navLinks";
 import {
   Globe,
   Zap,
@@ -100,13 +98,12 @@ export default function VendorCenter() {
   };
 
   return (
-    <main className="min-h-screen bg-white font-sans antialiased text-black overflow-x-hidden relative">
+    <>
       <Script
         id="json-ld"
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <LandingNav navLinks={NAV_LINKS} />
 
       {/* ── HERO ─────────────────────────────────── */}
       <section className="relative min-h-170 flex items-center overflow-hidden bg-black">
@@ -135,8 +132,8 @@ export default function VendorCenter() {
               </h1>
               <p className="text-gray-300 text-xl mb-10 max-w-lg leading-relaxed font-medium">
                 Reach millions of premium shoppers across the world with
-                world-class logistics, real-time analytics, and payouts
-                built for serious sellers.
+                world-class logistics, real-time analytics, and payouts built
+                for serious sellers.
               </p>
               <div className="flex flex-wrap gap-4">
                 <Button
@@ -719,6 +716,6 @@ export default function VendorCenter() {
           </div>
         </div>
       </footer>
-    </main>
+    </>
   );
 }

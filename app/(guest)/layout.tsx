@@ -7,16 +7,12 @@ export const metadata: Metadata = {
   description: "Log in or sign up to your SAX-RAPID Vendor account.",
 };
 
-export default async function AuthLayout({
+export default async function GuestLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const session = await getServerSession();
-
-  if (!session.token || !session.user) {
-    redirect("/login");
-  }
 
   if (
     session.token &&
@@ -30,12 +26,16 @@ export default async function AuthLayout({
 
   return (
     <AuthProvider
-      serverAuth={{
-        user: session.user,
-        vendorProfile: session.vendorProfile,
-        token: session.token,
-        isTwoFactorVerified: session.isTwoFactorVerified,
-      }}
+      serverAuth={
+        session.token
+          ? {
+              user: session.user,
+              vendorProfile: session.vendorProfile,
+              token: session.token,
+              isTwoFactorVerified: session.isTwoFactorVerified,
+            }
+          : undefined
+      }
     >
       {children}
     </AuthProvider>

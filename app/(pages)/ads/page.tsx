@@ -100,11 +100,6 @@ export default function BoostAdsPage() {
 		},
 	});
 
-	const handleOpenBoostModal = (boost: BoostPricingResponseDTO) => {
-		setSelectedBoost(boost);
-		setIsModalOpen(true);
-	};
-
 	const calculateCost = () => {
 		if (!selectedBoost) return 0;
 		return selectedBoost.pricingByDays[selectedDays.toString()] || 0;
@@ -153,19 +148,6 @@ export default function BoostAdsPage() {
 				return "Category Spotlight";
 			default:
 				return type;
-		}
-	};
-
-	const getBoostDescription = (type: BoostType) => {
-		switch (type) {
-			case "TopSearch":
-				return "Appear at the top of relevant search results.";
-			case "Featured":
-				return "Showcase your best product on the store homepage.";
-			case "CategorySpotlight":
-				return "Dominant placement in a specific category page.";
-			default:
-				return "";
 		}
 	};
 

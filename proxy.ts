@@ -9,9 +9,6 @@ const PUBLIC_ROUTES = [
   "/signup",
   "/forgot-password",
   "/reset-password",
-  "/verify",
-  "/2fa",
-  "/onboarding",
   "/faq",
   "/resources",
 ];

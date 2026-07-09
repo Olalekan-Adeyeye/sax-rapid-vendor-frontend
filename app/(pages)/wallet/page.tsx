@@ -6,7 +6,6 @@ import {
   ArrowUpRight,
   ArrowDownLeft,
   Clock,
-  Filter,
   Coins,
   Loader2,
   AlertTriangle,
@@ -22,7 +21,7 @@ import { getErrorMessage } from "@/lib/utils/errors";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
 import { EmptyState } from "@/components/common/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { WithdrawModal } from "@/components/wallet/WithdrawModal";
+
 import Link from "next/link";
 import { FundWalletModal } from "@/components/wallet/FundWalletModal";
 

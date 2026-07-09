@@ -7,7 +7,6 @@ import {
   ShoppingBag,
   DollarSign,
   Package,
-  Calendar,
   ArrowUpRight,
   AlertCircle,
   RefreshCw,
@@ -68,7 +67,6 @@ export default function AnalyticsPage() {
   const {
     data: performance,
     isLoading: loadingPerformance,
-    error: performanceError,
   } = useQuery({
     queryKey: ["vendor-analytics-performance", queryParams, timeRange],
     queryFn: () =>
@@ -82,7 +80,6 @@ export default function AnalyticsPage() {
   const {
     data: topSellers,
     isLoading: loadingTopSellers,
-    error: topSellersError,
   } = useQuery({
     queryKey: ["vendor-analytics-top-sellers", queryParams],
     queryFn: () =>

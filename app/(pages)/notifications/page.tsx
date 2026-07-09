@@ -81,7 +81,6 @@ export default function NotificationsPage() {
     total: countData?.totalCount || 0,
     unread: countData?.unreadCount || 0,
   };
-  const loading = loadingNotifications;
   const error = queryError ? getErrorMessage(queryError) : null;
 
   // Mutations
@@ -145,7 +144,7 @@ export default function NotificationsPage() {
     try {
       await refetch();
       toast("Refreshed", "Notification list updated", "success");
-    } catch (err) {
+    } catch {
       toast("Refresh Failed", "Could not sync notifications", "error");
     }
   };
@@ -239,7 +238,7 @@ export default function NotificationsPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-2 gap-4">
                             <h5
-                              className={`text-sm tracking-tight break-words transition-colors ${!item.isRead ? "font-black text-black" : "font-bold text-gray-600"}`}
+                              className={`text-sm tracking-tight wrap-break-word transition-colors ${!item.isRead ? "font-black text-black" : "font-bold text-gray-600"}`}
                             >
                               {item.title}
                             </h5>
@@ -257,7 +256,7 @@ export default function NotificationsPage() {
                             </div>
                           </div>
                           <p
-                            className={`text-xs leading-relaxed break-words ${!item.isRead ? "text-gray-900 font-bold" : "text-gray-500 font-medium"}`}
+                            className={`text-xs leading-relaxed wrap-break-word ${!item.isRead ? "text-gray-900 font-bold" : "text-gray-500 font-medium"}`}
                           >
                             {item.body}
                           </p>

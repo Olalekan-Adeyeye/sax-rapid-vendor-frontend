@@ -20,7 +20,7 @@ import { ProductListItemDto } from "@/lib/api/types/products.types";
 import { CategoryResponseDTO } from "@/lib/api/types/categories.types";
 import { useToast } from "@/lib/context/ToastContext";
 import { getErrorMessage } from "@/lib/utils/errors";
-import { ErrorComponent } from "@/components/ui/ErrorComponent";
+
 import { SearchInput } from "@/components/ui/SearchInput";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
 import { EmptyState } from "@/components/common/EmptyState";
@@ -103,7 +103,10 @@ export default function ProductsPage() {
 
   // ── Derived state ─────────────────────────────────────────────────────────
 
-  const products = Array.isArray(productsQuery.data) ? productsQuery.data : [];
+  const products = useMemo(
+    () => (Array.isArray(productsQuery.data) ? productsQuery.data : []),
+    [productsQuery.data],
+  );
   const totalCount = products.length;
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
   const categories: CategoryResponseDTO[] = categoriesQuery.data ?? [];
