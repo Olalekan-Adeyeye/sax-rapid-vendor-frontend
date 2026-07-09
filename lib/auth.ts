@@ -46,14 +46,6 @@ export async function getCurrentUser(
         return mapUserToProfile(json.data as UserProfileResponse);
       }
     }
-    if (response.status === 403) {
-      try {
-        const errorBody = await response.json();
-        if (errorBody?.data) {
-          return mapUserToProfile(errorBody.data as UserProfileResponse);
-        }
-      } catch {}
-    }
     return null;
   } catch {
     return null;

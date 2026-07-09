@@ -14,12 +14,11 @@ export default async function AuthLayout({
 }) {
   const session = await getServerSession();
 
-  if (!session.token || !session.user) {
+  if (!session.token) {
     redirect("/login");
   }
 
   if (
-    session.token &&
     session.user &&
     session.user.isVerified &&
     session.vendorProfile !== null &&

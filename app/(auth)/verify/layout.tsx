@@ -21,10 +21,8 @@ export default async function VerifyLayout({
 }) {
   const session = await getServerSession();
 
-  if (session.token && session.user) {
-    if (session.user.isVerified) {
-      redirect("/dashboard");
-    }
+  if (session.token && session.user?.isVerified) {
+    redirect("/dashboard");
   }
   return <>{children}</>;
 }
