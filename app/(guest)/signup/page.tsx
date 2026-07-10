@@ -109,6 +109,7 @@ export default function SignupPage() {
       }
 
       // Navigate to verify
+      document.cookie = `sax_pending_verify=${encodeURIComponent(data.email)}; path=/; max-age=600; SameSite=Lax`;
       toast(
         "Account Created",
         "Your account was created successfully. Let's verify your email.",

@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { getServerSession } from "@/lib/auth";
 import { AuthProvider } from "@/lib/context/AuthContext";
 
@@ -25,6 +26,12 @@ export default async function VerifyLayout({
   if (session.token && session.user?.isVerified) {
     redirect("/dashboard");
   }
+
+  const cookieStore = await cookies();
+  if (!cookieStore.get("sax_pending_verify")?.value) {
+    redirect("/login");
+  }
+
   return (
     <AuthProvider
       serverAuth={{

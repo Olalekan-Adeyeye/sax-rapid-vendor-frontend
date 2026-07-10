@@ -66,12 +66,13 @@ export default function LoginPage() {
 
       if (axios.isAxiosError<ApiError>(err) && err.response?.status === 403) {
         const email = data.email;
+        document.cookie = `sax_pending_verify=${encodeURIComponent(email)}; path=/; max-age=600; SameSite=Lax`;
         toast(
           "Email Not Verified",
           "Please verify your email address before logging in.",
           "error",
         );
-        router.push(`/verify?email=${encodeURIComponent(email)}`);
+        router.push("/verify");
         return;
       }
 
