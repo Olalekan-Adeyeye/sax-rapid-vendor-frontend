@@ -141,18 +141,18 @@ export default function ResourcesPage() {
         </div>
       </section>
 
-      <section className="py-20 bg-black relative overflow-hidden">
-        <div className="absolute top-0 left-1/2 w-200 h-200 -translate-x-1/2 -translate-y-1/2 bg-gold/5 rounded-full blur-[150px] pointer-events-none" />
+      <section className="py-20 bg-gold relative overflow-hidden">
+        <div className="absolute top-0 left-1/2 w-200 h-200 -translate-x-1/2 -translate-y-1/2 bg-black/5 rounded-full blur-[150px] pointer-events-none" />
         <div className="max-w-2xl mx-auto px-6 relative z-10 text-center">
-          <h2 className="text-3xl font-black text-white tracking-tighter mb-4">
+          <h2 className="text-3xl font-black text-black tracking-tighter mb-4">
             Ready to start selling?
           </h2>
-          <p className="text-gray-400 text-sm mb-8">
+          <p className="text-black/60 text-sm mb-8">
             Join thousands of vendors already growing on SAX·RAPID.
           </p>
           <Link
             href="/signup"
-            className="inline-flex items-center gap-2 bg-gold text-black text-[11px] font-black uppercase tracking-widest px-10 py-5 rounded hover:bg-white transition-all"
+            className="inline-flex items-center gap-2 bg-black text-white text-[11px] font-black uppercase tracking-widest px-10 py-5 rounded hover:bg-white hover:text-black transition-all"
           >
             Create Your Store
           </Link>
