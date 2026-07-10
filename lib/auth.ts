@@ -89,6 +89,17 @@ export const getServerSession = cache(async (): Promise<AuthSession> => {
   };
 });
 
+export function shouldRedirectToDashboard(session: AuthSession): boolean {
+  return !!(
+    session.token &&
+    session.user &&
+    session.user.isVerified &&
+    session.vendorProfile !== null &&
+    session.vendorProfile.verificationStatus === "Verified" &&
+    (!session.user.isTwoFactorEnabled || session.isTwoFactorVerified)
+  );
+}
+
 export function requireAuth(): never {
   redirect("/login");
 }

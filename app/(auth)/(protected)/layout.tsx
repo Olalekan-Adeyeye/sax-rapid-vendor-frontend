@@ -18,8 +18,11 @@ export default async function AuthLayout({
     redirect("/login");
   }
 
+  if (!session.user) {
+    redirect("/login");
+  }
+
   if (
-    session.user &&
     session.user.isVerified &&
     session.vendorProfile !== null &&
     (!session.user.isTwoFactorEnabled || session.isTwoFactorVerified)

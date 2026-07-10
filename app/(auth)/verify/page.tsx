@@ -46,10 +46,16 @@ export default function VerifyPage() {
     return () => clearInterval(interval);
   }, []);
 
+  const OTPSEND_KEY = "last_otp_send";
+  const OTP_COOLDOWN = 30000;
+
   useEffect(() => {
     if (email && !autoSent.current) {
       autoSent.current = true;
-      handleResend();
+      const lastSend = Number(sessionStorage.getItem(OTPSEND_KEY));
+      if (Date.now() - lastSend > OTP_COOLDOWN) {
+        handleResend();
+      }
     }
   }, [email]);
 
@@ -93,6 +99,7 @@ export default function VerifyPage() {
     setResending(true);
     try {
       await resendOtp({ email });
+      sessionStorage.setItem(OTPSEND_KEY, String(Date.now()));
       toast("OTP Resent", "A new code has been sent to your email.", "success");
       setTimer(45);
     } catch {

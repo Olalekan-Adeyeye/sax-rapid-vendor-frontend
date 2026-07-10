@@ -3,7 +3,7 @@ import { LandingNav } from "@/components/vendor/LandingNav";
 import { Logo } from "@/components/common/Logo";
 import { NAV_LINKS } from "@/lib/constants/navLinks";
 import { redirect } from "next/navigation";
-import { getServerSession } from "@/lib/auth";
+import { getServerSession, shouldRedirectToDashboard } from "@/lib/auth";
 
 export default async function PublicLayout({
   children,
@@ -12,14 +12,7 @@ export default async function PublicLayout({
 }) {
   const session = await getServerSession();
 
-  if (
-    session.token &&
-    session.user &&
-    session.user.isVerified &&
-    session.vendorProfile !== null &&
-    session.vendorProfile.verificationStatus === "Verified" &&
-    (!session.user.isTwoFactorEnabled || session.isTwoFactorVerified)
-  ) {
+  if (shouldRedirectToDashboard(session)) {
     redirect("/dashboard");
   }
 

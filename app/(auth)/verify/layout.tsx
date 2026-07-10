@@ -28,7 +28,8 @@ export default async function VerifyLayout({
   }
 
   const cookieStore = await cookies();
-  if (!cookieStore.get("sax_pending_verify")?.value) {
+  const pendingEmail = cookieStore.get("sax_pending_verify")?.value;
+  if (!pendingEmail || !pendingEmail.includes("@")) {
     redirect("/login");
   }
 
