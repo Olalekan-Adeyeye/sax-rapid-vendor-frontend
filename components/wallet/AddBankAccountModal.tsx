@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Plus, Building2, Landmark, User, Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -9,6 +9,7 @@ import { useToast } from "@/lib/context/ToastContext";
 import * as bankAccountService from "@/lib/api/services/bank-accounts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getErrorMessage } from "@/lib/utils/errors";
+import { useCurrency } from "@/lib/hooks/useCurrency";
 
 interface AddBankAccountModalProps {
   isOpen: boolean;
@@ -21,13 +22,14 @@ export function AddBankAccountModal({
 }: AddBankAccountModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { currency: defaultCurrency, currencySymbol } = useCurrency();
 
   const [formData, setFormData] = useState({
     bankName: "",
     accountName: "",
     accountNumber: "",
     bankCode: "",
-    currency: "NGN",
+    currency: defaultCurrency,
   });
 
   const [resolving, setResolving] = useState(false);
@@ -109,10 +111,13 @@ export function AddBankAccountModal({
     });
   };
 
-  const currencyOptions = [
-    { label: "NGN (₦)", value: "NGN" },
-    { label: "ZAR (R)", value: "ZAR" },
-  ];
+  const currencyOptions = useMemo(() => {
+    return [
+      { label: `${defaultCurrency} (${currencySymbol})`, value: defaultCurrency },
+      ...(defaultCurrency !== "ZAR" ? [{ label: "ZAR (R)", value: "ZAR" as const }] : []),
+      ...(defaultCurrency !== "NGN" ? [{ label: "NGN (₦)", value: "NGN" as const }] : []),
+    ];
+  }, [defaultCurrency, currencySymbol]);
 
   return (
     <Modal

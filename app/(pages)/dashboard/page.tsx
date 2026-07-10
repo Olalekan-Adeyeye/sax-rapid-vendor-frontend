@@ -32,6 +32,7 @@ import { RevenueChart } from "@/components/dashboard/RevenueChart";
 import { InventoryHealth } from "@/components/dashboard/InventoryHealth";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { formatCurrency } from "@/lib/utils/currency";
+import { useCurrency } from "@/lib/hooks/useCurrency";
 
 export default function DashboardOverview() {
   const {
@@ -97,6 +98,8 @@ export default function DashboardOverview() {
   const latestOrders = orders || [];
   const topSellerItems = topSellers?.items || [];
 
+  const { currency: activeCurrency } = useCurrency();
+
   const isInitialLoading = loadingDashboardStats && !dashboardStats;
   if (isInitialLoading) {
     return <FullPageLoader label="Loading dashboard..." icon={BarChart3} />;
@@ -129,7 +132,7 @@ export default function DashboardOverview() {
           value={
             dashboardStatsError
               ? "N/A"
-              : formatCurrency(dashboardStats?.revenue || 0)
+              : formatCurrency(dashboardStats?.revenue || 0, activeCurrency)
           }
           isError={!!dashboardStatsError}
           detail={
@@ -231,7 +234,7 @@ export default function DashboardOverview() {
                   image={product.imageUrl || ""}
                   name={product.productName || "Product"}
                   sales={product.unitsSold.toLocaleString()}
-                  revenue={formatCurrency(product.revenueGenerated)}
+                  revenue={formatCurrency(product.revenueGenerated, activeCurrency)}
                 />
               ))
             ) : (
@@ -515,7 +518,7 @@ export default function DashboardOverview() {
                       )}
                     </td>
                     <td className="px-8 py-5 text-xs font-black text-black">
-                      {formatCurrency(order.totalAmount)}
+                      {formatCurrency(order.totalAmount, activeCurrency)}
                     </td>
                     <td className="px-8 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                       {formatDate(order.createdAt)}

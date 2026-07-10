@@ -8,6 +8,7 @@ import * as walletService from "@/lib/api/services/wallet";
 import { Modal } from "@/components/ui/Modal";
 import { useMutation } from "@tanstack/react-query";
 import { getErrorMessage } from "@/lib/utils/errors";
+import { getCurrencySymbol } from "@/lib/utils/countries";
 
 interface FundWalletModalProps {
   isOpen: boolean;
@@ -131,7 +132,7 @@ export function FundWalletModal({
           </label>
           <div className="relative">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-gray-300">
-              {currency === "NGN" ? "₦" : "$"}
+              {getCurrencySymbol(currency)}
             </span>
             <Input
               id="fund-amount"

@@ -16,11 +16,11 @@ export default async function PageLayout({
 }) {
   const session = await getServerSession();
 
-  if (!session.token || !session.user) {
+  if (!session.token) {
     redirect("/login");
   }
 
-  if (!session.user.isVerified) {
+  if (!session.user || !session.user.isVerified) {
     redirect("/verify");
   }
 

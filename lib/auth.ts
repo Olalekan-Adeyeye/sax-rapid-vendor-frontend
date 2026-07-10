@@ -40,10 +40,13 @@ export async function getCurrentUser(
       headers: { Authorization: `Bearer ${token}` },
       next: { revalidate: 0 },
     });
-    if (!response.ok) return null;
-    const json: ApiResponse<unknown> = await response.json();
-    if (!json.success || !json.data) return null;
-    return mapUserToProfile(json.data as UserProfileResponse);
+    if (response.ok) {
+      const json: ApiResponse<unknown> = await response.json();
+      if (json.success && json.data) {
+        return mapUserToProfile(json.data as UserProfileResponse);
+      }
+    }
+    return null;
   } catch {
     return null;
   }
@@ -85,6 +88,17 @@ export const getServerSession = cache(async (): Promise<AuthSession> => {
     isTwoFactorVerified,
   };
 });
+
+export function shouldRedirectToDashboard(session: AuthSession): boolean {
+  return !!(
+    session.token &&
+    session.user &&
+    session.user.isVerified &&
+    session.vendorProfile !== null &&
+    session.vendorProfile.verificationStatus === "Verified" &&
+    (!session.user.isTwoFactorEnabled || session.isTwoFactorVerified)
+  );
+}
 
 export function requireAuth(): never {
   redirect("/login");

@@ -10,6 +10,7 @@ import * as bankAccountService from "@/lib/api/services/bank-accounts";
 import { Modal } from "@/components/ui/Modal";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { getErrorMessage } from "@/lib/utils/errors";
+import { getCurrencySymbol } from "@/lib/utils/countries";
 import type { BankAccountResponseDTO } from "@/lib/api/types/bank-accounts.types";
 
 interface WithdrawModalProps {
@@ -108,7 +109,7 @@ export function WithdrawModal({
           <div className="space-y-3">
             <div className="relative">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-gray-300">
-                {currency === "NGN" ? "₦" : "$"}
+                {getCurrencySymbol(currency)}
               </span>
               <Input
                 id="withdraw-amount"

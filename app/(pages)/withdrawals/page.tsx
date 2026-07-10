@@ -14,6 +14,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as walletService from "@/lib/api/services/wallet";
 import * as bankAccountService from "@/lib/api/services/bank-accounts";
 import { formatCurrency } from "@/lib/utils/currency";
+import { useCurrency } from "@/lib/hooks/useCurrency";
 import { formatDate } from "@/lib/utils/date";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -36,6 +37,7 @@ export default function PayoutsPage() {
   const [deleteTarget, setDeleteTarget] = React.useState<string | null>(null);
 
   const { toast } = useToast();
+  const { currency: activeCurrency } = useCurrency();
 
   const { data: wallet, isLoading: loadingWallet } = useQuery({
     queryKey: ["vendor-wallet"],
@@ -113,14 +115,14 @@ export default function PayoutsPage() {
         <StatCard
           icon={Banknote}
           title="Available Balance"
-          value={formatCurrency(wallet?.balance || 0)}
+          value={formatCurrency(wallet?.balance || 0, activeCurrency)}
           detail="Ready for payout"
           isLoading={loadingWallet}
         />
         <StatCard
           icon={Clock}
           title="Pending Balance"
-          value={formatCurrency(wallet?.pendingBalance || 0)}
+          value={formatCurrency(wallet?.pendingBalance || 0, activeCurrency)}
           detail="Awaiting settlement"
           isLoading={loadingWallet}
           variant="dark"
@@ -128,7 +130,7 @@ export default function PayoutsPage() {
         <StatCard
           icon={CheckCircle}
           title="Total Balance"
-          value={formatCurrency((wallet?.balance || 0) + (wallet?.pendingBalance || 0))}
+          value={formatCurrency((wallet?.balance || 0) + (wallet?.pendingBalance || 0), activeCurrency)}
           detail="Combined value"
           isLoading={loadingWallet}
         />
@@ -258,7 +260,7 @@ export default function PayoutsPage() {
                       #{p.id ? p.id.slice(0, 8) : "N/A"}
                     </td>
                     <td className="px-8 py-5 text-xs font-black text-black">
-                      {formatCurrency(p.amount)}
+                      {formatCurrency(p.amount, activeCurrency)}
                     </td>
                     <td className="px-8 py-5 text-xs font-bold text-gray-400">
                       {p.transactionReference || "SYSTEM-PAY"}

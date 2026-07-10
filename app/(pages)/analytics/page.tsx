@@ -19,6 +19,7 @@ import { FullPageLoader } from "@/components/common/FullPageLoader";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency } from "@/lib/utils/currency";
+import { useCurrency } from "@/lib/hooks/useCurrency";
 import {
   getVendorDashboardStats,
   getVendorPerformanceAnalytics,
@@ -114,10 +115,12 @@ export default function AnalyticsPage() {
     return recentOrders.filter((o) => o.status === "Pending").length;
   }, [recentOrders]);
 
+  const { currency: activeCurrency } = useCurrency();
+
   const statCards = [
     {
       label: "Total Revenue",
-      value: loadingStats ? "..." : formatCurrency(stats?.revenue || 0),
+      value: loadingStats ? "..." : formatCurrency(stats?.revenue || 0, activeCurrency),
       detail: stats?.currency ? `in ${stats.currency}` : "Total earnings",
       icon: DollarSign,
       dark: true,
@@ -520,6 +523,7 @@ export default function AnalyticsPage() {
                               stats?.totalOrders
                                 ? stats.revenue / stats.totalOrders
                                 : 0,
+                              activeCurrency,
                             )}
                       </p>
                     </div>
@@ -534,6 +538,7 @@ export default function AnalyticsPage() {
                               stats?.uniqueCustomers
                                 ? stats.revenue / stats.uniqueCustomers
                                 : 0,
+                              activeCurrency,
                             )}
                       </p>
                     </div>
@@ -638,7 +643,7 @@ export default function AnalyticsPage() {
                         </td>
                         <td className="px-8 py-6">
                           <span className="text-sm font-black text-black">
-                            {formatCurrency(product.revenueGenerated)}
+                            {formatCurrency(product.revenueGenerated, activeCurrency)}
                           </span>
                         </td>
                         <td className="px-8 py-6">
@@ -735,7 +740,7 @@ export default function AnalyticsPage() {
                         {order.status}
                       </span>
                       <span>•</span>
-                      <span>{formatCurrency(order.totalAmount)}</span>
+                      <span>{formatCurrency(order.totalAmount, activeCurrency)}</span>
                     </p>
                   </div>
                 </div>

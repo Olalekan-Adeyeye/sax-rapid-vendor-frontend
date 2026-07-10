@@ -16,6 +16,8 @@ import Image from "next/image";
 import * as productsService from "@/lib/api/services/products";
 import * as categoriesService from "@/lib/api/services/categories";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useCurrency } from "@/lib/hooks/useCurrency";
+import { formatCurrency } from "@/lib/utils/currency";
 import { ProductListItemDto } from "@/lib/api/types/products.types";
 import { CategoryResponseDTO } from "@/lib/api/types/categories.types";
 import { useToast } from "@/lib/context/ToastContext";
@@ -40,6 +42,7 @@ const PAGE_SIZE = 20;
 
 export default function ProductsPage() {
   const { user } = useAuth();
+  const { currency: activeCurrency } = useCurrency();
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -381,12 +384,12 @@ export default function ProductsPage() {
                       ) : (
                         <div className="flex flex-col items-start gap-0.5">
                           <span className="text-sm font-black text-black">
-                            ₦{product.effectivePrice.toLocaleString()}
+                            {formatCurrency(product.effectivePrice, activeCurrency)}
                           </span>
                           {product.effectivePrice < product.basePrice && (
                             <div className="flex items-center gap-2">
                               <span className="text-[10px] text-gray-400 line-through font-bold">
-                                ₦{product.basePrice.toLocaleString()}
+                                {formatCurrency(product.basePrice, activeCurrency)}
                               </span>
                               <span className="text-[8px] font-black bg-black text-white px-1.5 py-0.5 rounded uppercase tracking-[0.2em]">
                                 Sale

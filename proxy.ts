@@ -7,10 +7,12 @@ const PUBLIC_ROUTES = [
   "/",
   "/login",
   "/signup",
+  "/verify",
   "/forgot-password",
   "/reset-password",
   "/faq",
   "/resources",
+  "/seller-guide",
 ];
 
 function isPublicOrAuthRoute(pathname: string): boolean {
