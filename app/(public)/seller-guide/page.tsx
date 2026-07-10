@@ -499,24 +499,30 @@ export default function SellerGuidesPage() {
               </Link>
             ))}
           </div>
-          <div className="mt-16 text-center">
-            <h3 className="text-2xl font-black text-white tracking-tighter mb-4">
+        </div>
+      </section>
+
+      <section className="py-20 bg-gold relative overflow-hidden">
+        <div className="absolute top-0 left-1/2 w-200 h-200 -translate-x-1/2 -translate-y-1/2 bg-black/5 rounded-full blur-[150px] pointer-events-none" />
+        <div className="max-w-4xl mx-auto px-6 relative z-10">
+          <div className="text-center">
+            <h3 className="text-3xl font-black text-black tracking-tighter mb-4">
               Ready to Grow Your Business?
             </h3>
-            <p className="text-gray-400 text-sm mb-8">
+            <p className="text-black/60 text-sm mb-8">
               Join thousands of businesses using SAX Rapid Marketplace to reach
               more customers across Nigeria and South Africa.
             </p>
             <div className="flex items-center justify-center gap-4">
               <Link
                 href="/signup"
-                className="inline-flex items-center gap-2 bg-gold text-black text-[11px] font-black uppercase tracking-widest px-10 py-5 rounded hover:bg-white transition-all"
+                className="inline-flex items-center gap-2 bg-black text-white text-[11px] font-black uppercase tracking-widest px-10 py-5 rounded hover:bg-white hover:text-black transition-all"
               >
                 Start Selling Today
               </Link>
               <Link
                 href="/login"
-                className="inline-flex items-center gap-2 border border-gray-700 text-gray-300 text-[11px] font-black uppercase tracking-widest px-10 py-5 rounded hover:border-gold hover:text-gold transition-all"
+                className="inline-flex items-center gap-2 border border-black/30 text-black text-[11px] font-black uppercase tracking-widest px-10 py-5 rounded hover:bg-black hover:text-white transition-all"
               >
                 Go to Vendor Hub
               </Link>

@@ -12,6 +12,7 @@ const PUBLIC_ROUTES = [
   "/reset-password",
   "/faq",
   "/resources",
+  "/seller-guide",
 ];
 
 function isPublicOrAuthRoute(pathname: string): boolean {
