@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import axios from "axios";
 import { ApiError, mapAuthToProfile } from "@/lib/api/types/auth.types";
 import { useAuth } from "@/lib/context/AuthContext";
@@ -14,16 +14,17 @@ import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { otpSchema, OtpFormValues } from "@/lib/schemas/auth";
 import { AuthPageContainer } from "@/components/auth/AuthPageContainer";
+import { cookies } from "@/lib/utils/cookies";
 
 export default function VerifyPage() {
   const router = useRouter();
   const { user, setUser, refreshProfile } = useAuth();
   const { toast } = useToast();
-  const urlParams = useSearchParams();
-  const email = user?.email || urlParams.get("email") || "";
+  const email = user?.email || cookies.get("sax_pending_verify") || "";
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
-  const [timer, setTimer] = useState(5);
+  const [timer, setTimer] = useState(60);
+  const autoSent = useRef(false);
 
   const {
     register,
@@ -44,6 +45,19 @@ export default function VerifyPage() {
     }, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  const OTPSEND_KEY = "last_otp_send";
+  const OTP_COOLDOWN = 30000;
+
+  useEffect(() => {
+    if (email && !autoSent.current) {
+      autoSent.current = true;
+      const lastSend = Number(sessionStorage.getItem(OTPSEND_KEY));
+      if (Date.now() - lastSend > OTP_COOLDOWN) {
+        handleResend();
+      }
+    }
+  }, [email]);
 
   const onSubmit = async (data: OtpFormValues) => {
     setLoading(true);
@@ -66,7 +80,8 @@ export default function VerifyPage() {
 
       toast("Success", "Email verified successfully!", "success");
 
-      // Let AuthGuard handle the final destination
+      document.cookie = "sax_pending_verify=; path=/; max-age=0";
+
       router.replace("/dashboard");
     } catch (err: unknown) {
       let message = "Invalid or expired OTP";
@@ -84,6 +99,7 @@ export default function VerifyPage() {
     setResending(true);
     try {
       await resendOtp({ email });
+      sessionStorage.setItem(OTPSEND_KEY, String(Date.now()));
       toast("OTP Resent", "A new code has been sent to your email.", "success");
       setTimer(45);
     } catch {

@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useParams } from "next/navigation";
-import { useAuth } from "@/lib/context/AuthContext";
+import { useCurrency } from "@/lib/hooks/useCurrency";
 import { useToast } from "@/lib/context/ToastContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as categoriesService from "@/lib/api/services/categories";
@@ -144,15 +144,8 @@ export default function EditProductPage() {
 	const router = useRouter();
 	const params = useParams();
 	const productId = params.id as string;
-	const { user } = useAuth();
 	const { toast } = useToast();
-
-	const currencySymbol = useMemo(() => {
-		const code = user?.countryCode?.toUpperCase();
-		if (code === "+234") return "₦";
-		if (code === "+27") return "R";
-		return "$";
-	}, [user?.countryCode]);
+	const { currencySymbol } = useCurrency();
 
 	const [hasGeneratedVariations, setHasGeneratedVariations] = useState(false);
 	const [expandedVariationSchedules, setExpandedVariationSchedules] = useState<

@@ -29,6 +29,8 @@ import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
 import { EmptyState } from "@/components/common/EmptyState";
+import { useCurrency } from "@/lib/hooks/useCurrency";
+import { formatCurrency } from "@/lib/utils/currency";
 
 type TabType = "your-plan" | "plans-pricing";
 
@@ -39,6 +41,7 @@ export default function SubscriptionPlansPage() {
     useState<SubscriptionPlanResponse | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
 
+  const { currency: activeCurrency } = useCurrency();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -200,12 +203,12 @@ export default function SubscriptionPlansPage() {
                   Total Price
                 </span>
                 <span className="text-xl font-black text-black">
-                  ₦
-                  {(
+                  {formatCurrency(
                     (isYearly
                       ? confirmPlan.yearlyPrice
-                      : confirmPlan.monthlyPrice) || 0
-                  ).toLocaleString()}
+                      : confirmPlan.monthlyPrice) || 0,
+                    activeCurrency,
+                  )}
                 </span>
               </div>
             </div>
@@ -367,7 +370,7 @@ export default function SubscriptionPlansPage() {
                             <span className="text-sm font-black text-black uppercase">{item.planName}</span>
                           </td>
                           <td className="px-8 py-6 text-xs font-medium text-gray-500">{item.billingCycle}</td>
-                          <td className="px-8 py-6 text-right font-black text-black">₦{item.amount.toLocaleString()}</td>
+                          <td className="px-8 py-6 text-right font-black text-black">{formatCurrency(item.amount, activeCurrency)}</td>
                           <td className="px-8 py-6 text-xs font-medium text-gray-400">
                             {new Date(item.startDate).toLocaleDateString()} - {new Date(item.endDate).toLocaleDateString()}
                           </td>
@@ -477,7 +480,7 @@ export default function SubscriptionPlansPage() {
 
                       <div className="mb-8">
                         <span className="text-3xl font-black tracking-tighter">
-                          ₦{(price || 0).toLocaleString()}
+                          {formatCurrency(price || 0, activeCurrency)}
                         </span>
                         <br />
                         <span

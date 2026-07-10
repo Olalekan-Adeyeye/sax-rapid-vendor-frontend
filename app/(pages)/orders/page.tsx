@@ -28,6 +28,7 @@ import { getErrorMessage } from "@/lib/utils/errors";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
 import { EmptyState } from "@/components/common/EmptyState";
 import { SearchInput } from "@/components/ui/SearchInput";
+import { useCurrency } from "@/lib/hooks/useCurrency";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Pagination } from "@/components/ui/Pagination";
 import { Select } from "@/components/ui/Select";
@@ -90,6 +91,7 @@ export default function OrdersPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
+  const { currency: activeCurrency } = useCurrency();
 
   const [searchInput, setSearchInput] = useState(searchParams.get("search") || "");
   const searchQuery = searchParams.get("search") || "";
@@ -322,7 +324,7 @@ export default function OrdersPage() {
                           {order.items?.length === 1 ? "Item" : "Items"}
                         </td>
                         <td className="px-8 py-5 text-sm font-black text-black">
-                          {formatCurrency(order.totalAmount)}
+                          {formatCurrency(order.totalAmount, activeCurrency)}
                         </td>
                         <td className="px-8 py-5">
                           <span
@@ -360,7 +362,7 @@ export default function OrdersPage() {
                                 icon={<Printer size={14} />}
                                 onClick={() => {
                                   toast("Invoice", "Generating invoice PDF...", "info");
-                                  downloadInvoicePdf(order);
+                                  downloadInvoicePdf(order, activeCurrency);
                                 }}
                               >
                                 Print Invoice

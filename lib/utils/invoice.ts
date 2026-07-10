@@ -17,6 +17,7 @@ const CW = PW - M * 2;
 
 export async function downloadInvoicePdf(
   order: OrderResponseDTO,
+  currency = "NGN",
 ): Promise<void> {
   const doc = await PDFDocument.create();
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
@@ -231,8 +232,8 @@ export async function downloadInvoicePdf(
       item.productName || "Product",
       item.productSKU || "\u2014",
       item.quantity.toString(),
-      `NGN ${item.unitPrice.toLocaleString()}`,
-      `NGN ${item.totalPrice.toLocaleString()}`,
+      `${currency} ${item.unitPrice.toLocaleString()}`,
+      `${currency} ${item.totalPrice.toLocaleString()}`,
     ];
     vals.forEach((v, i) =>
       page.drawText(v, {
@@ -278,7 +279,7 @@ export async function downloadInvoicePdf(
       font: isTot ? bold : reg,
       color,
     });
-    const valStr = `NGN ${Math.abs(value).toLocaleString()}`;
+    const valStr = `${currency} ${Math.abs(value).toLocaleString()}`;
     const valW = (isTot ? bold : reg).widthOfTextAtSize(
       valStr,
       isTot ? 13 : 10,

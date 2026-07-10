@@ -13,8 +13,11 @@ import type { Coupon } from "@/lib/api/types/coupons.types";
 import { formatDate } from "@/lib/utils/date";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
 import { EmptyState } from "@/components/common/EmptyState";
+import { useCurrency } from "@/lib/hooks/useCurrency";
+import { formatCurrency } from "@/lib/utils/currency";
 
 export default function PromotionsPage() {
+  const { currency: activeCurrency } = useCurrency();
   const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
   const [isCampaignModalOpen, setIsCampaignModalOpen] = useState(false);
   const [isPromoTypePickerOpen, setIsPromoTypePickerOpen] = useState(false);
@@ -111,7 +114,7 @@ export default function PromotionsPage() {
                     <td className="px-8 py-5 text-xs font-bold text-gold">
                       {coupon.discountType === "percentage"
                         ? `${coupon.value}%`
-                        : `₦${coupon.value.toLocaleString()}`}
+                        : formatCurrency(coupon.value, activeCurrency)}
                     </td>
                     <td className="px-8 py-5 text-xs font-bold text-gray-500">
                       {coupon.usedCount} / {coupon.usageLimit || "∞"}

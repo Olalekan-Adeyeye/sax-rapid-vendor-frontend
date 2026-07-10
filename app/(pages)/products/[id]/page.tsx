@@ -22,7 +22,8 @@ import { useToast } from "@/lib/context/ToastContext";
 import * as productsService from "@/lib/api/services/products";
 import { ProductResponseDTO } from "@/lib/api/types/products.types";
 import { getErrorMessage } from "@/lib/utils/errors";
-import { useAuth } from "@/lib/context/AuthContext";
+import { useCurrency } from "@/lib/hooks/useCurrency";
+import { formatCurrency } from "@/lib/utils/currency";
 import { ProductDeleteModal } from "@/components/products/ProductDeleteModal";
 
 export default function SingleProductPage() {
@@ -30,7 +31,6 @@ export default function SingleProductPage() {
   const router = useRouter();
   const productId = params.id as string;
   const { toast } = useToast();
-  const { user } = useAuth();
 
   const [product, setProduct] = useState<ProductResponseDTO | null>(null);
   const [loading, setLoading] = useState(true);
@@ -75,12 +75,7 @@ export default function SingleProductPage() {
     }
   };
 
-  const currencySymbol = useMemo(() => {
-    const code = user?.countryCode?.toUpperCase();
-    if (code === "+234") return "₦";
-    if (code === "+27") return "R";
-    return "$";
-  }, [user?.countryCode]);
+  const { currencySymbol } = useCurrency();
 
   const isVariable = product?.productType === "Variable";
 

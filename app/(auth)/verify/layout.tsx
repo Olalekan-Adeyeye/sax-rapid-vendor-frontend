@@ -1,6 +1,8 @@
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { getServerSession } from "@/lib/auth";
+import { AuthProvider } from "@/lib/context/AuthContext";
 
 export const metadata: Metadata = {
   title: "Verify Your Identity",
@@ -21,10 +23,26 @@ export default async function VerifyLayout({
 }) {
   const session = await getServerSession();
 
-  if (session.token && session.user) {
-    if (session.user.isVerified) {
-      redirect("/dashboard");
-    }
+  if (session.token && session.user?.isVerified) {
+    redirect("/dashboard");
   }
-  return <>{children}</>;
+
+  const cookieStore = await cookies();
+  const pendingEmail = cookieStore.get("sax_pending_verify")?.value;
+  if (!pendingEmail || !pendingEmail.includes("@")) {
+    redirect("/login");
+  }
+
+  return (
+    <AuthProvider
+      serverAuth={{
+        user: session.user,
+        vendorProfile: session.vendorProfile,
+        token: session.token,
+        isTwoFactorVerified: session.isTwoFactorVerified,
+      }}
+    >
+      {children}
+    </AuthProvider>
+  );
 }

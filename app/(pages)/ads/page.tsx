@@ -25,6 +25,7 @@ import type {
 } from "@/lib/api/types/boost.types";
 import { formatCurrency } from "@/lib/utils/currency";
 import { useToast } from "@/lib/context/ToastContext";
+import { useCurrency } from "@/lib/hooks/useCurrency";
 import { ErrorComponent } from "@/components/ui/ErrorComponent";
 import { Modal } from "@/components/ui/Modal";
 import { Select } from "@/components/ui/Select";
@@ -37,12 +38,18 @@ import { getErrorMessage } from "@/lib/utils/errors";
 
 export default function BoostAdsPage() {
 	const { toast } = useToast();
+	const { currency: activeCurrency } = useCurrency();
 	const queryClient = useQueryClient();
 	const [selectedDays, setSelectedDays] = useState(7);
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [isBoostTypePickerOpen, setIsBoostTypePickerOpen] = useState(false);
 	const [selectedBoost, setSelectedBoost] = useState<BoostPricingResponseDTO | null>(null);
 	const [selectedProductId, setSelectedProductId] = useState<string>("");
+
+	const { data: wallet, isLoading: loadingWallet } = useQuery({
+		queryKey: ["vendor-wallet"],
+		queryFn: walletService.getWalletDetails,
+	});
 
 	// Queries
 	const { data: vendor } = useQuery({
@@ -59,12 +66,6 @@ export default function BoostAdsPage() {
 		queryKey: ["my-boosts"],
 		queryFn: () => getMyBoosts(),
 	});
-
-	const { data: wallet, isLoading: loadingWallet } = useQuery({
-		queryKey: ["vendor-wallet"],
-		queryFn: walletService.getWalletDetails,
-	});
-
 
 	const { data: productsData, isLoading: loadingProducts } = useQuery({
 		queryKey: ["vendor-products", vendor?.userId],
@@ -256,7 +257,7 @@ export default function BoostAdsPage() {
 									<div className="text-right flex items-center gap-8">
 										<div>
 											<p className="text-xs font-black text-black mb-1">
-												{formatCurrency(p.totalAmount || p.amount || 0)}
+												{formatCurrency(p.totalAmount || p.amount || 0, activeCurrency)}
 											</p>
 											<span
 												className={`text-[8px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${p.status === "Active" ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-400"}`}
@@ -340,7 +341,7 @@ export default function BoostAdsPage() {
 									Total Deduction
 								</p>
 								<p className="text-sm font-black text-black">
-									{formatCurrency(calculateCost())}
+									{formatCurrency(calculateCost(), activeCurrency)}
 								</p>
 							</div>
 						</div>
@@ -353,7 +354,7 @@ export default function BoostAdsPage() {
 									: "Insufficient Funds"}
 							</span>
 							<p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">
-								Balance: {formatCurrency(wallet?.balance || 0)}
+								Balance: {formatCurrency(wallet?.balance || 0, activeCurrency)}
 							</p>
 
 						</div>

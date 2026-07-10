@@ -25,6 +25,7 @@ import { formatCurrency } from "../../../../lib/utils/currency";
 import { formatDate } from "@/lib/utils/date";
 import { formatVariationDetails } from "@/lib/utils/product";
 import { useToast } from "@/lib/context/ToastContext";
+import { useCurrency } from "@/lib/hooks/useCurrency";
 import { Button } from "@/components/ui/Button";
 import { Dropdown, DropdownItem, DropdownDivider } from "@/components/ui/Dropdown";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
@@ -67,6 +68,7 @@ export default function OrderDetailsPage() {
 	const orderId = params.id as string;
 	const router = useRouter();
 	const { toast } = useToast();
+	const { currency: activeCurrency } = useCurrency();
 
 	const [updating, setUpdating] = useState(false);
 	const queryClient = useQueryClient();
@@ -164,7 +166,7 @@ export default function OrderDetailsPage() {
 					<Button
 					variant="outline"
 					size="sm"
-					onClick={() => { downloadInvoicePdf(order); }}
+					onClick={() => { downloadInvoicePdf(order, activeCurrency); }}
 					className="rounded-full px-6 text-xs font-bold"
 				>
 					Download Invoice
@@ -310,7 +312,7 @@ export default function OrderDetailsPage() {
 												{item.productName || "Product Name"}
 											</h5>
 											<p className="text-sm font-black text-black">
-												{formatCurrency(item.totalPrice)}
+												{formatCurrency(item.totalPrice, activeCurrency)}
 											</p>
 										</div>
 										{item.variationDetails && (
@@ -331,7 +333,7 @@ export default function OrderDetailsPage() {
 											<span className="text-[12px] font-bold text-gray-400">
 												Price:{" "}
 												<span className="text-black">
-													{formatCurrency(item.unitPrice)}
+													{formatCurrency(item.unitPrice, activeCurrency)}
 												</span>
 											</span>
 										</div>
@@ -343,25 +345,25 @@ export default function OrderDetailsPage() {
 							<div className="flex justify-between text-[12px] font-black text-gray-400 uppercase tracking-widest">
 								<span>Subtotal Cost</span>
 								<span className="text-black">
-									{formatCurrency(order.subTotal)}
+									{formatCurrency(order.subTotal, activeCurrency)}
 								</span>
 							</div>
 							<div className="flex justify-between text-[12px] font-black text-gray-400 uppercase tracking-widest">
 								<span>Logistics</span>
 								<span className="text-black">
-									{formatCurrency(order.shippingFee)}
+									{formatCurrency(order.shippingFee, activeCurrency)}
 								</span>
 							</div>
 							<div className="flex justify-between text-[12px] font-black text-gray-400 uppercase tracking-widest">
 								<span>Tax</span>
 								<span className="text-black">
-									{formatCurrency(order.taxAmount)}
+									{formatCurrency(order.taxAmount, activeCurrency)}
 								</span>
 							</div>
 							{order.discountAmount > 0 && (
 								<div className="flex justify-between text-[12px] font-black text-red-500 uppercase tracking-widest">
 									<span>Discount</span>
-									<span>-{formatCurrency(order.discountAmount)}</span>
+									<span>-{formatCurrency(order.discountAmount, activeCurrency)}</span>
 								</div>
 							)}
 						</div>
@@ -375,7 +377,7 @@ export default function OrderDetailsPage() {
 							</div>
 							<div className="text-right">
 								<span className="text-4xl font-black text-white tracking-tighter">
-									{formatCurrency(order.totalAmount)}
+									{formatCurrency(order.totalAmount, activeCurrency)}
 								</span>
 							</div>
 						</div>
