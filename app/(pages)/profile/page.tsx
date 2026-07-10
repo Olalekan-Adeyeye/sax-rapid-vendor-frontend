@@ -15,8 +15,6 @@ import {
   AlertTriangle,
   Clock,
   ExternalLink,
-  Copy,
-  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/lib/context/ToastContext";
@@ -28,8 +26,6 @@ export default function ProfilePage() {
   const { toast } = useToast();
   const [profile, setProfile] = useState<UserProfileResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [copiedId, setCopiedId] = useState(false);
-
   useEffect(() => {
     async function loadProfile() {
       try {
@@ -44,15 +40,6 @@ export default function ProfilePage() {
     }
     loadProfile();
   }, [toast]);
-
-  const copyToClipboard = (text: string) => {
-    if (typeof navigator !== "undefined") {
-      navigator.clipboard.writeText(text);
-      setCopiedId(true);
-      setTimeout(() => setCopiedId(false), 2000);
-      toast("Info", "User ID copied to clipboard", "info");
-    }
-  };
 
   if (loading) {
     return (

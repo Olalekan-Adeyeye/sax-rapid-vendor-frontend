@@ -7,11 +7,9 @@ import { useAuth } from "@/lib/context/AuthContext";
 import { tokenStorage } from "@/lib/api/apiClient";
 import {
   Menu,
-  Search,
   ChevronDown,
   User,
   Settings,
-  CreditCard,
   LogOut,
   PanelLeftClose,
   PanelLeft,

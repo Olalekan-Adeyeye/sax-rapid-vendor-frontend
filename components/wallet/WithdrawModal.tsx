@@ -94,8 +94,6 @@ export function WithdrawModal({
     });
   };
 
-  const defaultAccount = bankAccounts.find((a) => a.isDefault);
-
   return (
     <Modal
       isOpen={isOpen}

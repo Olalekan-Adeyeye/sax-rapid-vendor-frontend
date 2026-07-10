@@ -4,7 +4,6 @@ import {
   ShoppingBag,
   MoreVertical,
   Eye,
-  Truck,
   Loader2,
   Printer,
   Mail,
@@ -109,7 +108,7 @@ export default function OrdersPage() {
     queryFn: () => ordersService.getVendorOrders(1, 1000),
   });
 
-  const orders = ordersData || [];
+  const orders = useMemo(() => ordersData || [], [ordersData]);
 
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {

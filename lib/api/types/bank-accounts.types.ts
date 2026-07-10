@@ -11,6 +11,13 @@ export interface BankResponseDTO {
   code: string | null;
 }
 
+export interface ResolveAccountResponseDTO {
+  accountName: string | null;
+  accountNumber: string | null;
+  bankCode: string | null;
+  bankName: string | null;
+}
+
 export interface BankAccountResponseDTO {
   id: string;
   userId: string;

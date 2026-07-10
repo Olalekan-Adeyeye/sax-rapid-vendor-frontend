@@ -2,8 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/lib/context/ToastContext";
-import { AuthProvider } from "@/lib/context/AuthContext";
-import { AuthGuard } from "@/components/auth/AuthGuard";
 import { QueryProvider } from "@/lib/context/QueryProvider";
 
 const inter = Inter({
@@ -98,11 +96,9 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${jakarta.variable}`}>
       <body className="font-sans antialiased bg-white text-black">
         <QueryProvider>
-          <AuthProvider>
-            <ToastProvider>
-              <AuthGuard>{children}</AuthGuard>
-            </ToastProvider>
-          </AuthProvider>
+          <ToastProvider>
+            {children}
+          </ToastProvider>
         </QueryProvider>
       </body>
     </html>

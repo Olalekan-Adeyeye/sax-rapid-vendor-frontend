@@ -8,23 +8,14 @@ export default function Loading() {
 					className="relative shrink-0 flex items-center justify-center"
 					style={{ width: 100, height: 100 }}
 				>
-					{/* Primary Spinner Ring */}
-					<div className="absolute inset-0 rounded-full border-2 border-transparent border-t-gold animate-[spin_1.5s_linear_infinite]" />
-
-					{/* Subtle Pulse Ring */}
-					<div className="absolute inset-2 rounded-full border border-gold/5 animate-pulse" />
-
-					{/* Center Logo Icon */}
-					<div className="relative w-12 h-12 flex items-center justify-center">
-						<Image
-							src="/assets/icons/SRM-Logo.png"
-							alt="SAX-RAPID"
-							width={48}
-							height={48}
-							className="object-contain"
-							priority
-						/>
-					</div>
+					<Image
+						src="/assets/icons/SRM-Logo.png"
+						alt="SAX-RAPID"
+						width={64}
+						height={64}
+						className="object-contain animate-pulse"
+						priority
+					/>
 				</div>
 			</div>
 		</div>

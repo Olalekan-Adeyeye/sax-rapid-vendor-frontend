@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { Plus, Building2, Landmark, User, Loader2 } from "lucide-react";
+import { Plus, Building2, Landmark, User, Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -30,11 +30,38 @@ export function AddBankAccountModal({
     currency: "NGN",
   });
 
+  const [resolving, setResolving] = useState(false);
+  const [resolved, setResolved] = useState<string | null>(null);
+
   const { data: supportedBanks = [], isLoading: loadingBanks } = useQuery({
     queryKey: ["supported-banks", formData.currency],
     queryFn: () => bankAccountService.getSupportedBanks(formData.currency),
     enabled: isOpen,
   });
+
+  const handleResolveAccount = async (accountNumber: string) => {
+    const acct = accountNumber.trim();
+    if (!formData.bankCode || acct.length !== 10) return;
+    setResolving(true);
+    setResolved(null);
+    try {
+      const result = await bankAccountService.resolveBankAccount(
+        acct,
+        formData.bankCode,
+        formData.currency,
+      );
+      if (result.accountName) {
+        setFormData((prev) => ({ ...prev, accountName: result.accountName! }));
+        setResolved(result.accountName);
+      } else {
+        toast("Resolution Failed", "Could not verify account details.", "error");
+      }
+    } catch (err) {
+      toast("Error", getErrorMessage(err), "error");
+    } finally {
+      setResolving(false);
+    }
+  };
 
   const handleBankSelect = (bankId: string) => {
     const bank = supportedBanks.find((b) => b.code === bankId);
@@ -44,6 +71,7 @@ export function AddBankAccountModal({
         bankName: bank.name || "",
         bankCode: bank.code || "",
       }));
+      setResolved(null);
     }
   };
 
@@ -134,27 +162,44 @@ export function AddBankAccountModal({
         </div>
 
         <Input
-          id="account-name"
-          label="Account Name"
-          required
-          placeholder="e.g. John Doe"
-          value={formData.accountName}
-          onChange={(e) =>
-            setFormData({ ...formData, accountName: e.target.value })
-          }
-          leftSlot={<User size={14} />}
-        />
-
-        <Input
           id="account-number"
           label="Account Number"
           required
           placeholder="10 digits"
           value={formData.accountNumber}
-          onChange={(e) =>
-            setFormData({ ...formData, accountNumber: e.target.value })
+          onChange={(e) => {
+            const val = e.target.value;
+            setFormData({ ...formData, accountNumber: val, ...(val.length !== 10 && { accountName: "" }) });
+            setResolved(null);
+          }}
+          onBlur={(e) => handleResolveAccount(e.target.value)}
+          leftSlot={
+            resolving ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <Landmark size={14} />
+            )
           }
-          leftSlot={<Landmark size={14} />}
+          rightSlot={resolved ? <CheckCircle2 size={14} className="text-green-500" /> : undefined}
+        />
+
+        <Input
+          id="account-name"
+          label="Account Name"
+          disabled
+          required
+          placeholder="Auto-filled on verification"
+          value={formData.accountName}
+          onChange={(e) =>
+            setFormData({ ...formData, accountName: e.target.value })
+          }
+          leftSlot={
+            resolving ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <User size={14} />
+            )
+          }
         />
 
         <div className="bg-amber-50 rounded p-6 flex gap-4 border border-amber-100/50">

@@ -15,7 +15,7 @@ import {
 
 // ─── Base URL ─────────────────────────────────────────────────────────────────
 
-const BASE_URL =
+export const BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://api.saxrapid.com";
 
 // ─── Token Storage Helpers ────────────────────────────────────────────────────
@@ -156,5 +156,33 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+/**
+ * Creates an Axios instance pre-configured with a Bearer token for server-side use.
+ * Call this from Server Components or Route Handlers where cookies are available.
+ */
+export function createServerClient(token: string) {
+  const serverClient = axios.create({
+    baseURL: BASE_URL,
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    timeout: 30_000,
+  });
+
+  serverClient.interceptors.response.use(
+    (response: AxiosResponse) => response,
+    async (error: AxiosError) => {
+      if (error.response?.status === 401) {
+        tokenStorage.clearTokens();
+      }
+      return Promise.reject(error);
+    },
+  );
+
+  return serverClient;
+}
 
 export default apiClient;
