@@ -1,4 +1,8 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
+
+const MAX_SIZE_BYTES = 5 * 1024 * 1024;
+
+const ALLOWED_TYPES = ["image/png", "image/jpeg", "application/pdf"];
 
 interface FileUploadProps {
 	label: string;
@@ -18,11 +22,29 @@ export function FileUpload({
 	error,
 }: FileUploadProps) {
 	const inputRef = useRef<HTMLInputElement>(null);
+	const [internalError, setInternalError] = useState("");
 
 	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const selectedFile = e.target.files?.[0] || null;
+		setInternalError("");
+
+		if (selectedFile) {
+			if (!ALLOWED_TYPES.includes(selectedFile.type)) {
+				setInternalError("Only PNG, JPG or PDF files are allowed");
+				onChange(null);
+				return;
+			}
+			if (selectedFile.size > MAX_SIZE_BYTES) {
+				setInternalError("File size must be less than 5MB");
+				onChange(null);
+				return;
+			}
+		}
+
 		onChange(selectedFile);
 	};
+
+	const displayError = error || internalError;
 
 	return (
 		<div className="flex flex-col gap-2">
@@ -32,7 +54,7 @@ export function FileUpload({
 			<div
 				onClick={() => inputRef.current?.click()}
 				className={`w-full bg-gray-50 border border-dashed rounded px-4 py-8 text-center cursor-pointer transition-all group ${
-					error
+					displayError
 						? "border-red-500 bg-red-50/10"
 						: "border-gray-200 hover:border-gold/40"
 				}`}
@@ -43,7 +65,7 @@ export function FileUpload({
 					id={id}
 					className="hidden"
 					onChange={handleFileChange}
-					accept={accept}
+					accept={accept || ".png,.jpg,.jpeg,.pdf"}
 				/>
 				<div className="text-2xl mb-2 grayscale group-hover:grayscale-0 transition-all">
 					{file ? "✅" : "📄"}
@@ -52,7 +74,7 @@ export function FileUpload({
 					className={`text-[10px] font-black uppercase tracking-widest transition-colors ${
 						file
 							? "text-black"
-							: error
+							: displayError
 								? "text-red-500"
 								: "text-gray-500 group-hover:text-gold"
 					}`}
@@ -63,9 +85,9 @@ export function FileUpload({
 					PNG, JPG or PDF (Max 5MB)
 				</p>
 			</div>
-			{error && (
+			{displayError && (
 				<p className="text-[10px] text-red-500 font-bold uppercase tracking-wider mt-0.5 animate-in fade-in slide-in-from-top-1">
-					{error}
+					{displayError}
 				</p>
 			)}
 		</div>

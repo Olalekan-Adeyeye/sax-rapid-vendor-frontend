@@ -20,6 +20,7 @@ export interface CreateVendorProfileRequest {
   storeAddress?: string | null;
   storeCity?: string | null;
   storeState?: string | null;
+  storeCountry?: string | null;
   storeLatitude?: number | null;
   storeLongitude?: number | null;
   description?: string | null;
