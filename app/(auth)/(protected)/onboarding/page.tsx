@@ -37,6 +37,7 @@ import {
 } from "@/lib/api/services/vendor";
 import { uploadFile } from "@/lib/api/services/files";
 import type { AccountType } from "@/lib/api/types/vendor.types";
+import { getCountryByPhoneCode } from "@/lib/utils/countries";
 
 const STEPS = [
   {
@@ -229,6 +230,7 @@ export default function OnboardingPage() {
             : data.address,
           storeCity: data.city,
           storeState: data.state,
+          storeCountry: getCountryByPhoneCode(data.country)?.name || null,
           storeLatitude: storeLat ?? null,
           storeLongitude: storeLng ?? null,
           description: data.description || null,
