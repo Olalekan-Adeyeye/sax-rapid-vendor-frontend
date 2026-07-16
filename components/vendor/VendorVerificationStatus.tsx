@@ -39,7 +39,7 @@ export default function VendorVerificationStatus({
 
   return (
     <div className="fixed inset-0 z-1000 flex items-center justify-center bg-gray-100">
-      <div className="max-w-md w-full mx-4 bg-white rounded-2xl shadow-xl overflow-hidden">
+      <div className="max-w-md w-full mx-4 bg-white rounded shadow-xl overflow-hidden">
         <div className="flex items-center justify-center bg-black px-6 py-5">
           <Image
             src="/assets/icons/Sax-Rapid-Logo1.png"
