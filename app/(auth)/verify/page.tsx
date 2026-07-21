@@ -49,12 +49,31 @@ export default function VerifyPage() {
   const OTPSEND_KEY = "last_otp_send";
   const OTP_COOLDOWN = 30000;
 
+  const handleResend = async (silent = false) => {
+    if (!email) return;
+    setResending(true);
+    try {
+      await resendOtp({ email });
+      sessionStorage.setItem(OTPSEND_KEY, String(Date.now()));
+      if (!silent) toast("OTP Resent", "A new code has been sent to your email.", "success");
+      setTimer(45);
+    } catch {
+      if (!silent) toast("Error", "Failed to resend OTP. Please try again.", "error");
+    } finally {
+      setResending(false);
+    }
+  };
+
   useEffect(() => {
     if (email && !autoSent.current) {
       autoSent.current = true;
+      if (tokenStorage.getToken()) return;
       const lastSend = Number(sessionStorage.getItem(OTPSEND_KEY));
       if (Date.now() - lastSend > OTP_COOLDOWN) {
-        handleResend();
+        resendOtp({ email }).then(() => {
+          sessionStorage.setItem(OTPSEND_KEY, String(Date.now()));
+          setTimer(45);
+        });
       }
     }
   }, [email]);
@@ -80,7 +99,7 @@ export default function VerifyPage() {
 
       toast("Success", "Email verified successfully!", "success");
 
-      document.cookie = "sax_pending_verify=; path=/; max-age=0";
+      cookies.remove("sax_pending_verify");
 
       router.replace("/dashboard");
     } catch (err: unknown) {
@@ -93,22 +112,6 @@ export default function VerifyPage() {
       setLoading(false);
     }
   };
-
-  const handleResend = async () => {
-    if (!email) return;
-    setResending(true);
-    try {
-      await resendOtp({ email });
-      sessionStorage.setItem(OTPSEND_KEY, String(Date.now()));
-      toast("OTP Resent", "A new code has been sent to your email.", "success");
-      setTimer(45);
-    } catch {
-      toast("Error", "Failed to resend OTP. Please try again.", "error");
-    } finally {
-      setResending(false);
-    }
-  };
-
   return (
     <AuthPageContainer
       leftPanel={{
@@ -179,7 +182,7 @@ export default function VerifyPage() {
             ) : (
               <Button
                 type="button"
-                onClick={handleResend}
+                onClick={() => handleResend()}
                 disabled={resending}
                 variant="link"
                 loading={resending}
