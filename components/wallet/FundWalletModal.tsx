@@ -78,6 +78,7 @@ export function FundWalletModal({
       amount: numAmount,
       email: userEmail,
       gateway: provider,
+      currency,
       callbackUrl: `${window.location.origin}/wallet`,
     });
   };
