@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { TextArea } from "@/components/ui/TextArea";
 import { Button } from "@/components/ui/Button";
-import { Tag, Calendar, Hash, Percent, Truck, Eye } from "lucide-react";
+import { Tag, Calendar, Hash, Percent, Banknote } from "lucide-react";
 import { createVendorCoupon } from "@/lib/api/services/coupons";
 import type { ApiError } from "@/lib/api/types/auth.types";
 import { useToast } from "@/lib/context/ToastContext";
@@ -24,13 +24,10 @@ export function CreateCouponModal({ isOpen, onClose, onSuccess }: CreateCouponMo
     code: "",
     discountType: "percentage",
     value: 0,
-    scope: "Storewide",
     usageLimit: 0,
-    startDate: "",
     endDate: "",
-    allowFreeShipping: false,
-    showOnStore: true,
-    status: "Active",
+    minimumOrderAmount: 0,
+    maximumDiscountAmount: 0,
     description: "",
   });
 
@@ -42,6 +39,8 @@ export function CreateCouponModal({ isOpen, onClose, onSuccess }: CreateCouponMo
         code: formData.code,
         discountType: formData.discountType,
         value: Number(formData.value),
+        minimumOrderAmount: formData.minimumOrderAmount > 0 ? Number(formData.minimumOrderAmount) : null,
+        maximumDiscountAmount: formData.maximumDiscountAmount > 0 ? Number(formData.maximumDiscountAmount) : null,
         usageLimit: formData.usageLimit > 0 ? Number(formData.usageLimit) : null,
         endDate: new Date(formData.endDate).toISOString(),
         description: formData.description || null,
@@ -69,12 +68,10 @@ export function CreateCouponModal({ isOpen, onClose, onSuccess }: CreateCouponMo
       "coupon-code": "code",
       "discount-type": "discountType",
       "discount-value": "value",
-      "coupon-scope": "scope",
       "usage-limit": "usageLimit",
-      "start-date": "startDate",
+      "minimum-order-amount": "minimumOrderAmount",
+      "maximum-discount-amount": "maximumDiscountAmount",
       "expiry-date": "endDate",
-      "allow-free-shipping": "allowFreeShipping",
-      "show-on-store": "showOnStore",
       "coupon-description": "description",
     };
     setFormData((prev) => ({
@@ -125,23 +122,12 @@ export function CreateCouponModal({ isOpen, onClose, onSuccess }: CreateCouponMo
             required
             value={formData.value}
             onChange={handleChange}
-            leftSlot={<Percent size={14} className="text-gray-400" />}
+            leftSlot={
+              formData.discountType === "percentage"
+                ? <Percent size={14} className="text-gray-400" />
+                : <Banknote size={14} className="text-gray-400" />
+            }
           />
-          <Select
-            id="coupon-scope"
-            label="Scope"
-            value={formData.scope}
-            onChange={handleChange}
-            options={[
-              { label: "Storewide", value: "Storewide" },
-              { label: "Specific Products", value: "SpecificProducts" },
-              { label: "Specific Categories", value: "SpecificCategories" },
-            ]}
-            required
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Input
             id="usage-limit"
             label="Usage Limit"
@@ -151,13 +137,26 @@ export function CreateCouponModal({ isOpen, onClose, onSuccess }: CreateCouponMo
             onChange={handleChange}
             leftSlot={<Hash size={14} className="text-gray-400" />}
           />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Input
-            id="start-date"
-            label="Start Date"
-            type="date"
-            value={formData.startDate}
+            id="minimum-order-amount"
+            label="Minimum Order Amount"
+            type="number"
+            placeholder="0.00"
+            value={formData.minimumOrderAmount}
             onChange={handleChange}
-            leftSlot={<Calendar size={14} className="text-gray-400" />}
+            leftSlot={<Banknote size={14} className="text-gray-400" />}
+          />
+          <Input
+            id="maximum-discount-amount"
+            label="Maximum Discount Amount"
+            type="number"
+            placeholder="0.00"
+            value={formData.maximumDiscountAmount}
+            onChange={handleChange}
+            leftSlot={<Banknote size={14} className="text-gray-400" />}
           />
         </div>
 
@@ -170,48 +169,6 @@ export function CreateCouponModal({ isOpen, onClose, onSuccess }: CreateCouponMo
           onChange={handleChange}
           leftSlot={<Calendar size={14} className="text-gray-400" />}
         />
-
-        <div className="space-y-4">
-          <label className="flex items-center gap-5 p-5 rounded border border-gray-100 cursor-pointer group hover:border-gray-200 transition-colors">
-            <div className="w-12 h-12 rounded flex items-center justify-center bg-blue-50 shrink-0">
-              <Truck size={20} className="text-blue-600" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-black">Allow Free Shipping</p>
-              <p className="text-xs font-medium text-gray-400 mt-0.5">Customers pay no shipping fees when using this coupon</p>
-            </div>
-            <div className="relative flex items-center shrink-0">
-              <input
-                id="allow-free-shipping"
-                type="checkbox"
-                checked={formData.allowFreeShipping}
-                onChange={handleChange}
-                className="sr-only peer"
-              />
-              <div className="w-14 h-7 bg-gray-200 rounded-full peer-checked:bg-gold transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:after:translate-x-7"></div>
-            </div>
-          </label>
-
-          <label className="flex items-center gap-5 p-5 rounded border border-gray-100 cursor-pointer group hover:border-gray-200 transition-colors">
-            <div className="w-12 h-12 rounded flex items-center justify-center bg-purple-50 shrink-0">
-              <Eye size={20} className="text-purple-600" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-black">Show on Store</p>
-              <p className="text-xs font-medium text-gray-400 mt-0.5">Display this coupon prominently on your store page</p>
-            </div>
-            <div className="relative flex items-center shrink-0">
-              <input
-                id="show-on-store"
-                type="checkbox"
-                checked={formData.showOnStore}
-                onChange={handleChange}
-                className="sr-only peer"
-              />
-              <div className="w-14 h-7 bg-gray-200 rounded-full peer-checked:bg-gold transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:after:translate-x-7"></div>
-            </div>
-          </label>
-        </div>
 
         <TextArea
           id="coupon-description"
