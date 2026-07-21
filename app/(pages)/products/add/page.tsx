@@ -79,6 +79,7 @@ interface Variation {
 	saleEndDate?: string;
 	stock: string;
 	attributes?: { attributeName: string; attributeValue: string }[];
+	images: { file: File; preview: string }[];
 }
 
 const ChipInput = ({
@@ -461,6 +462,7 @@ export default function AddProductPage() {
 			saleEndDate: "",
 			stock: "",
 			attributes: combo.attrList,
+			images: [],
 		}));
 
 		setFieldValue("variations" as Path<FlatProductValues>, newVariations);
@@ -480,6 +482,36 @@ export default function AddProductPage() {
 		const updated = variations.map((v: Variation) =>
 			v.id === id ? { ...v, [field]: value } : v,
 		);
+		setFieldValue("variations" as Path<FlatProductValues>, updated);
+	};
+
+	const handleVariationImageUpload = (
+		variationId: string,
+		e: React.ChangeEvent<HTMLInputElement>,
+	) => {
+		const files = e.target.files;
+		if (!files || files.length === 0) return;
+		const newImages = Array.from(files).map((file) => ({
+			file,
+			preview: URL.createObjectURL(file),
+		}));
+		const updated = variations.map((v: Variation) =>
+			v.id === variationId
+				? { ...v, images: [...v.images, ...newImages] }
+				: v,
+		);
+		setFieldValue("variations" as Path<FlatProductValues>, updated);
+		e.target.value = "";
+	};
+
+	const removeVariationImage = (variationId: string, index: number) => {
+		const updated = variations.map((v: Variation) => {
+			if (v.id !== variationId) return v;
+			const img = v.images[index];
+			if (img) URL.revokeObjectURL(img.preview);
+			const remaining = v.images.filter((_, i) => i !== index);
+			return { ...v, images: remaining };
+		});
 		setFieldValue("variations" as Path<FlatProductValues>, updated);
 	};
 
@@ -1044,22 +1076,25 @@ export default function AddProductPage() {
 										<div className="border border-gray-100 rounded overflow-hidden">
 											<div className="overflow-x-auto">
 												<table className="w-full text-left border-collapse">
-													<thead>
-														<tr className="bg-gray-50 border-b border-gray-100">
-															<th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 w-1/3">
-																Variation Focus
-															</th>
-															<th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 w-1/4">
-																Price ({currencySymbol})
-															</th>
-															<th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 w-1/4">
-																Sale ({currencySymbol})
-															</th>
-															<th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 w-1/6">
-																Stock
-															</th>
-														</tr>
-													</thead>
+														<thead>
+															<tr className="bg-gray-50 border-b border-gray-100">
+																<th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 w-1/4">
+																	Variation Focus
+																</th>
+																<th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 w-1/5">
+																	Price ({currencySymbol})
+																</th>
+																<th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 w-1/5">
+																	Sale ({currencySymbol})
+																</th>
+																<th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 w-1/6">
+																	Stock
+																</th>
+																<th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 w-1/6">
+																	Image
+																</th>
+															</tr>
+														</thead>
 													<tbody className="divide-y divide-gray-50">
 														{variations.map((v: Variation) => (
 															<React.Fragment key={v.id}>
@@ -1126,10 +1161,53 @@ export default function AddProductPage() {
 																			className="bg-white border-gray-200 focus:border-gold/50 py-2.5! px-4!"
 																		/>
 																	</td>
+																	<td className="p-3 align-middle">
+																		<input
+																			type="file"
+																			id={`var-img-${v.id}`}
+																			accept="image/*"
+																			multiple
+																			className="hidden"
+																			onChange={(e) =>
+																				handleVariationImageUpload(v.id, e)
+																			}
+																		/>
+																		<div className="flex flex-wrap gap-1 max-w-28">
+																			{v.images.map((img, imgIdx) => (
+																				<div
+																					key={imgIdx}
+																					className="relative w-9 h-9 rounded overflow-hidden border border-gray-100 group"
+																				>
+																					<Image
+																						src={img.preview}
+																						alt={`${v.name} ${imgIdx}`}
+																						fill
+																						className="object-cover"
+																						unoptimized
+																					/>
+																					<button
+																						type="button"
+																						onClick={() =>
+																							removeVariationImage(v.id, imgIdx)
+																						}
+																						className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+																					>
+																						<X size={10} className="text-white" />
+																					</button>
+																				</div>
+																			))}
+																			<label
+																				htmlFor={`var-img-${v.id}`}
+																				className="w-9 h-9 border-2 border-dashed border-gray-200 bg-gray-50 rounded flex items-center justify-center text-gray-400 hover:border-black hover:bg-gray-100 hover:text-black transition-all cursor-pointer"
+																			>
+																				<Upload size={12} />
+																			</label>
+																		</div>
+																	</td>
 																</tr>
 																{expandedVariationSchedules.has(v.id) && (
 																	<tr className="bg-gray-50/30">
-																		<td colSpan={4} className="px-5 py-4">
+																		<td colSpan={5} className="px-5 py-4">
 																			<div className="grid grid-cols-2 gap-4 animate-in slide-in-from-top-1 duration-200">
 																				<div className="space-y-1.5">
 																					<label className="text-[8px] font-black uppercase tracking-widest text-gray-400 ml-1">
