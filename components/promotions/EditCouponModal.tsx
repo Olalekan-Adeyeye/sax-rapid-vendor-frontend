@@ -7,32 +7,35 @@ import { Select } from "@/components/ui/Select";
 import { TextArea } from "@/components/ui/TextArea";
 import { Button } from "@/components/ui/Button";
 import { Tag, Calendar, Hash, Percent, Banknote } from "lucide-react";
-import { createVendorCoupon } from "@/lib/api/services/coupons";
+import { updateVendorCoupon } from "@/lib/api/services/coupons";
 import type { ApiError } from "@/lib/api/types/auth.types";
+import type { Coupon } from "@/lib/api/types/coupons.types";
 import { useToast } from "@/lib/context/ToastContext";
 
-interface CreateCouponModalProps {
+interface EditCouponModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  coupon: Coupon;
 }
 
-export function CreateCouponModal({
+export function EditCouponModal({
   isOpen,
   onClose,
   onSuccess,
-}: CreateCouponModalProps) {
+  coupon,
+}: EditCouponModalProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    code: "",
-    discountType: "Percentage",
-    value: 0,
-    usageLimit: 0,
-    endDate: "",
-    minimumOrderAmount: 0,
-    maximumdiscountAmount: 0,
-    description: "",
+    code: coupon.code ?? "",
+    discountType: coupon.discountType || "",
+    value: coupon.value,
+    usageLimit: coupon.usageLimit ?? 0,
+    endDate: coupon.endDate ? coupon.endDate.split("T")[0] : "",
+    minimumOrderAmount: coupon.minimumOrderAmount ?? 0,
+    maximumDiscountAmount: coupon.maximumDiscountAmount ?? 0,
+    description: coupon.description ?? "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,27 +45,27 @@ export function CreateCouponModal({
       const payload = {
         code: formData.code,
         DiscountType: formData.discountType,
-        value: Number(formData.value),
+        discountValue: Number(formData.value),
         minimumOrderAmount:
           formData.minimumOrderAmount > 0
             ? Number(formData.minimumOrderAmount)
             : null,
-        maximumdiscountAmount:
-          formData.maximumdiscountAmount > 0
-            ? Number(formData.maximumdiscountAmount)
+        maximumDiscountAmount:
+          formData.maximumDiscountAmount > 0
+            ? Number(formData.maximumDiscountAmount)
             : null,
         usageLimit:
           formData.usageLimit > 0 ? Number(formData.usageLimit) : null,
-        endDate: new Date(formData.endDate).toISOString(),
+        expiryDate: new Date(formData.endDate).toISOString(),
         description: formData.description || null,
       };
 
-      await createVendorCoupon(payload);
-      toast("Success", "Coupon created successfully", "success");
+      await updateVendorCoupon(coupon.id, payload);
+      toast("Success", "Coupon updated successfully", "success");
       onSuccess?.();
       onClose();
     } catch (err: unknown) {
-      let errorMessage = "Failed to create coupon";
+      let errorMessage = "Failed to update coupon";
       if (axios.isAxiosError<ApiError>(err)) {
         errorMessage = err.response?.data?.message || errorMessage;
       }
@@ -86,7 +89,7 @@ export function CreateCouponModal({
       "discount-value": "value",
       "usage-limit": "usageLimit",
       "minimum-order-amount": "minimumOrderAmount",
-      "maximum-discount-amount": "maximumdiscountAmount",
+      "maximum-discount-amount": "maximumDiscountAmount",
       "expiry-date": "endDate",
       "coupon-description": "description",
     };
@@ -100,8 +103,8 @@ export function CreateCouponModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Create discount Coupon"
-      subtitle="Issue new promo codes for your customers"
+      title="Edit Discount Coupon"
+      subtitle="Update your promo code details"
       icon={Tag}
       size="lg"
     >
@@ -172,7 +175,7 @@ export function CreateCouponModal({
             label="Maximum Discount Amount"
             type="number"
             placeholder="0.00"
-            value={formData.maximumdiscountAmount}
+            value={formData.maximumDiscountAmount}
             onChange={handleChange}
             leftSlot={<Banknote size={14} className="text-gray-400" />}
           />
@@ -199,7 +202,7 @@ export function CreateCouponModal({
 
         <div className="pt-4">
           <Button type="submit" loading={loading} variant="black" fullWidth>
-            Create Coupon
+            Update Coupon
           </Button>
         </div>
       </form>

@@ -125,6 +125,7 @@ export interface CreateVariationDTO {
 	salePriceStartDate?: string | null;
 	salePriceEndDate?: string | null;
 	stockQuantity: number;
+	imageUrl?: string | null;
 	attributes: VariationAttributeDTO[] | null;
 }
 
