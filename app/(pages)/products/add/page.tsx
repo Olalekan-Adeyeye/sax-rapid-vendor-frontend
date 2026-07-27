@@ -134,6 +134,18 @@ const ChipInput = ({
 	);
 };
 
+function generateSku(productName?: string): string {
+	const prefix = productName
+		? productName
+				.split(" ")
+				.map((w) => w.charAt(0).toUpperCase())
+				.slice(0, 3)
+				.join("")
+		: "PRD";
+	const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+	return `${prefix}-${random}`;
+}
+
 export default function AddProductPage() {
 	const router = useRouter();
 	const { user } = useAuth();
@@ -485,96 +497,122 @@ export default function AddProductPage() {
 		setFieldValue("variations" as Path<FlatProductValues>, updated);
 	};
 
-	const handleVariationImageUpload = (
-		variationId: string,
-		e: React.ChangeEvent<HTMLInputElement>,
-	) => {
-		const files = e.target.files;
-		if (!files || files.length === 0) return;
-		const newImages = Array.from(files).map((file) => ({
-			file,
-			preview: URL.createObjectURL(file),
-		}));
-		const updated = variations.map((v: Variation) =>
-			v.id === variationId
-				? { ...v, images: [...v.images, ...newImages] }
-				: v,
-		);
-		setFieldValue("variations" as Path<FlatProductValues>, updated);
-		e.target.value = "";
-	};
+  const handleVariationImageUpload = (
+    variationId: string,
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    const file = files[0];
+    const image = { file, preview: URL.createObjectURL(file) };
+    const updated = variations.map((v: Variation) => {
+      if (v.id !== variationId) return v;
+      if (v.images[0]) URL.revokeObjectURL(v.images[0].preview);
+      return { ...v, images: [image] };
+    });
+    setFieldValue("variations" as Path<FlatProductValues>, updated);
+    e.target.value = "";
+  };
 
-	const removeVariationImage = (variationId: string, index: number) => {
-		const updated = variations.map((v: Variation) => {
-			if (v.id !== variationId) return v;
-			const img = v.images[index];
-			if (img) URL.revokeObjectURL(img.preview);
-			const remaining = v.images.filter((_, i) => i !== index);
-			return { ...v, images: remaining };
-		});
-		setFieldValue("variations" as Path<FlatProductValues>, updated);
-	};
+  const removeVariationImage = (variationId: string) => {
+    const updated = variations.map((v: Variation) => {
+      if (v.id !== variationId) return v;
+      const img = v.images[0];
+      if (img) URL.revokeObjectURL(img.preview);
+      return { ...v, images: [] };
+    });
+    setFieldValue("variations" as Path<FlatProductValues>, updated);
+  };
 
-	const createProductMutation = useMutation({
-		mutationFn: async (values: ProductFormValues) => {
-			const data = values as unknown as FlatProductValues;
-			const rawForm = getValues() as unknown as FlatProductValues;
+  const createProductMutation = useMutation({
+    mutationFn: async (values: ProductFormValues) => {
+      const data = values as unknown as FlatProductValues;
+      const rawForm = getValues() as unknown as FlatProductValues;
 
-			// 1. Upload images first if any
-			const uploadedImages: { url: string; isPrimary: boolean }[] = [];
-			if (localImages.length > 0) {
-				setIsUploading(true);
-				const uploadResults = await Promise.allSettled(
-					localImages.map((img) =>
-						filesService.uploadFile(img.file, "products"),
-					),
-				);
+      // 1. Upload main images first if any
+      const uploadedImages: { url: string; isPrimary: boolean }[] = [];
+      if (localImages.length > 0) {
+        setIsUploading(true);
+        const uploadResults = await Promise.allSettled(
+          localImages.map((img) =>
+            filesService.uploadFile(img.file, "products"),
+          ),
+        );
 
-				uploadResults.forEach((result, idx) => {
-					if (result.status === "fulfilled") {
-						uploadedImages.push({
-							url: result.value.url,
-							isPrimary: idx === 0,
-						});
-					} else {
-						console.error(`Failed to upload image ${idx}:`, result.reason);
-					}
-				});
-				setIsUploading(false);
-			}
+        uploadResults.forEach((result, idx) => {
+          if (result.status === "fulfilled") {
+            uploadedImages.push({
+              url: result.value.url,
+              isPrimary: idx === 0,
+            });
+          } else {
+            console.error(`Failed to upload image ${idx}:`, result.reason);
+          }
+        });
+        setIsUploading(false);
+      }
 
-			const isSimple = data.type === "simple";
-			const payload: CreateProductDTO = {
-				name: data.name,
-				description: data.description,
-				categoryId: Number(data.categoryId),
-				brandId: rawForm.brandId ? Number(rawForm.brandId) : null,
-				basePrice: Number(data.regularPrice) || 0,
-				salePrice: data.salePrice ? Number(data.salePrice) : null,
-				salePriceStartDate: data.saleStartDate || null,
-				salePriceEndDate: data.saleEndDate || null,
-				stockQuantity: isSimple ? Number(data.stockQuantity) || 0 : 0,
-				weight: Number(data.weight) || 0,
-				dimensionLength: data.length ? Number(data.length) : null,
-				dimensionWidth: data.width ? Number(data.width) : null,
-				dimensionHeight: data.height ? Number(data.height) : null,
-				sku: data.sku || null,
-				imageUrls: uploadedImages.map((img) => img.url),
-				...(isSimple
-					? {}
-					: {
-							variations: data.variations.map((v) => ({
-								sku: v.id,
-								price: Number(v.price),
-								salePrice: v.salePrice ? Number(v.salePrice) : undefined,
-								stockQuantity: Number(v.stock),
-								attributes: v.attributes || [],
-							})),
-						}),
-			};
+      // 2. Upload variation images
+      const variationImageUrls: Record<string, string> = {};
+      const variationImagesToUpload = data.variations.filter(
+        (v) => v.images.length > 0,
+      );
+      if (variationImagesToUpload.length > 0) {
+        setIsUploading(true);
+        const uploadResults = await Promise.allSettled(
+          variationImagesToUpload.map((v) =>
+            filesService.uploadFile(v.images[0].file, "products"),
+          ),
+        );
+        uploadResults.forEach((result, idx) => {
+          if (result.status === "fulfilled") {
+            variationImageUrls[variationImagesToUpload[idx].id] =
+              result.value.url;
+          } else {
+            console.error(
+              `Failed to upload variation image ${idx}:`,
+              result.reason,
+            );
+          }
+        });
+        setIsUploading(false);
+      }
 
-			return await productsService.createProduct(payload);
-		},
+      const isSimple = data.type === "simple";
+      const payload: CreateProductDTO = {
+        name: data.name,
+        description: data.description,
+        categoryId: Number(data.categoryId),
+        brandId: rawForm.brandId ? Number(rawForm.brandId) : null,
+        basePrice: Number(data.regularPrice) || 0,
+        salePrice: data.salePrice ? Number(data.salePrice) : null,
+        salePriceStartDate: data.saleStartDate || null,
+        salePriceEndDate: data.saleEndDate || null,
+        stockQuantity: isSimple ? Number(data.stockQuantity) || 0 : 0,
+        weight: Number(data.weight) || 0,
+        dimensionLength: data.length ? Number(data.length) : null,
+        dimensionWidth: data.width ? Number(data.width) : null,
+        dimensionHeight: data.height ? Number(data.height) : null,
+        sku: data.sku || generateSku(data.name),
+        imageUrls: uploadedImages.map((img) => img.url),
+        ...(isSimple
+          ? {}
+          : {
+              variations: data.variations.map((v) => ({
+                sku: v.id,
+                price: Number(v.price),
+                salePrice: v.salePrice ? Number(v.salePrice) : undefined,
+                salePriceStartDate: v.saleStartDate || null,
+                salePriceEndDate: v.saleEndDate || null,
+                stockQuantity: Number(v.stock),
+                imageUrl: variationImageUrls[v.id] || null,
+                attributes: v.attributes || [],
+              })),
+            }),
+      };
+
+      return await productsService.createProduct(payload);
+    },
 		onSuccess: () => {
 			toast("Success", "Product published successfully", "success");
 			queryClient.invalidateQueries({ queryKey: ["products"] });
@@ -1162,47 +1200,44 @@ export default function AddProductPage() {
 																		/>
 																	</td>
 																	<td className="p-3 align-middle">
-																		<input
-																			type="file"
-																			id={`var-img-${v.id}`}
-																			accept="image/*"
-																			multiple
-																			className="hidden"
-																			onChange={(e) =>
-																				handleVariationImageUpload(v.id, e)
-																			}
-																		/>
-																		<div className="flex flex-wrap gap-1 max-w-28">
-																			{v.images.map((img, imgIdx) => (
-																				<div
-																					key={imgIdx}
-																					className="relative w-9 h-9 rounded overflow-hidden border border-gray-100 group"
-																				>
-																					<Image
-																						src={img.preview}
-																						alt={`${v.name} ${imgIdx}`}
-																						fill
-																						className="object-cover"
-																						unoptimized
-																					/>
-																					<button
-																						type="button"
-																						onClick={() =>
-																							removeVariationImage(v.id, imgIdx)
-																						}
-																						className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-																					>
-																						<X size={10} className="text-white" />
-																					</button>
-																				</div>
-																			))}
-																			<label
-																				htmlFor={`var-img-${v.id}`}
-																				className="w-9 h-9 border-2 border-dashed border-gray-200 bg-gray-50 rounded flex items-center justify-center text-gray-400 hover:border-black hover:bg-gray-100 hover:text-black transition-all cursor-pointer"
-																			>
-																				<Upload size={12} />
-																			</label>
-																		</div>
+                                  <input
+                                    type="file"
+                                    id={`var-img-${v.id}`}
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) =>
+                                      handleVariationImageUpload(v.id, e)
+                                    }
+                                  />
+                                  <div className="flex flex-wrap gap-1 max-w-28">
+                                    {v.images.length > 0 ? (
+                                      <div className="relative w-9 h-9 rounded overflow-hidden border border-gray-100 group">
+                                        <Image
+                                          src={v.images[0].preview}
+                                          alt={v.name}
+                                          fill
+                                          className="object-cover"
+                                          unoptimized
+                                        />
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            removeVariationImage(v.id)
+                                          }
+                                          className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                          <X size={10} className="text-white" />
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <label
+                                        htmlFor={`var-img-${v.id}`}
+                                        className="w-9 h-9 border-2 border-dashed border-gray-200 bg-gray-50 rounded flex items-center justify-center text-gray-400 hover:border-black hover:bg-gray-100 hover:text-black transition-all cursor-pointer"
+                                      >
+                                        <Upload size={12} />
+                                      </label>
+                                    )}
+                                  </div>
 																	</td>
 																</tr>
 																{expandedVariationSchedules.has(v.id) && (
