@@ -1,26 +1,35 @@
 "use client";
 import React, { useState } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { Plus, Tag, BarChart3 } from "lucide-react";
+import { Plus, Tag, BarChart3, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { CreateCouponModal } from "@/components/promotions/CreateCouponModal";
+import { EditCouponModal } from "@/components/promotions/EditCouponModal";
+import { CouponDeleteModal } from "@/components/promotions/CouponDeleteModal";
 import { CreateCampaignModal } from "@/components/promotions/CreateCampaignModal";
 import { PromotionTypePickerModal } from "@/components/promotions/PromotionTypePickerModal";
-import { useQuery } from "@tanstack/react-query";
-import { getVendorCoupons } from "@/lib/api/services/coupons";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getVendorCoupons, deleteVendorCoupon } from "@/lib/api/services/coupons";
 import type { Coupon } from "@/lib/api/types/coupons.types";
 import { formatDate } from "@/lib/utils/date";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
 import { EmptyState } from "@/components/common/EmptyState";
 import { useCurrency } from "@/lib/hooks/useCurrency";
 import { formatCurrency } from "@/lib/utils/currency";
+import { useToast } from "@/lib/context/ToastContext";
+import axios from "axios";
+import type { ApiError } from "@/lib/api/types/auth.types";
 
 export default function PromotionsPage() {
   const { currency: activeCurrency } = useCurrency();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
   const [isCampaignModalOpen, setIsCampaignModalOpen] = useState(false);
   const [isPromoTypePickerOpen, setIsPromoTypePickerOpen] = useState(false);
+  const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
+  const [deletingCoupon, setDeletingCoupon] = useState<Coupon | null>(null);
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -34,6 +43,27 @@ export default function PromotionsPage() {
   const filteredCoupons = couponList.filter((c) =>
     c.code?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false,
   );
+
+  const deleteMutation = useMutation({
+    mutationFn: (couponId: string) => deleteVendorCoupon(couponId),
+    onSuccess: () => {
+      toast("Success", "Coupon deleted successfully", "success");
+      queryClient.invalidateQueries({ queryKey: ["vendor-coupons"] });
+      setDeletingCoupon(null);
+    },
+    onError: (err: unknown) => {
+      let errorMessage = "Failed to delete coupon";
+      if (axios.isAxiosError<ApiError>(err)) {
+        errorMessage = err.response?.data?.message || errorMessage;
+      }
+      toast("Error", errorMessage, "error");
+    },
+  });
+
+  const handleDelete = () => {
+    if (!deletingCoupon) return;
+    deleteMutation.mutate(deletingCoupon.id);
+  };
 
 
   if (isLoading && !couponList.length) {
@@ -88,6 +118,7 @@ export default function PromotionsPage() {
                   "Usage",
                   "Status",
                   "Expiry Date",
+                  "Actions",
                 ].map((th) => (
                   <th
                     key={th}
@@ -112,7 +143,7 @@ export default function PromotionsPage() {
                       {coupon.discountType}
                     </td>
                     <td className="px-8 py-5 text-xs font-bold text-gold">
-                      {coupon.discountType === "percentage"
+                      {coupon.discountType === "Percentage"
                         ? `${coupon.value}%`
                         : formatCurrency(coupon.value, activeCurrency)}
                     </td>
@@ -137,11 +168,30 @@ export default function PromotionsPage() {
                         ? formatDate(new Date(coupon.endDate))
                         : "No Expiry"}
                     </td>
+                    <td className="px-8 py-5">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setEditingCoupon(coupon)}
+                          className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-black transition-colors"
+                          title="Edit coupon"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          onClick={() => setDeletingCoupon(coupon)}
+                          disabled={deleteMutation.isPending && deleteMutation.variables === coupon.id}
+                          className="p-1.5 rounded hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50"
+                          title="Delete coupon"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6}>
+                  <td colSpan={7}>
                     <EmptyState icon={Tag} title="No promotion history found" />
                   </td>
                 </tr>
@@ -164,7 +214,28 @@ export default function PromotionsPage() {
       <CreateCouponModal
         isOpen={isCouponModalOpen}
         onClose={() => setIsCouponModalOpen(false)}
-        onSuccess={() => setIsCouponModalOpen(false)}
+        onSuccess={() => {
+          setIsCouponModalOpen(false);
+          queryClient.invalidateQueries({ queryKey: ["vendor-coupons"] });
+        }}
+      />
+      {editingCoupon && (
+        <EditCouponModal
+          isOpen={!!editingCoupon}
+          coupon={editingCoupon}
+          onClose={() => setEditingCoupon(null)}
+          onSuccess={() => {
+            setEditingCoupon(null);
+            queryClient.invalidateQueries({ queryKey: ["vendor-coupons"] });
+          }}
+        />
+      )}
+      <CouponDeleteModal
+        isOpen={!!deletingCoupon}
+        onClose={() => setDeletingCoupon(null)}
+        onConfirm={handleDelete}
+        couponCode={deletingCoupon?.code}
+        loading={deleteMutation.isPending}
       />
       <CreateCampaignModal
         isOpen={isCampaignModalOpen}

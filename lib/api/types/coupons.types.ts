@@ -33,15 +33,17 @@ export interface CreateCouponRequestDTO {
 
 export interface UpdateCouponRequestDTO {
   code: string | null;
-  discountType: string | null;
+  DiscountType: string | null;
   discountValue: number;
-  scope: string | null;
-  allowFreeShipping: boolean;
-  showOnStore: boolean;
+  scope?: string | null;
+  vendorId?: string | null;
+  adCampaignId?: string | null;
+  allowFreeShipping?: boolean;
+  showOnStore?: boolean;
   usageLimit: number | null;
   expiryDate: string | null;
-  status: string | null;
-  description: string | null;
+  status?: string | null;
+  description?: string | null;
 }
 
 export interface CouponQueryParams {
@@ -76,7 +78,7 @@ export interface Coupon {
 
 export interface CreateVendorCouponRequestDTO {
   code: string;
-  discountType: string;
+  DiscountType: string;
   value: number;
   minimumOrderAmount?: number | null;
   maximumDiscountAmount?: number | null;
