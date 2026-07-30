@@ -86,6 +86,7 @@ interface Variation {
 	saleEndDate?: string;
 	stock: string;
 	attributes?: { attributeName: string; attributeValue: string }[];
+	imageUrl?: string;
 }
 
 const ChipInput = ({
@@ -234,6 +235,7 @@ export default function EditProductPage() {
 		}));
 
 		setGalleryItems((prev) => [...prev, ...newItems]);
+		galleryDirtyRef.current = true;
 		e.target.value = ""; // Reset input
 	};
 
@@ -243,6 +245,7 @@ export default function EditProductPage() {
 			if (item.preview) URL.revokeObjectURL(item.preview);
 			return prev.filter((_, i) => i !== index);
 		});
+		galleryDirtyRef.current = true;
 	};
 
 	const galleryRef = useRef(galleryItems);
@@ -250,11 +253,29 @@ export default function EditProductPage() {
 		galleryRef.current = galleryItems;
 	}, [galleryItems]);
 
+	const galleryDirtyRef = useRef(true);
+	const galleryUrlsRef = useRef<string[]>([]);
+	const [varDirty, setVarDirty] = useState(true);
+	const varDirtyRef = useRef(varDirty);
+	useEffect(() => { varDirtyRef.current = varDirty; }, [varDirty]);
+	const [varUrls, setVarUrls] = useState<Record<string, string>>({});
+	const varUrlsRef = useRef(varUrls);
+	useEffect(() => { varUrlsRef.current = varUrls; }, [varUrls]);
+	const [varImages, setVarImages] = useState<Record<string, { file: File; preview: string }[]>>({});
+	const varImagesRef = useRef(varImages);
+	useEffect(() => {
+		varImagesRef.current = varImages;
+	}, [varImages]);
+
 	// Cleanup object URLs on unmount
 	useEffect(() => {
+		const ref = varImagesRef;
 		return () => {
 			galleryRef.current.forEach((item) => {
 				if (item.preview) URL.revokeObjectURL(item.preview);
+			});
+			Object.values(ref.current).forEach((imgs) => {
+				imgs.forEach((img) => URL.revokeObjectURL(img.preview));
 			});
 		};
 	}, []);
@@ -318,20 +339,32 @@ export default function EditProductPage() {
 						}));
 					}
 
-					return {
-						id: v.id,
-						name: attrsList.length > 0
-							? attrsList.map((a) => a.attributeValue).join(" / ")
-							: v.sku || "Variation",
-						price: v.price?.toString() || "",
-						stock: v.stockQuantity?.toString() || "0",
-						salePrice: v.salePrice?.toString() || "",
-						saleStartDate: v.salePriceStartDate ? v.salePriceStartDate.split("T")[0] : "",
-						saleEndDate: v.salePriceEndDate ? v.salePriceEndDate.split("T")[0] : "",
-						attributes: attrsList,
-					};
+				return {
+					id: v.id,
+					name: attrsList.length > 0
+						? attrsList.map((a) => a.attributeValue).join(" / ")
+						: v.sku || "Variation",
+					price: v.price?.toString() || "",
+					stock: v.stockQuantity?.toString() || "0",
+					salePrice: v.salePrice?.toString() || "",
+					saleStartDate: v.salePriceStartDate ? v.salePriceStartDate.split("T")[0] : "",
+					saleEndDate: v.salePriceEndDate ? v.salePriceEndDate.split("T")[0] : "",
+					attributes: attrsList,
+			imageUrl: v.imageUrl || undefined,
+			};
 				});
 				setValue("variations", mappedVariations as unknown as Variation[]);
+
+				// Initialize varUrls with existing variation image URLs (Zod strips them from form state)
+				const initialUrls: Record<string, string> = {};
+				if (product.variations) {
+					product.variations.forEach((v) => {
+						if (v.imageUrl) {
+							initialUrls[v.id] = v.imageUrl;
+						}
+					});
+				}
+				setVarUrls(initialUrls);
 
 				// Map attributes back if possible
 				if (product.attributes && product.attributes.length > 0) {
@@ -357,8 +390,12 @@ export default function EditProductPage() {
 			}
 
 			if (product.images) {
+				// Sort so the primary image is at index 0 (backend uses position to determine primary)
+				const sortedImages = [...product.images].sort((a, b) =>
+					a.isPrimary === b.isPrimary ? 0 : a.isPrimary ? -1 : 1,
+				);
 				setGalleryItems(
-					product.images
+					sortedImages
 						.map((img) => ({ url: img.imageUrl || "" }))
 						.filter((i) => !!i.url),
 				);
@@ -552,38 +589,96 @@ export default function EditProductPage() {
 		setFieldValue("variations" as Path<FlatProductValues>, updated);
 	};
 
+  const handleVariationImageUpload = (
+    variationId: string,
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    const file = files[0];
+    const preview = URL.createObjectURL(file);
+    setVarImages((prev) => {
+      const existing = prev[variationId];
+      if (existing?.[0]) URL.revokeObjectURL(existing[0].preview);
+      return { ...prev, [variationId]: [{ file, preview }] };
+    });
+    setVarDirty(true);
+    varDirtyRef.current = true;
+    e.target.value = "";
+  };
+
+  const removeVariationImage = (variationId: string) => {
+    setVarImages((prev) => {
+      const existing = prev[variationId];
+      if (existing?.[0]) URL.revokeObjectURL(existing[0].preview);
+      const next = { ...prev };
+      delete next[variationId];
+      return next;
+    });
+    setVarDirty(true);
+    varDirtyRef.current = true;
+  };
+
 	const onSubmit = async (values: ProductFormValues) => {
 		const data = values as unknown as FlatProductValues;
 		const rawForm = getValues() as unknown as FlatProductValues;
 		try {
 			setIsSubmitting(true);
 
-			// 1. Upload new images only
+			// 1. Upload main images (batch new files, keep existing URLs)
 			const uploadedImageUrls: string[] = [];
-			setIsUploading(true);
+			const existingUrls = galleryItems.filter((i) => i.url).map((i) => i.url!);
+			const newFiles = galleryItems.filter((i) => i.file).map((i) => i.file!);
 
-			for (let i = 0; i < galleryItems.length; i++) {
-				const item = galleryItems[i];
-				if (item.url) {
-					uploadedImageUrls.push(item.url);
-				} else if (item.file) {
-					try {
-						const uploadedFile = await filesService.uploadFile(
-							item.file,
-							"products",
-						);
-						uploadedImageUrls.push(uploadedFile.url);
-					} catch (error) {
-						console.error(`Failed to upload local image ${i}:`, error);
-						toast(
-							"Warning",
-							`Image ${i + 1} failed to upload and was removed.`,
-							"warning",
-						);
+			if (newFiles.length > 0 && galleryDirtyRef.current) {
+				setIsUploading(true);
+				try {
+					const results = await filesService.uploadFiles(newFiles, "products");
+					if (results.uploaded.length !== newFiles.length) {
+						throw new Error(`Only ${results.uploaded.length} of ${newFiles.length} images uploaded`);
 					}
+					galleryUrlsRef.current = newFiles.map((_, i) => results.uploaded[i]?.url || "").filter(Boolean);
+					galleryDirtyRef.current = false;
+				} catch (e) {
+					console.error("Failed to upload images:", e);
+					throw e;
+				} finally {
+					setIsUploading(false);
 				}
 			}
-			setIsUploading(false);
+
+			uploadedImageUrls.push(...existingUrls, ...galleryUrlsRef.current);
+
+			// 2. Upload variation images (batch)
+			const variationImageUrls: Record<string, string> = { ...varUrls };
+			const variationsToUpload = Object.entries(varImages)
+				.filter(([, imgs]) => imgs.length > 0)
+				.map(([id, imgs]) => ({ id, file: imgs[0].file }));
+			if (variationsToUpload.length > 0 && varDirty) {
+				setIsUploading(true);
+				try {
+					const results = await filesService.uploadFiles(
+						variationsToUpload.map((v) => v.file),
+						"products",
+					);
+					if (results.uploaded.length !== variationsToUpload.length) {
+						throw new Error(`Only ${results.uploaded.length} of ${variationsToUpload.length} variation images uploaded`);
+					}
+					results.uploaded.forEach((result, idx) => {
+						const id = variationsToUpload[idx].id;
+						variationImageUrls[id] = result.url;
+						setVarUrls((prev) => ({ ...prev, [id]: result.url }));
+						varUrlsRef.current[id] = result.url;
+					});
+					setVarDirty(false);
+					varDirtyRef.current = false;
+				} catch (e) {
+					console.error("Failed to upload variation images:", e);
+					throw e;
+				} finally {
+					setIsUploading(false);
+				}
+			}
 
 			const isSimple = data.type === "simple";
 			const payload: UpdateProductDTO = {
@@ -605,17 +700,18 @@ export default function EditProductPage() {
 				...(isSimple
 					? {}
 					: {
-							attributes: data.attributes.map((attr) => ({
+							attributes: (data.attributes || []).map((attr) => ({
 								name: attr.name,
 								value: attr.values.join(", "),
 							})),
-							variations: data.variations.map((v) => ({
+							variations: (data.variations || []).map((v) => ({
 								sku: v.id,
 								price: Number(v.price),
 								salePrice: v.salePrice ? Number(v.salePrice) : undefined,
 								salePriceStartDate: v.saleStartDate || null,
 								salePriceEndDate: v.saleEndDate || null,
 								stockQuantity: Number(v.stock),
+								imageUrl: variationImageUrls[v.id] || varUrls[v.id] || null,
 								attributes: v.attributes || [],
 							})),
 						}),
@@ -726,7 +822,10 @@ export default function EditProductPage() {
 							Cancel
 						</Button>
 						<Button
-							onClick={handleSubmit(onSubmit)}
+							onClick={
+								// eslint-disable-next-line react-hooks/refs
+								handleSubmit(onSubmit)
+							}
 							disabled={isSubmitting}
 							size="sm"
 							rounded="full"
@@ -1130,6 +1229,9 @@ export default function EditProductPage() {
 															<th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 w-1/6">
 																Stock
 															</th>
+															<th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 w-1/6">
+																Image
+															</th>
 														</tr>
 													</thead>
 													<tbody className="divide-y divide-gray-50">
@@ -1198,10 +1300,66 @@ export default function EditProductPage() {
 																			className="bg-white border-gray-200 focus:border-gold/50 py-2.5! px-4!"
 																		/>
 																	</td>
+																	<td className="p-3 align-middle">
+																		<input
+																			type="file"
+																			id={`var-img-${v.id}`}
+																			accept="image/*"
+																			className="hidden"
+																			onChange={(e) =>
+																				handleVariationImageUpload(v.id, e)
+																			}
+																		/>
+																		<div className="flex flex-wrap gap-1 max-w-28">
+																			{varImages[v.id]?.length > 0 ? (
+																				<div className="relative w-9 h-9 rounded overflow-hidden border border-gray-100 group">
+																					<Image
+																						src={varImages[v.id][0].preview}
+																						alt={v.name}
+																						fill
+																						className="object-cover"
+																						unoptimized
+																					/>
+																					<button
+																						type="button"
+																						onClick={() =>
+																							removeVariationImage(v.id)
+																						}
+																						className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+																					>
+																						<X size={10} className="text-white" />
+																					</button>
+																				</div>
+																			) : v.imageUrl ? (
+																				<div className="relative w-9 h-9 rounded overflow-hidden border border-gray-100 group">
+																					<Image
+																						src={v.imageUrl}
+																						alt={v.name}
+																						fill
+																						className="object-cover"
+																						unoptimized
+																					/>
+																					<label
+																						htmlFor={`var-img-${v.id}`}
+																						className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+																					>
+																						<Upload size={10} className="text-white" />
+																					</label>
+																				</div>
+																			) : (
+																				<label
+																					htmlFor={`var-img-${v.id}`}
+																					className="w-9 h-9 border-2 border-dashed border-gray-200 bg-gray-50 rounded flex items-center justify-center text-gray-400 hover:border-black hover:bg-gray-100 hover:text-black transition-all cursor-pointer"
+																				>
+																					<Upload size={12} />
+																				</label>
+																			)}
+																		</div>
+																	</td>
 																</tr>
 																{expandedVariationSchedules.has(v.id) && (
 																	<tr className="bg-gray-50/30">
-																		<td colSpan={4} className="px-5 py-4">
+																		<td colSpan={5} className="px-5 py-4">
 																			<div className="grid grid-cols-2 gap-4 animate-in slide-in-from-top-1 duration-200">
 																				<div className="space-y-1.5">
 																					<label className="text-[8px] font-black uppercase tracking-widest text-gray-400 ml-1">

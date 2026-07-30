@@ -79,7 +79,6 @@ interface Variation {
 	saleEndDate?: string;
 	stock: string;
 	attributes?: { attributeName: string; attributeValue: string }[];
-	images: { file: File; preview: string }[];
 }
 
 const ChipInput = ({
@@ -148,7 +147,6 @@ function generateSku(productName?: string): string {
 
 export default function AddProductPage() {
 	const router = useRouter();
-	const { user } = useAuth();
 	const { currencySymbol } = useCurrency();
 	const { toast } = useToast();
 
@@ -250,6 +248,7 @@ export default function AddProductPage() {
 		}));
 
 		setLocalImages((prev) => [...prev, ...newLocalImages]);
+		galleryDirtyRef.current = true;
 		// Reset input value so same file can be selected again
 		e.target.value = "";
 	};
@@ -260,6 +259,7 @@ export default function AddProductPage() {
 			if (item.preview) URL.revokeObjectURL(item.preview);
 			return prev.filter((_, i) => i !== index);
 		});
+		galleryDirtyRef.current = true;
 	};
 
 	const localImagesRef = useRef(localImages);
@@ -267,10 +267,24 @@ export default function AddProductPage() {
 		localImagesRef.current = localImages;
 	}, [localImages]);
 
+	const galleryDirtyRef = useRef(true);
+	const galleryUrlsRef = useRef<string[]>([]);
+	const varDirtyRef = useRef(true);
+	const varUrlsRef = useRef<Record<string, string>>({});
+	const [varImages, setVarImages] = useState<Record<string, { file: File; preview: string }[]>>({});
+	const varImagesRef = useRef(varImages);
+	useEffect(() => {
+		varImagesRef.current = varImages;
+	}, [varImages]);
+
 	// Cleanup object URLs on unmount
 	useEffect(() => {
+		const ref = varImagesRef;
 		return () => {
 			localImagesRef.current.forEach((img) => URL.revokeObjectURL(img.preview));
+			Object.values(ref.current).forEach((imgs) => {
+				imgs.forEach((img) => URL.revokeObjectURL(img.preview));
+			});
 		};
 	}, []);
 
@@ -474,7 +488,6 @@ export default function AddProductPage() {
 			saleEndDate: "",
 			stock: "",
 			attributes: combo.attrList,
-			images: [],
 		}));
 
 		setFieldValue("variations" as Path<FlatProductValues>, newVariations);
@@ -504,24 +517,25 @@ export default function AddProductPage() {
     const files = e.target.files;
     if (!files || files.length === 0) return;
     const file = files[0];
-    const image = { file, preview: URL.createObjectURL(file) };
-    const updated = variations.map((v: Variation) => {
-      if (v.id !== variationId) return v;
-      if (v.images[0]) URL.revokeObjectURL(v.images[0].preview);
-      return { ...v, images: [image] };
+    const preview = URL.createObjectURL(file);
+    setVarImages((prev) => {
+      const existing = prev[variationId];
+      if (existing?.[0]) URL.revokeObjectURL(existing[0].preview);
+      return { ...prev, [variationId]: [{ file, preview }] };
     });
-    setFieldValue("variations" as Path<FlatProductValues>, updated);
+    varDirtyRef.current = true;
     e.target.value = "";
   };
 
   const removeVariationImage = (variationId: string) => {
-    const updated = variations.map((v: Variation) => {
-      if (v.id !== variationId) return v;
-      const img = v.images[0];
-      if (img) URL.revokeObjectURL(img.preview);
-      return { ...v, images: [] };
+    setVarImages((prev) => {
+      const existing = prev[variationId];
+      if (existing?.[0]) URL.revokeObjectURL(existing[0].preview);
+      const next = { ...prev };
+      delete next[variationId];
+      return next;
     });
-    setFieldValue("variations" as Path<FlatProductValues>, updated);
+    varDirtyRef.current = true;
   };
 
   const createProductMutation = useMutation({
@@ -532,50 +546,57 @@ export default function AddProductPage() {
       // 1. Upload main images first if any
       const uploadedImages: { url: string; isPrimary: boolean }[] = [];
       if (localImages.length > 0) {
-        setIsUploading(true);
-        const uploadResults = await Promise.allSettled(
-          localImages.map((img) =>
-            filesService.uploadFile(img.file, "products"),
-          ),
-        );
-
-        uploadResults.forEach((result, idx) => {
-          if (result.status === "fulfilled") {
-            uploadedImages.push({
-              url: result.value.url,
-              isPrimary: idx === 0,
-            });
-          } else {
-            console.error(`Failed to upload image ${idx}:`, result.reason);
+        if (galleryDirtyRef.current) {
+          setIsUploading(true);
+          try {
+            const results = await filesService.uploadFiles(
+              localImages.map((img) => img.file),
+              "products",
+            );
+            if (results.uploaded.length !== localImages.length) {
+              throw new Error(`Only ${results.uploaded.length} of ${localImages.length} images uploaded`);
+            }
+            galleryUrlsRef.current = localImages.map((_, i) => results.uploaded[i]?.url || "").filter(Boolean);
+            galleryDirtyRef.current = false;
+          } catch (e) {
+            console.error("Failed to upload images:", e);
+            throw e;
+          } finally {
+            setIsUploading(false);
           }
+        }
+        galleryUrlsRef.current.forEach((url, idx) => {
+          uploadedImages.push({ url, isPrimary: idx === 0 });
         });
-        setIsUploading(false);
       }
 
       // 2. Upload variation images
-      const variationImageUrls: Record<string, string> = {};
-      const variationImagesToUpload = data.variations.filter(
-        (v) => v.images.length > 0,
-      );
-      if (variationImagesToUpload.length > 0) {
+      const variationImageUrls: Record<string, string> = { ...varUrlsRef.current };
+      const variationImagesToUpload = Object.entries(varImagesRef.current)
+        .filter(([, imgs]) => imgs.length > 0)
+        .map(([id, imgs]) => ({ id, file: imgs[0].file }));
+      if (variationImagesToUpload.length > 0 && varDirtyRef.current) {
         setIsUploading(true);
-        const uploadResults = await Promise.allSettled(
-          variationImagesToUpload.map((v) =>
-            filesService.uploadFile(v.images[0].file, "products"),
-          ),
-        );
-        uploadResults.forEach((result, idx) => {
-          if (result.status === "fulfilled") {
-            variationImageUrls[variationImagesToUpload[idx].id] =
-              result.value.url;
-          } else {
-            console.error(
-              `Failed to upload variation image ${idx}:`,
-              result.reason,
-            );
+        try {
+          const results = await filesService.uploadFiles(
+            variationImagesToUpload.map((v) => v.file),
+            "products",
+          );
+          if (results.uploaded.length !== variationImagesToUpload.length) {
+            throw new Error(`Only ${results.uploaded.length} of ${variationImagesToUpload.length} variation images uploaded`);
           }
-        });
-        setIsUploading(false);
+          results.uploaded.forEach((result, idx) => {
+            const id = variationImagesToUpload[idx].id;
+            variationImageUrls[id] = result.url;
+            varUrlsRef.current[id] = result.url;
+          });
+          varDirtyRef.current = false;
+        } catch (e) {
+          console.error("Failed to upload variation images:", e);
+          throw e;
+        } finally {
+          setIsUploading(false);
+        }
       }
 
       const isSimple = data.type === "simple";
@@ -598,7 +619,7 @@ export default function AddProductPage() {
         ...(isSimple
           ? {}
           : {
-              variations: data.variations.map((v) => ({
+              variations: (data.variations || []).map((v) => ({
                 sku: v.id,
                 price: Number(v.price),
                 salePrice: v.salePrice ? Number(v.salePrice) : undefined,
@@ -1210,10 +1231,10 @@ export default function AddProductPage() {
                                     }
                                   />
                                   <div className="flex flex-wrap gap-1 max-w-28">
-                                    {v.images.length > 0 ? (
+                                    {varImages[v.id]?.length > 0 ? (
                                       <div className="relative w-9 h-9 rounded overflow-hidden border border-gray-100 group">
                                         <Image
-                                          src={v.images[0].preview}
+                                          src={varImages[v.id][0].preview}
                                           alt={v.name}
                                           fill
                                           className="object-cover"
