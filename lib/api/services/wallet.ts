@@ -9,7 +9,8 @@ import {
   WalletDetailsResponseDTO,
   WalletFundRequestDTO,
   WithdrawRequestDTO,
-  UpdateWalletCurrencyDTO
+  UpdateWalletCurrencyDTO,
+  PagedTransactionsDTO,
 } from "../types/wallet.types";
 import { InitializePaymentResponseDTO } from "../types/payments.types";
 
@@ -48,4 +49,15 @@ export async function withdraw(data: WithdrawRequestDTO): Promise<void> {
 export async function changeCurrency(data: UpdateWalletCurrencyDTO): Promise<void> {
   const response = await apiClient.put<void>("/Wallet/currency", data);
   return response.data;
+}
+
+/**
+ * GET /api/vendor/wallet/transactions
+ * Get paginated full transaction log for the authenticated vendor
+ */
+export async function getTransactionLog(page = 1, pageSize = 20): Promise<PagedTransactionsDTO> {
+  const response = await apiClient.get<ApiResponse<PagedTransactionsDTO>>(`${BASE}/transactions`, {
+    params: { page, pageSize },
+  });
+  return response.data.data;
 }
