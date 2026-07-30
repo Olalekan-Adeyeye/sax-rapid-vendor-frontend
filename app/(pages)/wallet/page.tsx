@@ -13,11 +13,11 @@ import {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/Button";
 import * as walletService from "@/lib/api/services/wallet";
-import * as vendorService from "@/lib/api/services/vendor";
 import { formatCurrency } from "@/lib/utils/currency";
 import { getRelativeTime } from "@/lib/utils/date";
 import { ErrorComponent } from "@/components/ui/ErrorComponent";
 import { getErrorMessage } from "@/lib/utils/errors";
+import { useAuth } from "@/lib/context/AuthContext";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
 import { EmptyState } from "@/components/common/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -27,6 +27,7 @@ import { FundWalletModal } from "@/components/wallet/FundWalletModal";
 
 export default function WalletPage() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   // Modal States
   const [isFundModalOpen, setIsFundModalOpen] = useState(false);
@@ -39,11 +40,6 @@ export default function WalletPage() {
   } = useQuery({
     queryKey: ["vendor-wallet"],
     queryFn: walletService.getWalletDetails,
-  });
-
-  const { data: vendor } = useQuery({
-    queryKey: ["vendor-profile"],
-    queryFn: vendorService.getMyVendorProfile,
   });
 
   const activeCurrency = wallet?.currency || "NGN";
@@ -197,8 +193,7 @@ export default function WalletPage() {
                   ) : (
                     transactions.map((t, i) => {
                       const isCredit =
-                        t.transactionType?.toLowerCase() === "deposit" ||
-                        t.transactionType?.toLowerCase() === "earnings";
+                        t.transactionType?.toLowerCase() === "credit";
                       const Icon = isCredit ? ArrowDownLeft : ArrowUpRight;
 
                       return (
@@ -243,14 +238,16 @@ export default function WalletPage() {
                 </div>
                 {transactions.length > 0 && !loadingTransactions && (
                   <div className="p-8 border-t border-gray-50">
-                    <Button
-                      fullWidth
-                      variant="outline"
-                      size="sm"
-                      className="py-4 text-gray-500 hover:text-black"
-                    >
-                      View Full Statement
-                    </Button>
+                    <Link href="/wallet/transactions">
+                      <Button
+                        fullWidth
+                        variant="outline"
+                        size="sm"
+                        className="py-4 text-gray-500 hover:text-black"
+                      >
+                        View Full Statement
+                      </Button>
+                    </Link>
                   </div>
                 )}
               </div>
@@ -265,7 +262,7 @@ export default function WalletPage() {
         onClose={() => setIsFundModalOpen(false)}
         onSuccess={handleActionSuccess}
         currency={activeCurrency}
-        userEmail={vendor?.ownerEmail || ""}
+        userEmail={user?.email || ""}
       />
     </div>
   );

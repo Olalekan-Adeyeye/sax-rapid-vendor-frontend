@@ -54,7 +54,7 @@ export interface VendorSubscriptionResponse {
   billingCycle: SubscriptionBillingCycle;
   priceAtPurchase: number;
   startDate: string; // ISO 8601
-  expiryDate: string; // ISO 8601
+  endDate: string; // ISO 8601
   isActive: boolean;
   isCancelled: boolean;
 }

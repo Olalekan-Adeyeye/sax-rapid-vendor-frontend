@@ -28,6 +28,7 @@ export interface ProductVariationResponseDTO {
 	effectivePrice: number;
 	stockQuantity: number;
 	isInStock: boolean;
+	imageUrl?: string | null;
 	attributes: Record<string, string> | null;
 }
 

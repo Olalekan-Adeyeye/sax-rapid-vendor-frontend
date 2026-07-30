@@ -1,4 +1,5 @@
 import { VariationDetails, VariationAttributeDTO } from "../api/types/orders.types";
+import { Attribute, Variation } from "@/lib/types/product-form.types";
 
 /**
  * Formats variation details from various possible API formats (string, JSON string, or object).
@@ -55,4 +56,59 @@ export function formatVariationDetails(details: VariationDetails): string | null
 	}
 
 	return typeof details === "string" ? details : null;
+}
+
+export function generateSku(productName?: string): string {
+	const prefix = productName
+		? productName
+				.split(" ")
+				.map((w) => w.charAt(0).toUpperCase())
+				.slice(0, 3)
+				.join("")
+		: "PRD";
+	const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+	return `${prefix}-${random}`;
+}
+
+type CombinResult = {
+	vals: string[];
+	attrList: { attributeName: string; attributeValue: string }[];
+};
+
+function combineAttrs(attrs: Attribute[]): CombinResult[] {
+	if (attrs.length === 0) return [];
+	if (attrs.length === 1)
+		return attrs[0].values.map((v) => ({
+			vals: [v],
+			attrList: [{ attributeName: attrs[0].name, attributeValue: v }],
+		}));
+	const rest = combineAttrs(attrs.slice(1));
+	const current = attrs[0];
+	return current.values.flatMap((val) =>
+		rest.map((r) => ({
+			vals: [val, ...r.vals],
+			attrList: [
+				{ attributeName: current.name, attributeValue: val },
+				...r.attrList,
+			],
+		})),
+	);
+}
+
+export function generateVariations(attributes: Attribute[]): Variation[] {
+	const valid = attributes.filter(
+		(a) => a.name.trim() && a.values.length > 0,
+	);
+	if (valid.length === 0) return [];
+
+	return combineAttrs(valid).map((combo) => ({
+		id: Math.random().toString(36).substring(7),
+		name: combo.vals.join(" / "),
+		price: "",
+		salePrice: "",
+		saleStartDate: "",
+		saleEndDate: "",
+		stock: "",
+		attributes: combo.attrList,
+	}));
 }

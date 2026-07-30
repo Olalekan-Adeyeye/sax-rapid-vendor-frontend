@@ -50,6 +50,13 @@ export interface UploadDocumentsRequest {
   businessDocumentUrl?: string | null;
 }
 
+/** POST /api/Vendor/upgrade-to-business – Upgrade individual to business account */
+export interface UpgradeToBusinessRequest {
+  companyName: string;
+  businessRegistrationNumber: string;
+  businessDocumentUrl: string;
+}
+
 // ─── Response DTOs ────────────────────────────────────────────────────────────
 
 /** Returned by GET/POST/PUT /api/Vendor/profile and GET /api/Vendor/{vendorId} */

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import {
@@ -23,7 +23,6 @@ import * as productsService from "@/lib/api/services/products";
 import { ProductResponseDTO } from "@/lib/api/types/products.types";
 import { getErrorMessage } from "@/lib/utils/errors";
 import { useCurrency } from "@/lib/hooks/useCurrency";
-import { formatCurrency } from "@/lib/utils/currency";
 import { ProductDeleteModal } from "@/components/products/ProductDeleteModal";
 
 export default function SingleProductPage() {
@@ -320,7 +319,7 @@ export default function SingleProductPage() {
                 <h5 className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
                   Description
                 </h5>
-                <div className="bg-gray-50/50 rounded p-8 border border-gray-100">
+                <div className="bg-white rounded p-8 border border-gray-100">
                   <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap font-medium">
                     {product.description ||
                       "No description provided for this product."}
@@ -330,92 +329,52 @@ export default function SingleProductPage() {
             </div>
           </div>
 
-          {/* Secondary Content Sections */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-            {/* Attributes Section */}
-            {product.attributes && product.attributes.length > 0 && (
-              <div className="bg-white border border-gray-100 rounded p-10 space-y-8">
-                <div className="flex items-center justify-between border-b border-gray-50 pb-6">
-                  <h4 className="text-sm font-black text-black uppercase tracking-widest">
-                    Product Attributes
-                  </h4>
-                  <span className="text-[10px] font-black text-gold bg-gold/5 px-4 py-2 rounded uppercase tracking-widest">
-                    {product.attributes.length} Total
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {/* Group attributes by name */}
-                  {Object.entries(
-                    product.attributes.reduce(
-                      (acc, curr) => {
-                        if (!curr.name) return acc;
-                        if (!acc[curr.name]) acc[curr.name] = [];
-                        acc[curr.name].push(curr.value || "");
-                        return acc;
-                      },
-                      {} as Record<string, string[]>,
-                    ),
-                  ).map(([name, values]) => (
-                    <div
-                      key={name}
-                      className="p-5 bg-gray-50/50 rounded border border-gray-50 space-y-2"
-                    >
-                      <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest block">
-                        {name}
-                      </span>
-                      <div className="flex flex-wrap gap-2">
-                        {values.map((val) => (
-                          <span
-                            key={val}
-                            className="text-xs font-bold text-black bg-white border border-gray-100 px-3 py-1.5 rounded"
-                          >
-                            {val}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Quick Metrics / Small Analytics */}
-            <div className="bg-black text-white rounded p-10 space-y-8 flex flex-col justify-between">
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-black uppercase tracking-widest text-gold/80">
-                    Performance Preview
-                  </h4>
-                  <BarChart3 size={20} className="text-gold" />
-                </div>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between py-4 border-b border-white/5">
-                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                      Favorites
-                    </span>
-                    <span className="text-xs font-black">
-                      {product.favoriteCount || 0}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between py-4 border-b border-white/5">
-                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                      Total Sales
-                    </span>
-                    <span className="text-xs font-black">---</span>
-                  </div>
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                fullWidth
-                className="border-white/10 text-white hover:bg-white hover:text-black transition-all rounded py-6"
-              >
-                <span className="text-[10px] font-black uppercase tracking-[0.2em]">
-                  See Full Analytics
+          {/* Attributes Section */}
+          {product.attributes && product.attributes.length > 0 && (
+            <div className="bg-white border border-gray-100 rounded p-10 space-y-8">
+              <div className="flex items-center justify-between border-b border-gray-50 pb-6">
+                <h4 className="text-sm font-black text-black uppercase tracking-widest">
+                  Product Attributes
+                </h4>
+                <span className="text-[10px] font-black text-gold bg-gold/5 px-4 py-2 rounded uppercase tracking-widest">
+                  {product.attributes.length} Total
                 </span>
-              </Button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {/* Group attributes by name */}
+                {Object.entries(
+                  product.attributes.reduce(
+                    (acc, curr) => {
+                      if (!curr.name) return acc;
+                      if (!acc[curr.name]) acc[curr.name] = [];
+                      acc[curr.name].push(curr.value || "");
+                      return acc;
+                    },
+                    {} as Record<string, string[]>,
+                  ),
+                ).map(([name, values]) => (
+                  <div
+                    key={name}
+                    className="p-5 bg-gray-50/50 rounded border border-gray-50 space-y-2"
+                  >
+                    <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest block">
+                      {name}
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {values.map((val) => (
+                        <span
+                          key={val}
+                          className="text-xs font-bold text-black bg-white border border-gray-100 px-3 py-1.5 rounded"
+                        >
+                          {val}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Variations Table */}
           {isVariable && (
@@ -448,6 +407,9 @@ export default function SingleProductPage() {
                       </th>
                       <th className="px-10 py-6 text-[10px] font-black uppercase tracking-widest text-gray-500 border-b border-gray-100">
                         Stock Status
+                      </th>
+                      <th className="px-10 py-6 text-[10px] font-black uppercase tracking-widest text-gray-500 border-b border-gray-100">
+                        Image
                       </th>
                       <th className="px-10 py-6 text-[10px] font-black uppercase tracking-widest text-gray-500 border-b border-gray-100">
                         Attributes
@@ -494,6 +456,23 @@ export default function SingleProductPage() {
                           </div>
                         </td>
                         <td className="px-10 py-8">
+                          {v.imageUrl ? (
+                            <div className="relative w-12 h-12 rounded overflow-hidden border border-gray-100">
+                              <Image
+                                src={v.imageUrl}
+                                alt=""
+                                fill
+                                className="object-cover"
+                                unoptimized
+                              />
+                            </div>
+                          ) : (
+                            <span className="text-[10px] text-gray-300 font-bold">
+                              —
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-10 py-8">
                           <div className="flex flex-wrap gap-2">
                             {v.attributes &&
                             Object.keys(v.attributes).length > 0 ? (
@@ -522,6 +501,34 @@ export default function SingleProductPage() {
               </div>
             </div>
           )}
+
+          {/* Performance Preview */}
+          <div className="bg-black text-white rounded p-10 space-y-8 flex flex-col justify-between">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-black uppercase tracking-widest text-gold/80">
+                  Performance Preview
+                </h4>
+                <BarChart3 size={20} className="text-gold" />
+              </div>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between py-4 border-b border-white/5">
+                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                    Favorites
+                  </span>
+                  <span className="text-xs font-black">
+                    {product.favoriteCount || 0}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between py-4 border-b border-white/5">
+                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                    Total Sales
+                  </span>
+                  <span className="text-xs font-black">---</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </>
       ) : null}
     </div>

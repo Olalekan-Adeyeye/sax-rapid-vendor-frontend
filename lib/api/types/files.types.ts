@@ -23,6 +23,11 @@ export interface FileUploadResponse {
 }
 
 /**
- * Batch file upload response returns array of upload results
+ * Batch file upload response
  */
-export type FileBatchUploadResponse = FileUploadResponse[];
+export interface FileBatchUploadResponse {
+  uploaded: FileUploadResponse[];
+  failed: { fileName: string; error: string }[];
+  totalUploaded: number;
+  totalFailed: number;
+}

@@ -8,6 +8,7 @@ import type {
   CreateVendorProfileRequest,
   UpdateVendorProfileRequest,
   UploadDocumentsRequest,
+  UpgradeToBusinessRequest,
   VendorProfileResponse,
 } from "../types/vendor.types";
 import type { ApiResponse } from "../types/auth.types";
@@ -64,4 +65,15 @@ export async function uploadVendorDocuments(
   data: UploadDocumentsRequest
 ): Promise<void> {
   await apiClient.post(`${BASE}/profile/documents`, data);
+}
+
+/**
+ * POST /api/Vendor/upgrade-to-business
+ * Upgrades an individual vendor account to a business vendor account
+ */
+export async function upgradeToBusiness(
+  data: UpgradeToBusinessRequest
+): Promise<VendorProfileResponse> {
+  const response = await apiClient.post<ApiResponse<VendorProfileResponse>>(`${BASE}/upgrade-to-business`, data);
+  return response.data.data;
 }
