@@ -27,7 +27,8 @@ import * as productsService from "@/lib/api/services/products";
 import * as brandsService from "@/lib/api/services/brands";
 import * as filesService from "@/lib/api/services/files";
 import { CategoryResponseDTO } from "@/lib/api/types/categories.types";
-import { ATTRIBUTE_CATEGORIES } from "@/lib/constants/attributeCategories";
+import { ATTRIBUTE_CATEGORIES } from "@/lib/constants/attributeCategories";
+
 import { getErrorMessage } from "@/lib/utils/errors";
 import { Input } from "@/components/ui/Input";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -36,111 +37,13 @@ import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { ErrorComponent } from "@/components/ui/ErrorComponent";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
-import {
-	useForm,
-	useWatch,
-	UseFormRegister,
-	UseFormSetValue,
-	FieldErrors,
-	Path,
-} from "react-hook-form";
+import ChipInput from "@/components/ui/ChipInput";
+import { useForm } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import { productSchema, ProductFormValues } from "@/lib/schemas/vendor";
+import { FlatProductValues, Attribute, Variation } from "@/lib/types/product-form.types";
 import { UpdateProductDTO } from "@/lib/api/types/products.types";
-
-// Helper type that represents the logical OR of all fields for easier RHF integration
-type FlatProductValues = {
-	name: string;
-	description: string;
-	categoryId: string;
-	brandId: string;
-	type: "simple" | "variable";
-	regularPrice: string;
-	salePrice?: string;
-	saleStartDate?: string;
-	saleEndDate?: string;
-	stockQuantity: string;
-	sku?: string;
-	weight: string;
-	length?: string;
-	width?: string;
-	height?: string;
-	status: string;
-	attributes: Attribute[];
-	variations: Variation[];
-	images: string[];
-};
-
-interface Attribute {
-	id: string;
-	name: string;
-	values: string[];
-}
-
-interface Variation {
-	id: string;
-	name: string;
-	price: string;
-	salePrice?: string;
-	saleStartDate?: string;
-	saleEndDate?: string;
-	stock: string;
-	attributes?: { attributeName: string; attributeValue: string }[];
-	imageUrl?: string;
-}
-
-const ChipInput = ({
-	values,
-	onChange,
-	placeholder,
-}: {
-	values: string[];
-	onChange: (v: string[]) => void;
-	placeholder?: string;
-}) => {
-	const [inputValue, setInputValue] = useState("");
-	const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-		if (e.key === "Enter" && inputValue.trim()) {
-			e.preventDefault();
-			const newVal = inputValue.trim();
-			if (!values.find((v) => v.toLowerCase() === newVal.toLowerCase())) {
-				onChange([...values, newVal]);
-			}
-			setInputValue("");
-		}
-	};
-	const removeValue = (valToRemove: string) => {
-		onChange(values.filter((v) => v !== valToRemove));
-	};
-	return (
-		<div className="w-full bg-gray-50 border border-gray-100 focus-within:border-black rounded px-4 py-3 transition-all flex flex-wrap gap-2 items-center min-h-12.5">
-			{values.map((val) => (
-				<span
-					key={val}
-					className="bg-black text-white text-xs font-bold px-3 py-1.5 rounded flex items-center gap-1.5"
-				>
-					{val}
-					<X
-						size={12}
-						className="cursor-pointer hover:text-gold transition-colors"
-						onClick={() => removeValue(val)}
-					/>
-				</span>
-			))}
-			<input
-				type="text"
-				value={inputValue}
-				onChange={(e) => setInputValue(e.target.value)}
-				onKeyDown={handleKeyDown}
-				placeholder={
-					values.length === 0 ? placeholder : "Type and press Enter..."
-				}
-				className="flex-1 bg-transparent text-xs font-bold text-black outline-none placeholder:text-gray-300 min-w-30"
-			/>
-		</div>
-	);
-};
-
+import { useProductFormHandlers } from "@/lib/hooks/useProductFormHandlers";
 export default function EditProductPage() {
 	const router = useRouter();
 	const params = useParams();
@@ -148,18 +51,12 @@ export default function EditProductPage() {
 	const { toast } = useToast();
 	const { currencySymbol } = useCurrency();
 
-	const [hasGeneratedVariations, setHasGeneratedVariations] = useState(false);
-	const [expandedVariationSchedules, setExpandedVariationSchedules] = useState<
-		Set<string>
-	>(new Set());
-
 	const [categories, setCategories] = useState<CategoryResponseDTO[]>([]);
 	const [loadingCategories, setLoadingCategories] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [fetchError, setFetchError] = useState<string | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isFetching, setIsFetching] = useState(true);
-	const [isSchedulingSale, setIsSchedulingSale] = useState(false);
 
 	const { data: brands = [] } = useQuery({
 		queryKey: ["brands"],
@@ -196,26 +93,43 @@ export default function EditProductPage() {
 		setValue,
 		getValues,
 		reset,
-		control,
 		formState: { errors },
 	} = form;
 
-	// Typed versions of RHF utilities for the union type
-	const registerField =
-		register as unknown as UseFormRegister<FlatProductValues>;
-	const setFieldValue =
-		setValue as unknown as UseFormSetValue<FlatProductValues>;
-	const fieldErrors = errors as unknown as FieldErrors<FlatProductValues>;
-
-	const formValues = useWatch({ control }) as unknown as FlatProductValues;
-	const productType = formValues.type;
-	const categoryId = formValues.categoryId;
-	const attributes = (formValues.type === "variable"
-		? formValues.attributes || []
-		: []) as unknown as Attribute[];
-	const variations = (formValues.type === "variable"
-		? formValues.variations || []
-		: []) as unknown as Variation[];
+	const {
+		registerField,
+		setFieldValue,
+		fieldErrors,
+		formValues,
+		productType,
+		categoryId,
+		attributes,
+		variations,
+		hasGeneratedVariations,
+		setHasGeneratedVariations,
+		expandedVariationSchedules,
+		isSchedulingSale,
+		setIsSchedulingSale,
+		varDirty,
+		varDirtyRef,
+		setVarDirty,
+		varUrls,
+		varUrlsRef,
+		setVarUrls,
+		varImages,
+		varImagesRef,
+		galleryDirtyRef,
+		galleryUrlsRef,
+		handleTypeSwitch,
+		addAttribute,
+		updateAttribute,
+		removeAttribute,
+		toggleVariationSchedule,
+		generateVariations,
+		updateVariation,
+		handleVariationImageUpload,
+		removeVariationImage,
+	} = useProductFormHandlers(form, toast);
 
 	const [galleryItems, setGalleryItems] = useState<
 		{ url?: string; file?: File; preview?: string }[]
@@ -236,7 +150,7 @@ export default function EditProductPage() {
 
 		setGalleryItems((prev) => [...prev, ...newItems]);
 		galleryDirtyRef.current = true;
-		e.target.value = ""; // Reset input
+		e.target.value = "";
 	};
 
 	const removeImage = (index: number) => {
@@ -253,20 +167,6 @@ export default function EditProductPage() {
 		galleryRef.current = galleryItems;
 	}, [galleryItems]);
 
-	const galleryDirtyRef = useRef(true);
-	const galleryUrlsRef = useRef<string[]>([]);
-	const [varDirty, setVarDirty] = useState(true);
-	const varDirtyRef = useRef(varDirty);
-	useEffect(() => { varDirtyRef.current = varDirty; }, [varDirty]);
-	const [varUrls, setVarUrls] = useState<Record<string, string>>({});
-	const varUrlsRef = useRef(varUrls);
-	useEffect(() => { varUrlsRef.current = varUrls; }, [varUrls]);
-	const [varImages, setVarImages] = useState<Record<string, { file: File; preview: string }[]>>({});
-	const varImagesRef = useRef(varImages);
-	useEffect(() => {
-		varImagesRef.current = varImages;
-	}, [varImages]);
-
 	// Cleanup object URLs on unmount
 	useEffect(() => {
 		const ref = varImagesRef;
@@ -278,6 +178,7 @@ export default function EditProductPage() {
 				imgs.forEach((img) => URL.revokeObjectURL(img.preview));
 			});
 		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	const fetchCats = useCallback(async () => {
@@ -405,7 +306,7 @@ export default function EditProductPage() {
 		} finally {
 			setIsFetching(false);
 		}
-	}, [productId, reset, setValue]);
+	}, [productId, reset, setValue, setHasGeneratedVariations, setVarUrls]);
 
 	useEffect(() => {
 		setTimeout(() => {
@@ -462,162 +363,6 @@ export default function EditProductPage() {
 			cat.keywords.some((k) => catName.includes(k) || parentName.includes(k)),
 		);
 	}, [categories, categoryId]);
-
-	const handleTypeSwitch = (type: "simple" | "variable") => {
-		if (type === "simple" && attributes.length > 0) {
-			setValue("attributes", []);
-			setValue("variations", []);
-			setHasGeneratedVariations(false);
-			toast(
-				"Switched to Simple",
-				"Attributes and variations were reset.",
-				"warning",
-			);
-		}
-		setValue("type", type);
-	};
-
-	const addAttribute = (name: string = "", initialValues: string[] = []) => {
-		if (
-			name &&
-			attributes.some(
-				(a: Attribute) => a.name.toLowerCase() === name.toLowerCase(),
-			)
-		) {
-			toast(
-				"Already exists",
-				`The attribute '${name}' has already been added.`,
-				"info",
-			);
-			return;
-		}
-		setFieldValue("attributes" as Path<FlatProductValues>, [
-			...attributes,
-			{
-				id: Math.random().toString(36).substring(7),
-				name,
-				values: initialValues,
-			},
-		]);
-	};
-
-	const updateAttribute = (
-		id: string,
-		field: keyof Attribute,
-		value: string | string[],
-	) => {
-		const updated = attributes.map((attr: Attribute) =>
-			attr.id === id ? { ...attr, [field]: value } : attr,
-		);
-		setFieldValue("attributes" as Path<FlatProductValues>, updated);
-	};
-
-	const removeAttribute = (id: string) => {
-		const filtered = attributes.filter((attr: Attribute) => attr.id !== id);
-		setFieldValue("attributes" as Path<FlatProductValues>, filtered);
-	};
-
-	const toggleVariationSchedule = (id: string) => {
-		setExpandedVariationSchedules((prev) => {
-			const next = new Set(prev);
-			if (next.has(id)) next.delete(id);
-			else next.add(id);
-			return next;
-		});
-	};
-
-	const generateVariations = () => {
-		const validAttributes = attributes.filter(
-			(a: Attribute) => a.name.trim() && a.values.length > 0,
-		);
-		if (validAttributes.length === 0) {
-			toast(
-				"Action needed",
-				"Add at least one attribute with values to generate variations.",
-				"error",
-			);
-			return;
-		}
-		const combine = (
-			attrs: Attribute[],
-		): { vals: string[]; attrList: { attributeName: string; attributeValue: string }[] }[] => {
-			if (attrs.length === 0) return [];
-			if (attrs.length === 1)
-				return attrs[0].values.map((v: string) => ({
-					vals: [v],
-					attrList: [{ attributeName: attrs[0].name, attributeValue: v }],
-				}));
-			const rest = combine(attrs.slice(1));
-			const current = attrs[0];
-			return current.values.flatMap((val: string) =>
-				rest.map((r) => ({
-					vals: [val, ...r.vals],
-					attrList: [{ attributeName: current.name, attributeValue: val }, ...r.attrList],
-				})),
-			);
-		};
-
-		const combos = combine(validAttributes);
-		const newVariations = combos.map((combo) => ({
-			id: Math.random().toString(36).substring(7),
-			name: combo.vals.join(" / "),
-			price: "",
-			salePrice: "",
-			saleStartDate: "",
-			saleEndDate: "",
-			stock: "",
-			attributes: combo.attrList,
-		}));
-
-		setFieldValue("variations" as Path<FlatProductValues>, newVariations);
-		setHasGeneratedVariations(true);
-		toast(
-			"Variations Created",
-			`Successfully generated ${newVariations.length} variations.`,
-			"success",
-		);
-	};
-
-	const updateVariation = (
-		id: string,
-		field: keyof Variation,
-		value: string,
-	) => {
-		const updated = variations.map((v: Variation) =>
-			v.id === id ? { ...v, [field]: value } : v,
-		);
-		setFieldValue("variations" as Path<FlatProductValues>, updated);
-	};
-
-  const handleVariationImageUpload = (
-    variationId: string,
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    const file = files[0];
-    const preview = URL.createObjectURL(file);
-    setVarImages((prev) => {
-      const existing = prev[variationId];
-      if (existing?.[0]) URL.revokeObjectURL(existing[0].preview);
-      return { ...prev, [variationId]: [{ file, preview }] };
-    });
-    setVarDirty(true);
-    varDirtyRef.current = true;
-    e.target.value = "";
-  };
-
-  const removeVariationImage = (variationId: string) => {
-    setVarImages((prev) => {
-      const existing = prev[variationId];
-      if (existing?.[0]) URL.revokeObjectURL(existing[0].preview);
-      const next = { ...prev };
-      delete next[variationId];
-      return next;
-    });
-    setVarDirty(true);
-    varDirtyRef.current = true;
-  };
 
 	const onSubmit = async (values: ProductFormValues) => {
 		const data = values as unknown as FlatProductValues;
