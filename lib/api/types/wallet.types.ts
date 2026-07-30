@@ -13,10 +13,16 @@ export interface WalletDetailsResponseDTO {
 export interface WalletTransactionResponseDTO {
   id?: string | null;
   transactionReference?: string | null;
+  gatewayReference?: string | null;
   provider?: string | null;
   transactionType?: string | null;
+  category?: string | null;
   amount: number;
+  balanceBefore?: number;
+  balanceAfter?: number;
+  currency?: string | null;
   status?: string | null;
+  description?: string | null;
   transactionDate: string;
 }
 
@@ -42,14 +48,12 @@ export interface WalletResponseDTO extends WalletDetailsResponseDTO {
   updatedAt?: string | null;
 }
 
-export interface PagedWalletTransactionResponseDTO {
+export interface PagedTransactionsDTO {
   items: WalletTransactionResponseDTO[] | null;
   totalCount: number;
-  pageIndex: number;
-  pageSize: number;
   totalPages: number;
-  hasPreviousPage: boolean;
-  hasNextPage: boolean;
+  page: number;
+  pageSize: number;
 }
 
 export interface UpdateWalletCurrencyDTO {
