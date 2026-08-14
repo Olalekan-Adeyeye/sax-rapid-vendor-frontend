@@ -91,7 +91,7 @@ export function AddBankAccountModal({
         accountName: "",
         accountNumber: "",
         bankCode: "",
-        currency: "NGN",
+        currency: defaultCurrency,
       });
       onClose();
     },
@@ -114,8 +114,6 @@ export function AddBankAccountModal({
   const currencyOptions = useMemo(() => {
     return [
       { label: `${defaultCurrency} (${currencySymbol})`, value: defaultCurrency },
-      ...(defaultCurrency !== "ZAR" ? [{ label: "ZAR (R)", value: "ZAR" as const }] : []),
-      ...(defaultCurrency !== "NGN" ? [{ label: "NGN (₦)", value: "NGN" as const }] : []),
     ];
   }, [defaultCurrency, currencySymbol]);
 

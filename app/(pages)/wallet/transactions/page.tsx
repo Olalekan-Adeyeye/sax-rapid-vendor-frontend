@@ -17,6 +17,7 @@ import { ErrorComponent } from "@/components/ui/ErrorComponent";
 import { EmptyState } from "@/components/common/EmptyState";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
 import { formatCurrency } from "@/lib/utils/currency";
+import { useCurrency } from "@/lib/hooks/useCurrency";
 import { formatDateTime } from "@/lib/utils/date";
 import { getErrorMessage } from "@/lib/utils/errors";
 import * as walletService from "@/lib/api/services/wallet";
@@ -25,6 +26,7 @@ export default function TransactionLogPage() {
   const router = useRouter();
   const [page, setPage] = useState(1);
   const pageSize = 20;
+  const { currency: regionCurrency } = useCurrency();
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["wallet-transactions", page],
@@ -163,7 +165,7 @@ export default function TransactionLogPage() {
                           className={`text-sm font-black ${credit ? "text-green-500" : "text-black"}`}
                         >
                           {credit ? "+" : "-"}
-                          {formatCurrency(t.amount, t.currency || "NGN")}
+                          {formatCurrency(t.amount, t.currency || regionCurrency)}
                         </span>
                       </td>
                       <td className="px-8 py-6">{statusBadge(t.status)}</td>
