@@ -14,7 +14,7 @@ export const cookies = {
     expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
     
     const secure = window.location.protocol === "https:" ? "Secure;" : "";
-    const cookieValue = `${name}=${encodeURIComponent(value)}; expires=${expires.toUTCString()}; path=/; SameSite=Strict; ${secure}`;
+    const cookieValue = `${name}=${encodeURIComponent(value)}; expires=${expires.toUTCString()}; path=/; SameSite=Lax; ${secure}`;
     
     document.cookie = cookieValue;
   },
@@ -42,6 +42,6 @@ export const cookies = {
    */
   remove: (name: string): void => {
     if (typeof document === "undefined") return;
-    document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Strict;`;
+    document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Lax;`;
   },
 };

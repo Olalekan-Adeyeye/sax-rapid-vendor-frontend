@@ -9,7 +9,11 @@ interface PromotionTypePickerModalProps {
   onSelect: (type: "coupon" | "campaign") => void;
 }
 
-export function PromotionTypePickerModal({ isOpen, onClose, onSelect }: PromotionTypePickerModalProps) {
+export function PromotionTypePickerModal({
+  isOpen,
+  onClose,
+  onSelect,
+}: PromotionTypePickerModalProps) {
   const options = [
     {
       type: "coupon" as const,
@@ -19,14 +23,14 @@ export function PromotionTypePickerModal({ isOpen, onClose, onSelect }: Promotio
       color: "bg-gold/20 text-gold",
       hover: "hover:border-gold hover:bg-gold/5",
     },
-    {
-      type: "campaign" as const,
-      title: "Promotional Campaigns",
-      desc: "Launch time-limited store wide sales or seasonal events.",
-      icon: Rocket,
-      color: "bg-black text-white",
-      hover: "hover:border-black hover:bg-gray-50",
-    },
+    // {
+    //   type: "campaign" as const,
+    //   title: "Promotional Campaigns",
+    //   desc: "Launch time-limited store wide sales or seasonal events.",
+    //   icon: Rocket,
+    //   color: "bg-black text-white",
+    //   hover: "hover:border-black hover:bg-gray-50",
+    // },
   ];
 
   return (
@@ -44,7 +48,9 @@ export function PromotionTypePickerModal({ isOpen, onClose, onSelect }: Promotio
             onClick={() => onSelect(opt.type)}
             className={`w-full p-6 rounded border border-gray-100 flex items-start gap-5 text-left transition-all ${opt.hover}`}
           >
-            <div className={`w-12 h-12 rounded flex items-center justify-center shrink-0 ${opt.color}`}>
+            <div
+              className={`w-12 h-12 rounded flex items-center justify-center shrink-0 ${opt.color}`}
+            >
               <opt.icon size={22} />
             </div>
             <div className="min-w-0">
