@@ -99,15 +99,27 @@ export default function PayoutsPage() {
         title="Withdrawals"
         description="Request and track your payouts to your bank account"
         actions={
-          <Button
-            onClick={() => setIsWithdrawModalOpen(true)}
-            rounded="full"
-            size="sm"
-            className="px-8 py-3.5"
-          >
-            <ArrowDownCircle size={16} />
-            Request Withdrawal
-          </Button>
+          <>
+            <Button
+              variant="outline"
+              rounded="full"
+              size="sm"
+              className="px-8 py-3.5 bg-gray-100!"
+              onClick={() => setIsAddBankModalOpen(true)}
+            >
+              <Plus size={16} />
+              Add Bank Account
+            </Button>
+            <Button
+              onClick={() => setIsWithdrawModalOpen(true)}
+              rounded="full"
+              size="sm"
+              className="px-8 py-3.5"
+            >
+              <ArrowDownCircle size={16} />
+              Request Withdrawal
+            </Button>
+          </>
         }
       />
 
@@ -130,24 +142,18 @@ export default function PayoutsPage() {
         <StatCard
           icon={CheckCircle}
           title="Total Balance"
-          value={formatCurrency((wallet?.balance || 0) + (wallet?.pendingBalance || 0), activeCurrency)}
+          value={formatCurrency(
+            (wallet?.balance || 0) + (wallet?.pendingBalance || 0),
+            activeCurrency,
+          )}
           detail="Combined value"
           isLoading={loadingWallet}
         />
       </div>
 
       <div className="bg-white border border-gray-100 rounded overflow-hidden">
-        <div className="p-8 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="p-8 border-b border-gray-50 flex items-center justify-between gap-6">
           <h4 className="text-sm font-bold text-black">Payout Methods</h4>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsAddBankModalOpen(true)}
-            className="text-xs font-bold text-gold hover:text-black"
-          >
-            <Plus size={14} />
-            Add Bank Account
-          </Button>
         </div>
         <div className="p-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
           {bankAccounts.length > 0 ? (
@@ -198,7 +204,11 @@ export default function PayoutsPage() {
             ))
           ) : (
             <div className="col-span-full">
-              <EmptyState icon={CreditCard} title="No bank accounts added yet" className="py-12" />
+              <EmptyState
+                icon={CreditCard}
+                title="No bank accounts added yet"
+                className="py-12"
+              />
             </div>
           )}
         </div>
@@ -284,7 +294,10 @@ export default function PayoutsPage() {
               ) : (
                 <tr>
                   <td colSpan={5}>
-                    <EmptyState icon={Banknote} title="No payout records found" />
+                    <EmptyState
+                      icon={Banknote}
+                      title="No payout records found"
+                    />
                   </td>
                 </tr>
               )}
@@ -300,7 +313,7 @@ export default function PayoutsPage() {
           queryClient.invalidateQueries({ queryKey: ["vendor-wallet"] });
         }}
         availableBalance={wallet?.balance || 0}
-        currency={wallet?.currency || "NGN"}
+        currency={wallet?.currency || activeCurrency}
       />
 
       <AddBankAccountModal

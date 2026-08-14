@@ -5,6 +5,8 @@ import { Modal } from "@/components/ui/Modal";
 import { Star, Search, Check } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { formatCurrency } from "@/lib/utils/currency";
+import { useCurrency } from "@/lib/hooks/useCurrency";
 
 interface ConfigureFeaturedModalProps {
   isOpen: boolean;
@@ -13,16 +15,17 @@ interface ConfigureFeaturedModalProps {
 
 // Mock products
 const MOCK_PRODUCTS = [
-  { id: "1", name: "Premium Human Hair", price: "₦45,000", image: "https://via.placeholder.com/50" },
-  { id: "2", name: "Lace Front Wig", price: "₦32,000", image: "https://via.placeholder.com/50" },
-  { id: "3", name: "Shea Butter Conditioner", price: "₦8,500", image: "https://via.placeholder.com/50" },
-  { id: "4", name: "Argan Oil Serum", price: "₦12,000", image: "https://via.placeholder.com/50" },
-  { id: "5", name: "Silk Hair Wrap", price: "₦5,000", image: "https://via.placeholder.com/50" },
+  { id: "1", name: "Premium Human Hair", price: 45000, image: "https://via.placeholder.com/50" },
+  { id: "2", name: "Lace Front Wig", price: 32000, image: "https://via.placeholder.com/50" },
+  { id: "3", name: "Shea Butter Conditioner", price: 8500, image: "https://via.placeholder.com/50" },
+  { id: "4", name: "Argan Oil Serum", price: 12000, image: "https://via.placeholder.com/50" },
+  { id: "5", name: "Silk Hair Wrap", price: 5000, image: "https://via.placeholder.com/50" },
 ];
 
 export function ConfigureFeaturedModal({ isOpen, onClose }: ConfigureFeaturedModalProps) {
   const [loading, setLoading] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>(["1", "3"]);
+  const { currency: activeCurrency } = useCurrency();
 
   const toggleProduct = (id: string) => {
     if (selectedIds.includes(id)) {
@@ -84,7 +87,9 @@ export function ConfigureFeaturedModal({ isOpen, onClose }: ConfigureFeaturedMod
                   <h4 className="text-[11px] font-black uppercase tracking-widest text-black">
                     {product.name}
                   </h4>
-                  <p className="text-[10px] font-bold text-gold mt-0.5">{product.price}</p>
+                  <p className="text-[10px] font-bold text-gold mt-0.5">
+                    {formatCurrency(product.price, activeCurrency)}
+                  </p>
                 </div>
               </div>
               <div

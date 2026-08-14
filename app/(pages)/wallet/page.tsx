@@ -24,10 +24,12 @@ import { PageHeader } from "@/components/ui/PageHeader";
 
 import Link from "next/link";
 import { FundWalletModal } from "@/components/wallet/FundWalletModal";
+import { useCurrency } from "@/lib/hooks/useCurrency";
 
 export default function WalletPage() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { currency: regionCurrency } = useCurrency();
 
   // Modal States
   const [isFundModalOpen, setIsFundModalOpen] = useState(false);
@@ -42,7 +44,7 @@ export default function WalletPage() {
     queryFn: walletService.getWalletDetails,
   });
 
-  const activeCurrency = wallet?.currency || "NGN";
+  const activeCurrency = wallet?.currency || regionCurrency;
   const transactions = wallet?.recentTransactions || [];
   const error = walletError ? getErrorMessage(walletError) : null;
   const loadingTransactions = loadingWallet;
