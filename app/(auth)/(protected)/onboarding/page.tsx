@@ -78,8 +78,14 @@ const STEPS = [
   },
 ];
 
-const idTypes = [
+const NG_ID_TYPES = [
   { label: "NIN (National Identity Number)", value: "NIN" },
+  { label: "Driver's License", value: "DL" },
+  { label: "International Passport", value: "IP" },
+];
+
+const ZA_ID_TYPES = [
+  { label: "Govt. ID Document", value: "SA ID" },
   { label: "Driver's License", value: "DL" },
   { label: "International Passport", value: "IP" },
 ];
@@ -293,6 +299,19 @@ export default function OnboardingPage() {
   };
 
   const currentStepData = STEPS[step];
+
+  const country = getCountryByPhoneCode(user?.countryCode ?? "");
+  const idTypes = country?.code === "ZA" ? ZA_ID_TYPES : NG_ID_TYPES;
+  const { statePlaceholder, cityPlaceholder } =
+    country?.code === "ZA"
+      ? {
+          statePlaceholder: "e.g. Johannesburg",
+          cityPlaceholder: "e.g. Sandton",
+        }
+      : {
+          statePlaceholder: "e.g. Lagos",
+          cityPlaceholder: "e.g. Ikeja",
+        };
 
   return (
     <AuthPageContainer
@@ -618,7 +637,7 @@ export default function OnboardingPage() {
                       <Input
                         label="City"
                         id="city"
-                        placeholder="e.g. Lagos"
+                        placeholder={cityPlaceholder}
                         {...register("city")}
                         error={errors.city?.message}
                         required
@@ -627,7 +646,7 @@ export default function OnboardingPage() {
                       <Input
                         label="State / Region"
                         id="state"
-                        placeholder="e.g. Ikeja"
+                        placeholder={statePlaceholder}
                         {...register("state")}
                         error={errors.state?.message}
                         required
@@ -645,7 +664,7 @@ export default function OnboardingPage() {
                     />
 
                     {/* Map Location Picker */}
-                    <div className="pt-4 border-t border-gray-100">
+                    {/* <div className="pt-4 border-t border-gray-100">
                       <p className="text-xs font-bold text-black mb-3">
                         Pickup Location (Optional)
                       </p>
@@ -679,7 +698,7 @@ export default function OnboardingPage() {
                           Set Store Location on Map
                         </button>
                       )}
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               </div>
@@ -742,7 +761,7 @@ export default function OnboardingPage() {
                           </p>
                           <p className="text-[10px] text-gray-400 font-medium">
                             Auto-selected based on your location (
-                            {user?.countryCode || "+234"})
+                            {country?.name || "Nigeria"})
                           </p>
                         </div>
                         <FileUpload
