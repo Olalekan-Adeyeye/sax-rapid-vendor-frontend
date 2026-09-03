@@ -29,6 +29,7 @@ import { TextArea } from "@/components/ui/TextArea";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import ChipInput from "@/components/ui/ChipInput";
+import ImageGallery, { GalleryItem } from "@/components/ui/ImageGallery";
 import { useForm } from "react-hook-form";
 import { productSchema, ProductFormValues } from "@/lib/schemas/vendor";
 import { FlatProductValues, Attribute, Variation } from "@/lib/types/product-form.types";
@@ -132,24 +133,19 @@ export default function AddProductPage() {
     removeVariationImage,
   } = useProductFormHandlers(form, toast);
 
-  const [localImages, setLocalImages] = useState<
-    { file: File; preview: string }[]
-  >([]);
+  const [localImages, setLocalImages] = useState<GalleryItem[]>([]);
   const [isUploading, setIsUploading] = useState(false);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
+  const handleImageUpload = (files: FileList) => {
     const newFiles = Array.from(files).slice(0, 10 - localImages.length);
-    const newLocalImages = newFiles.map((file) => ({
+    const newLocalImages: GalleryItem[] = newFiles.map((file) => ({
+      id: crypto.randomUUID(),
       file,
       preview: URL.createObjectURL(file),
     }));
 
     setLocalImages((prev) => [...prev, ...newLocalImages]);
     galleryDirtyRef.current = true;
-    e.target.value = "";
   };
 
   const removeImage = (index: number) => {
@@ -170,7 +166,9 @@ export default function AddProductPage() {
   useEffect(() => {
     const ref = varImagesRef;
     return () => {
-      localImagesRef.current.forEach((img) => URL.revokeObjectURL(img.preview));
+      localImagesRef.current.forEach((img) => {
+        if (img.preview) URL.revokeObjectURL(img.preview);
+      });
       Object.values(ref.current).forEach((imgs) => {
         imgs.forEach((img) => URL.revokeObjectURL(img.preview));
       });
@@ -272,7 +270,7 @@ export default function AddProductPage() {
           setIsUploading(true);
           try {
             const results = await filesService.uploadFiles(
-              localImages.map((img) => img.file),
+              localImages.map((img) => img.file).filter((f): f is File => !!f),
               "products",
             );
             if (results.uploaded.length !== localImages.length) {
@@ -525,63 +523,13 @@ export default function AddProductPage() {
                 Max 10 images (5MB each)
               </span>
             </h4>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <input
-                type="file"
-                id="image-upload"
-                multiple
-                accept="image/*"
-                className="hidden"
-                onChange={handleImageUpload}
-                disabled={isUploading}
-              />
-              {localImages.map((img, idx) => (
-                <div
-                  key={idx}
-                  className="relative aspect-square rounded overflow-hidden border border-gray-100 group"
-                >
-                  <Image
-                    src={img.preview}
-                    alt={`Product ${idx}`}
-                    fill
-                    className="object-cover"
-                    unoptimized
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeImage(idx)}
-                    className="absolute top-1 right-1 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <X size={12} />
-                  </button>
-                  {idx === 0 && (
-                    <span className="absolute bottom-0 left-0 right-0 bg-gold text-black text-[8px] font-black uppercase py-1 text-center">
-                      Primary
-                    </span>
-                  )}
-                </div>
-              ))}
-              {localImages.length < 10 && (
-                <label
-                  htmlFor="image-upload"
-                  className="aspect-square border-2 border-dashed border-gray-200 bg-gray-50 rounded flex flex-col items-center justify-center text-gray-400 hover:border-black hover:bg-gray-100 hover:text-black transition-all cursor-pointer group"
-                >
-                  {isUploading ? (
-                    <Loader2 size={24} className="animate-spin text-gold" />
-                  ) : (
-                    <>
-                      <Upload
-                        size={24}
-                        className="mb-2 group-hover:-translate-y-1 transition-transform"
-                      />
-                      <span className="text-[10px] font-bold text-center px-2">
-                        {localImages.length === 0 ? "Main Image" : "Add Image"}
-                      </span>
-                    </>
-                  )}
-                </label>
-              )}
-            </div>
+            <ImageGallery
+              items={localImages}
+              onReorder={setLocalImages}
+              onUpload={handleImageUpload}
+              onRemove={removeImage}
+              isUploading={isUploading}
+            />
           </div>
 
           {/* Product Type & Pricing/Inventory */}

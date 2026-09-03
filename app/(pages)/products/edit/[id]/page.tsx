@@ -38,6 +38,7 @@ import { Button } from "@/components/ui/Button";
 import { ErrorComponent } from "@/components/ui/ErrorComponent";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
 import ChipInput from "@/components/ui/ChipInput";
+import ImageGallery, { GalleryItem } from "@/components/ui/ImageGallery";
 import { useForm } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import { productSchema, ProductFormValues } from "@/lib/schemas/vendor";
@@ -52,11 +53,45 @@ export default function EditProductPage() {
 	const { currencySymbol } = useCurrency();
 
 	const [categories, setCategories] = useState<CategoryResponseDTO[]>([]);
+	const [selectedMainCategoryId, setSelectedMainCategoryId] = useState("");
 	const [loadingCategories, setLoadingCategories] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [fetchError, setFetchError] = useState<string | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isFetching, setIsFetching] = useState(true);
+
+	const pendingCategoryIdRef = useRef<string | null>(null);
+	const categoriesRef = useRef<CategoryResponseDTO[]>([]);
+
+	function findCategoryInTree(
+		cats: CategoryResponseDTO[],
+		id: string,
+	): CategoryResponseDTO | undefined {
+		for (const cat of cats) {
+			if (cat.id.toString() === id) return cat;
+			if (cat.subCategories) {
+				const found = findCategoryInTree(cat.subCategories, id);
+				if (found) return found;
+			}
+		}
+		return undefined;
+	}
+
+	const resolveMainCategory = useCallback(
+		(catId: string, cats: CategoryResponseDTO[]) => {
+			if (!catId || cats.length === 0) return;
+			const selectedCat = findCategoryInTree(cats, catId);
+			if (selectedCat) {
+				setSelectedMainCategoryId(
+					selectedCat.parentId != null
+						? selectedCat.parentId.toString()
+						: catId,
+				);
+			}
+		},
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[],
+	);
 
 	const { data: brands = [] } = useQuery({
 		queryKey: ["brands"],
@@ -131,26 +166,21 @@ export default function EditProductPage() {
 		removeVariationImage,
 	} = useProductFormHandlers(form, toast);
 
-	const [galleryItems, setGalleryItems] = useState<
-		{ url?: string; file?: File; preview?: string }[]
-	>([]);
+	const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
 	const [isUploading, setIsUploading] = useState(false);
 
-	const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const files = e.target.files;
-		if (!files || files.length === 0) return;
-
+	const handleImageUpload = (files: FileList) => {
 		const availableSpace = 10 - galleryItems.length;
 		const newFiles = Array.from(files).slice(0, availableSpace);
 
-		const newItems = newFiles.map((file) => ({
+		const newItems: GalleryItem[] = newFiles.map((file) => ({
+			id: crypto.randomUUID(),
 			file,
 			preview: URL.createObjectURL(file),
 		}));
 
 		setGalleryItems((prev) => [...prev, ...newItems]);
 		galleryDirtyRef.current = true;
-		e.target.value = "";
 	};
 
 	const removeImage = (index: number) => {
@@ -186,13 +216,18 @@ export default function EditProductPage() {
 			setLoadingCategories(true);
 			const data = (await categoriesService.getCategories()) || [];
 			setCategories(data);
+			categoriesRef.current = data;
+			if (pendingCategoryIdRef.current) {
+				resolveMainCategory(pendingCategoryIdRef.current, data);
+				pendingCategoryIdRef.current = null;
+			}
 		} catch (err) {
 			console.error("Failed to load categories:", err);
 			setError(getErrorMessage(err));
 		} finally {
 			setLoadingCategories(false);
 		}
-	}, []);
+	}, [resolveMainCategory]);
 
 	const fetchProduct = useCallback(async () => {
 		if (!productId) return;
@@ -227,6 +262,14 @@ export default function EditProductPage() {
 
 			if (product.sku) setValue("sku", product.sku);
 			if (product.brandId) (setValue as unknown as (name: string, value: string) => void)("brandId", product.brandId.toString());
+
+			// Resolve main category
+			const productCategoryId = product.categoryId?.toString() || "";
+			if (productCategoryId && categoriesRef.current.length > 0) {
+				resolveMainCategory(productCategoryId, categoriesRef.current);
+			} else if (productCategoryId) {
+				pendingCategoryIdRef.current = productCategoryId;
+			}
 
 			if (isVariable) {
 				setHasGeneratedVariations(true);
@@ -297,7 +340,10 @@ export default function EditProductPage() {
 				);
 				setGalleryItems(
 					sortedImages
-						.map((img) => ({ url: img.imageUrl || "" }))
+						.map((img) => ({
+							id: img.id?.toString() || crypto.randomUUID(),
+							url: img.imageUrl || "",
+						}))
 						.filter((i) => !!i.url),
 				);
 			}
@@ -306,7 +352,7 @@ export default function EditProductPage() {
 		} finally {
 			setIsFetching(false);
 		}
-	}, [productId, reset, setValue, setHasGeneratedVariations, setVarUrls]);
+	}, [productId, reset, setValue, setHasGeneratedVariations, setVarUrls, resolveMainCategory]);
 
 	useEffect(() => {
 		setTimeout(() => {
@@ -315,30 +361,63 @@ export default function EditProductPage() {
 		}, 0);
 	}, [fetchCats, fetchProduct]);
 
-	const flattenedCategories = useMemo(() => {
-		const flat: { id: string; label: string; name: string }[] = [];
+	const mainCategories = useMemo(() => {
+		const flatMain: { label: string; value: string }[] = [];
 		const seenIds = new Set<string>();
-		const process = (cats: CategoryResponseDTO[]) => {
-			if (!cats || !Array.isArray(cats)) return;
-			cats.forEach((cat) => {
-				if (!cat) return;
+
+		categories.forEach((cat) => {
+			if (!cat) return;
+			if (cat.parentId == null) {
 				const stringId = (cat.id ?? "").toString();
 				if (stringId && !seenIds.has(stringId)) {
-					flat.push({
-						id: stringId,
+					flatMain.push({
+						value: stringId,
 						label: cat.name || "Unnamed Category",
-						name: cat.name || "",
 					});
 					seenIds.add(stringId);
 				}
-				if (cat.subCategories && cat.subCategories.length > 0) {
-					process(cat.subCategories);
+			}
+		});
+		return flatMain;
+	}, [categories]);
+
+	const subCategories = useMemo(() => {
+		if (!selectedMainCategoryId) return [];
+
+		const flatSub: { label: string; value: string }[] = [];
+		const seenIds = new Set<string>();
+
+		categories.forEach((cat) => {
+			if (cat && cat.parentId?.toString() === selectedMainCategoryId) {
+				const stringId = (cat.id ?? "").toString();
+				if (stringId && !seenIds.has(stringId)) {
+					flatSub.push({
+						value: stringId,
+						label: cat.name || "Unnamed Subcategory",
+					});
+					seenIds.add(stringId);
+				}
+			}
+		});
+
+		const parent = categories.find(
+			(c) => c.id?.toString() === selectedMainCategoryId,
+		);
+		if (parent && parent.subCategories) {
+			parent.subCategories.forEach((sub) => {
+				const stringId = (sub.id ?? "").toString();
+				if (stringId && !seenIds.has(stringId)) {
+					flatSub.push({
+						value: stringId,
+						label: sub.name || "Unnamed Subcategory",
+					});
+					seenIds.add(stringId);
 				}
 			});
-		};
-		process(categories);
-		return flat;
-	}, [categories]);
+		}
+
+		return flatSub;
+	}, [categories, selectedMainCategoryId]);
 
 	const displayedPresets = useMemo(() => {
 		if (!categoryId) return [];
@@ -480,16 +559,17 @@ export default function EditProductPage() {
 			</h4>
 			<div className="space-y-6">
 				<Select
-					id="category-selection"
-					label="Category Selection"
+					id="main-category"
+					label="Main Category"
 					required
-					value={categoryId}
-					onChange={(e) => setValue("categoryId", e.target.value)}
+					value={selectedMainCategoryId}
+					onChange={(e) => {
+						const val = e.target.value;
+						setSelectedMainCategoryId(val);
+						setValue("categoryId", val);
+					}}
 					disabled={loadingCategories}
-					options={flattenedCategories.map((cat) => ({
-						label: cat.label,
-						value: cat.id,
-					}))}
+					options={mainCategories}
 					leftSlot={
 						loadingCategories ? (
 							<Loader2 size={14} className="animate-spin" />
@@ -510,8 +590,28 @@ export default function EditProductPage() {
 							</button>
 						) : null
 					}
-					error={error || errors.categoryId?.message}
+					error={
+						error ||
+						(selectedMainCategoryId ? undefined : errors.categoryId?.message)
+					}
 				/>
+
+				{subCategories.length > 0 && (
+					<Select
+						id="sub-category"
+						label="Sub Category"
+						value={categoryId === selectedMainCategoryId ? "" : categoryId}
+						onChange={(e) => {
+							const val = e.target.value;
+							setValue("categoryId", val || selectedMainCategoryId);
+						}}
+						options={subCategories}
+						className="animate-in fade-in slide-in-from-top-1 duration-200"
+					/>
+				)}
+
+				<input type="hidden" {...register("categoryId")} />
+
 				<Select
 					id="brand"
 					label="Brand"
@@ -567,10 +667,7 @@ export default function EditProductPage() {
 							Cancel
 						</Button>
 						<Button
-							onClick={
-								// eslint-disable-next-line react-hooks/refs
-								handleSubmit(onSubmit)
-							}
+							onClick={handleSubmit(onSubmit)}
 							disabled={isSubmitting}
 							size="sm"
 							rounded="full"
@@ -622,63 +719,13 @@ export default function EditProductPage() {
 								Max 10 images (5MB each)
 							</span>
 						</h4>
-						<div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-							<input
-								type="file"
-								id="image-upload"
-								multiple
-								accept="image/*"
-								className="hidden"
-								onChange={handleImageUpload}
-								disabled={isUploading}
-							/>
-							{galleryItems.map((item, idx) => (
-								<div
-									key={idx}
-									className="relative aspect-square rounded overflow-hidden border border-gray-100 group"
-								>
-									<Image
-										src={(item.file ? item.preview : item.url) || ""}
-										alt={`Product ${idx}`}
-										fill
-										className="object-cover"
-										unoptimized
-									/>
-									<button
-										type="button"
-										onClick={() => removeImage(idx)}
-										className="absolute top-1 right-1 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-									>
-										<X size={12} />
-									</button>
-									{idx === 0 && (
-										<span className="absolute bottom-0 left-0 right-0 bg-gold text-black text-[8px] font-black uppercase py-1 text-center">
-											Primary
-										</span>
-									)}
-								</div>
-							))}
-							{galleryItems.length < 10 && (
-								<label
-									htmlFor="image-upload"
-									className="aspect-square border-2 border-dashed border-gray-200 bg-gray-50 rounded flex flex-col items-center justify-center text-gray-400 hover:border-black hover:bg-gray-100 hover:text-black transition-all cursor-pointer group"
-								>
-									{isUploading ? (
-										<Loader2 size={24} className="animate-spin text-gold" />
-									) : (
-										<>
-											<Upload
-												size={24}
-												className="mb-2 group-hover:-translate-y-1 transition-transform"
-											/>
-											<span className="text-[10px] font-bold text-center px-2">
-												{galleryItems.length === 0 ? "Main Image" : "Add Image"}
-											</span>
-										</>
-									)}
-								</label>
-							)}
-						</div>
+						<ImageGallery
+							items={galleryItems}
+							onReorder={setGalleryItems}
+							onUpload={handleImageUpload}
+							onRemove={removeImage}
+							isUploading={isUploading}
+						/>
 					</div>
 
 					{/* Pricing & Variants */}
