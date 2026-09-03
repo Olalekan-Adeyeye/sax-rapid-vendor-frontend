@@ -147,6 +147,7 @@ export function AddBankAccountModal({
                 value: b.code || "",
               })),
             ]}
+            searchable
           />
           <Select
             id="currency"
@@ -161,6 +162,7 @@ export function AddBankAccountModal({
               });
             }}
             options={currencyOptions}
+            searchable
           />
         </div>
 

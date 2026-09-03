@@ -68,7 +68,14 @@ export default function ProductsPage() {
   // ── Queries ──────────────────────────────────────────────────────────────
 
   const productsQuery = useQuery({
-    queryKey: ["my-products", user?.userId, committedSearch, categoryIdFilter, sortFilter, currentPage],
+    queryKey: [
+      "my-products",
+      user?.userId,
+      committedSearch,
+      categoryIdFilter,
+      sortFilter,
+      currentPage,
+    ],
     queryFn: () =>
       productsService.getMyProducts({
         SearchTerm: committedSearch || undefined,
@@ -248,6 +255,9 @@ export default function ProductsPage() {
               ]}
               outerClassName="w-48 mb-0"
               className="text-xs! transition-colors py-2.5! pl-5! pr-10! rounded-full border border-gray-100 hover:border-gold shadow-none"
+              searchable
+              optionClassName="text-xs!"
+              searchInputClassName="text-xs!"
             />
           </div>
         </div>
@@ -384,12 +394,18 @@ export default function ProductsPage() {
                       ) : (
                         <div className="flex flex-col items-start gap-0.5">
                           <span className="text-sm font-black text-black">
-                            {formatCurrency(product.effectivePrice, activeCurrency)}
+                            {formatCurrency(
+                              product.effectivePrice,
+                              activeCurrency,
+                            )}
                           </span>
                           {product.effectivePrice < product.basePrice && (
                             <div className="flex items-center gap-2">
                               <span className="text-[10px] text-gray-400 line-through font-bold">
-                                {formatCurrency(product.basePrice, activeCurrency)}
+                                {formatCurrency(
+                                  product.basePrice,
+                                  activeCurrency,
+                                )}
                               </span>
                               <span className="text-[8px] font-black bg-black text-white px-1.5 py-0.5 rounded uppercase tracking-[0.2em]">
                                 Sale

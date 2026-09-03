@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -36,6 +36,14 @@ export default function SignupPage() {
   const [showPass, setShowPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const pendingCookieRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (pendingCookieRef.current) {
+      document.cookie = pendingCookieRef.current;
+      pendingCookieRef.current = null;
+    }
+  });
 
   const { data: countries = [], isLoading: loadingCountries } = useQuery({
     queryKey: ["countries"],
@@ -109,7 +117,7 @@ export default function SignupPage() {
       }
 
       // Navigate to verify
-      document.cookie = `sax_pending_verify=${encodeURIComponent(data.email)}; path=/; max-age=600; SameSite=Lax`;
+      pendingCookieRef.current = `sax_pending_verify=${encodeURIComponent(data.email)}; path=/; max-age=600; SameSite=Lax`;
       toast(
         "Account Created",
         "Your account was created successfully. Let's verify your email.",
@@ -161,6 +169,7 @@ export default function SignupPage() {
       }}
     >
       <form
+        // eslint-disable-next-line react-hooks/refs
         onSubmit={handleSubmit(onSubmit)}
         className="space-y-5 animate-in fade-in slide-in-from-bottom-4"
       >
@@ -213,6 +222,7 @@ export default function SignupPage() {
             ) : undefined
           }
           className="h-12.5 rounded"
+          searchable
         />
 
         <div className="space-y-2">

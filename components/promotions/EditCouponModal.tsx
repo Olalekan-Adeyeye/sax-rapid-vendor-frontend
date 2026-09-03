@@ -129,6 +129,7 @@ export function EditCouponModal({
               { label: "Fixed Amount", value: "FixedAmount" },
             ]}
             required
+            searchable
           />
         </div>
 

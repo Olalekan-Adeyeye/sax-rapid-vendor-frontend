@@ -1,4 +1,4 @@
-import { getCountryByPhoneCode, getCurrencySymbol } from "./countries";
+import { getCountryByPhoneCode } from "./countries";
 
 export function deriveCurrencyFromPhoneCode(phoneCode?: string | null): {
   currency: string;

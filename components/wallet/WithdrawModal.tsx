@@ -144,6 +144,7 @@ export function WithdrawModal({
                   value: acc.id,
                 })),
               ]}
+              searchable
             />
           </div>
         </div>

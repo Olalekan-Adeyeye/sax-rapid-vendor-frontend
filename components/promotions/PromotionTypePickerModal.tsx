@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { Modal } from "@/components/ui/Modal";
-import { Tag, Rocket } from "lucide-react";
+import { Tag } from "lucide-react";
 
 interface PromotionTypePickerModalProps {
   isOpen: boolean;

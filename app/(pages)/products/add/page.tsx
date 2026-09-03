@@ -419,6 +419,7 @@ export default function AddProductPage() {
             categoryError ||
             (selectedMainCategoryId ? undefined : errors.categoryId?.message)
           }
+          searchable
         />
 
         {subCategories.length > 0 && (
@@ -432,6 +433,7 @@ export default function AddProductPage() {
             }}
             options={subCategories}
             className="animate-in fade-in slide-in-from-top-1 duration-200"
+            searchable
           />
         )}
 
@@ -447,6 +449,7 @@ export default function AddProductPage() {
           value={formValues.brandId || ""}
           onChange={(e) => setFieldValue("brandId", e.target.value)}
           disabled={brandsQuery.isLoading}
+          searchable
         />
 
         <Input
@@ -1031,6 +1034,7 @@ export default function AddProductPage() {
                 ]}
                 {...registerField("status")}
                 error={fieldErrors.status?.message}
+                searchable
               />
             </div>
 

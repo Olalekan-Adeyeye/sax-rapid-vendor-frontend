@@ -126,6 +126,7 @@ export function CreateCouponModal({
               { label: "Fixed Amount", value: "FixedAmount" },
             ]}
             required
+            searchable
           />
         </div>
 

@@ -594,6 +594,7 @@ export default function EditProductPage() {
 						error ||
 						(selectedMainCategoryId ? undefined : errors.categoryId?.message)
 					}
+					searchable
 				/>
 
 				{subCategories.length > 0 && (
@@ -605,9 +606,10 @@ export default function EditProductPage() {
 							const val = e.target.value;
 							setValue("categoryId", val || selectedMainCategoryId);
 						}}
-						options={subCategories}
-						className="animate-in fade-in slide-in-from-top-1 duration-200"
-					/>
+					options={subCategories}
+					className="animate-in fade-in slide-in-from-top-1 duration-200"
+					searchable
+				/>
 				)}
 
 				<input type="hidden" {...register("categoryId")} />
@@ -621,6 +623,7 @@ export default function EditProductPage() {
 					}))}
 					value={formValues.brandId || ""}
 					onChange={(e) => setFieldValue("brandId", e.target.value)}
+					searchable
 				/>
 				<Input
 					id="sku-number"
@@ -1238,6 +1241,7 @@ export default function EditProductPage() {
 								]}
 								{...registerField("status")}
 								error={fieldErrors.status?.message}
+								searchable
 							/>
 						</div>
 
