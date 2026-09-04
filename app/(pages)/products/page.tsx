@@ -234,7 +234,9 @@ export default function ProductsPage() {
                 { label: "Name: Z to A", value: "name_desc" },
               ]}
               outerClassName="w-44 mb-0"
-              className="text-xs! transition-colors py-2.5! pl-5! pr-10! rounded-full border border-gray-100 hover:border-gold shadow-none"
+              className="text-xs! transition-colors py-2.5! pl-5! pr-10! rounded-full border border-gray-100 hover:border-gold shadow-none w-[100px]"
+              optionClassName="text-xs!"
+              searchInputClassName="text-xs!"
             />
             <Select
               id="categoryFilter"

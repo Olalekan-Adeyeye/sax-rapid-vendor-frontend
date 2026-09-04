@@ -28,7 +28,7 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   searchable?: boolean;
 }
 
-function SearchableSelect({
+export function Select({
   label,
   id,
   required,
@@ -44,6 +44,7 @@ function SearchableSelect({
   searchInputClassName = "",
   value,
   onChange,
+  searchable = false,
   ...props
 }: SelectProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -92,10 +93,10 @@ function SearchableSelect({
   }, [isOpen]);
 
   useEffect(() => {
-    if (isOpen && searchRef.current) {
+    if (isOpen && searchable && searchRef.current) {
       setTimeout(() => searchRef.current?.focus(), 50);
     }
-  }, [isOpen]);
+  }, [isOpen, searchable]);
 
   const updateCoords = useCallback(() => {
     const trigger = triggerRef.current;
@@ -120,12 +121,6 @@ function SearchableSelect({
       window.removeEventListener("resize", onResize);
     };
   }, [isOpen, updateCoords]);
-
-  useEffect(() => {
-    if (isOpen && searchRef.current) {
-      setTimeout(() => searchRef.current?.focus(), 50);
-    }
-  }, [isOpen]);
 
   const selectOption = useCallback(
     (opt: { label: string; value: string | number }) => {
@@ -250,26 +245,28 @@ function SearchableSelect({
                   }}
                   className="bg-white border border-gray-200 shadow-[0_8px_30px_rgba(0,0,0,0.12)] rounded overflow-hidden"
                 >
-                  <div className="p-2 border-b border-gray-100">
-                    <div className="relative">
-                      <Search
-                        size={14}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                      />
-                      <input
-                        ref={searchRef}
-                        type="text"
-                        value={search}
-                        onChange={(e) => {
-                          setSearch(e.target.value);
-                          setActiveIndex(-1);
-                        }}
-                        onKeyDown={handleKeyDown}
-                        placeholder="Type to search..."
-                        className={`${searchInputClassName} w-full pl-9 pr-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded focus:outline-none focus:border-gold/50`}
-                      />
+                  {searchable && (
+                    <div className="p-2 border-b border-gray-100">
+                      <div className="relative">
+                        <Search
+                          size={14}
+                          className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                        />
+                        <input
+                          ref={searchRef}
+                          type="text"
+                          value={search}
+                          onChange={(e) => {
+                            setSearch(e.target.value);
+                            setActiveIndex(-1);
+                          }}
+                          onKeyDown={handleKeyDown}
+                          placeholder="Type to search..."
+                          className={`${searchInputClassName} w-full pl-9 pr-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded focus:outline-none focus:border-gold/50`}
+                        />
+                      </div>
                     </div>
-                  </div>
+                  )}
                   <div
                     id={`${id}-listbox`}
                     ref={listRef}
@@ -317,75 +314,6 @@ function SearchableSelect({
             </AnimatePresence>,
             document.body,
           )}
-      </div>
-    </FormField>
-  );
-}
-
-export function Select({ searchable = false, ...rest }: SelectProps) {
-  if (searchable) {
-    return <SearchableSelect {...rest} />;
-  }
-
-  const {
-    label,
-    id,
-    required,
-    error,
-    helpText,
-    hideAsterisk,
-    options,
-    leftSlot,
-    rightSlot,
-    className = "",
-    outerClassName = "",
-    ref,
-    ...props
-  } = rest;
-
-  return (
-    <FormField
-      label={label}
-      id={id}
-      required={required}
-      error={error}
-      helpText={helpText}
-      hideAsterisk={hideAsterisk}
-      className={outerClassName}
-    >
-      <div className="relative group">
-        {leftSlot && (
-          <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 z-10 transition-colors group-focus-within:text-gold">
-            {leftSlot}
-          </div>
-        )}
-        <select
-          id={id}
-          ref={ref}
-          required={required}
-          className={`w-full bg-white border border-gray-300 focus:border-gold text-black text-sm font-medium rounded ${
-            leftSlot ? "pl-12" : "px-5"
-          } pr-12 py-3.5 appearance-none outline-none transition-all cursor-pointer ${className}`}
-          {...props}
-        >
-          <option value="" disabled>
-            Select an option
-          </option>
-          {options.map((opt) => (
-            <option
-              key={opt.value}
-              value={opt.value}
-              disabled={opt.disabled}
-              className={`bg-white text-black`}
-            >
-              {opt.label}
-            </option>
-          ))}
-        </select>
-        <div className="absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-2 text-gray-400">
-          {rightSlot}
-          <ChevronDown size={14} className={rightSlot ? "text-gray-300" : ""} />
-        </div>
       </div>
     </FormField>
   );

@@ -32,7 +32,11 @@ import ChipInput from "@/components/ui/ChipInput";
 import ImageGallery, { GalleryItem } from "@/components/ui/ImageGallery";
 import { useForm } from "react-hook-form";
 import { productSchema, ProductFormValues } from "@/lib/schemas/vendor";
-import { FlatProductValues, Attribute, Variation } from "@/lib/types/product-form.types";
+import {
+  FlatProductValues,
+  Attribute,
+  Variation,
+} from "@/lib/types/product-form.types";
 import { CreateProductDTO } from "@/lib/api/types/products.types";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useProductFormHandlers } from "@/lib/hooks/useProductFormHandlers";
@@ -1022,19 +1026,6 @@ export default function AddProductPage() {
                     KG
                   </span>
                 }
-              />
-              <Select
-                id="inventory-status"
-                label="Inventory Status"
-                required
-                options={[
-                  { label: "In stock", value: "In stock" },
-                  { label: "Out of Stock", value: "Out of Stock" },
-                  { label: "Pre-order", value: "Pre-order" },
-                ]}
-                {...registerField("status")}
-                error={fieldErrors.status?.message}
-                searchable
               />
             </div>
 
