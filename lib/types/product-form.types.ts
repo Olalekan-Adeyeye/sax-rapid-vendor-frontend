@@ -14,7 +14,7 @@ export type FlatProductValues = {
 	length?: string;
 	width?: string;
 	height?: string;
-	status: string;
+	status?: string;
 	attributes: Attribute[];
 	variations: Variation[];
 	images: string[];

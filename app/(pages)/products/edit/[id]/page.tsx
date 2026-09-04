@@ -119,7 +119,7 @@ export default function EditProductPage() {
       length: "",
       width: "",
       height: "",
-      status: "In stock",
+      //         status: "",
       attributes: [],
       variations: [],
       images: [],
@@ -257,7 +257,7 @@ export default function EditProductPage() {
         saleEndDate: product.salePriceEndDate
           ? product.salePriceEndDate.split("T")[0]
           : "",
-        status: (product.status as unknown as string) || "In stock",
+        //         status: "",
         weight: product.weight?.toString() || "",
         length: product.dimensionLength?.toString() || "",
         width: product.dimensionWidth?.toString() || "",

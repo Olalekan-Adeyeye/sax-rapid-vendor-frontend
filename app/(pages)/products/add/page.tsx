@@ -91,7 +91,7 @@ export default function AddProductPage() {
       length: "",
       width: "",
       height: "",
-      status: "In stock",
+      //       status: "",
       attributes: [],
       variations: [],
       images: [],
