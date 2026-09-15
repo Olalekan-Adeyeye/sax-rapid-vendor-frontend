@@ -137,8 +137,31 @@ export default function AddProductPage() {
     removeVariationImage,
   } = useProductFormHandlers(form, toast);
 
-  const [localImages, setLocalImages] = useState<GalleryItem[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
+	const [localImages, setLocalImages] = useState<GalleryItem[]>([]);
+	const [isUploading, setIsUploading] = useState(false);
+
+	// Bulk variation pricing state
+	const [bulkPrice, setBulkPrice] = useState("");
+	const [bulkSalePrice, setBulkSalePrice] = useState("");
+	const [bulkStock, setBulkStock] = useState("");
+
+	const applyBulkVariations = () => {
+		if (!bulkPrice && !bulkSalePrice && !bulkStock) {
+			toast("Empty", "Enter at least one value to apply to all variations.", "warning");
+			return;
+		}
+		const updated = variations.map((v: Variation) => ({
+			...v,
+			...(bulkPrice ? { price: bulkPrice } : {}),
+			...(bulkSalePrice ? { salePrice: bulkSalePrice } : {}),
+			...(bulkStock ? { stock: bulkStock } : {}),
+		}));
+		setValue("variations", updated);
+		setBulkPrice("");
+		setBulkSalePrice("");
+		setBulkStock("");
+		toast("Applied", "Bulk values applied to all variations.", "success");
+	};
 
   const handleImageUpload = (files: FileList) => {
     const newFiles = Array.from(files).slice(0, 10 - localImages.length);
@@ -772,31 +795,90 @@ export default function AddProductPage() {
                   </Button>
                 </div>
 
-                {/* Variations Table */}
-                <div className="pt-4 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h5 className="text-xs font-black text-black">
-                      Variations ({variations.length})
-                    </h5>
-                    {variations.length > 0 && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setValue("variations", []);
-                          setHasGeneratedVariations(false);
-                          toast(
-                            "Cleared",
-                            "All variations have been cleared.",
-                            "info",
-                          );
-                        }}
-                        className="text-gray-400 hover:text-red-500 border-none p-0 h-auto"
-                      >
-                        Clear Variations
-                      </Button>
-                    )}
-                  </div>
+				{/* Variations Table */}
+				<div className="pt-4 space-y-4">
+					<div className="flex items-center justify-between">
+						<h5 className="text-xs font-black text-black">
+							Variations ({variations.length})
+						</h5>
+						{variations.length > 0 && (
+							<Button
+								variant="ghost"
+								size="sm"
+								onClick={() => {
+									setValue("variations", []);
+									setHasGeneratedVariations(false);
+									toast(
+										"Cleared",
+										"All variations have been cleared.",
+										"info",
+									);
+								}}
+								className="text-gray-400 hover:text-red-500 border-none p-0 h-auto"
+							>
+								Clear Variations
+							</Button>
+						)}
+					</div>
+
+					{/* Bulk Set Price Bar */}
+					{variations.length > 0 && (
+						<div className="bg-gray-50 border border-gray-100 rounded p-5 flex flex-col sm:flex-row items-end gap-4 animate-in fade-in duration-200">
+							<div className="flex-1 w-full">
+								<label className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1.5 block">
+									Bulk Price ({currencySymbol})
+								</label>
+								<Input
+									id="bulk-price"
+									type="number"
+									min="0"
+									step="0.01"
+									placeholder="0.00"
+									value={bulkPrice}
+									onChange={(e) => setBulkPrice(e.target.value)}
+									className="bg-white border-gray-200 focus:border-gold/50 py-2.5! px-3!"
+								/>
+							</div>
+							<div className="flex-1 w-full">
+								<label className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1.5 block">
+									Bulk Sale ({currencySymbol})
+								</label>
+								<Input
+									id="bulk-sale-price"
+									type="number"
+									min="0"
+									step="0.01"
+									placeholder="0.00"
+									value={bulkSalePrice}
+									onChange={(e) => setBulkSalePrice(e.target.value)}
+									className="bg-white border-gray-200 focus:border-gold/50 py-2.5! px-3!"
+								/>
+							</div>
+							<div className="flex-1 w-full">
+								<label className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1.5 block">
+									Bulk Stock
+								</label>
+								<Input
+									id="bulk-stock"
+									type="number"
+									min="0"
+									placeholder="0"
+									value={bulkStock}
+									onChange={(e) => setBulkStock(e.target.value)}
+									className="bg-white border-gray-200 focus:border-gold/50 py-2.5! px-3!"
+								/>
+							</div>
+							<Button
+								onClick={applyBulkVariations}
+								variant="black"
+								size="sm"
+								rounded="full"
+								className="shrink-0 h-10 px-6"
+							>
+								Apply to All
+							</Button>
+						</div>
+					)}
 
                   {!hasGeneratedVariations ? (
                     <div className="py-12 border border-dashed border-gray-200 rounded flex flex-col items-center justify-center text-center space-y-3 bg-gray-50/50">
