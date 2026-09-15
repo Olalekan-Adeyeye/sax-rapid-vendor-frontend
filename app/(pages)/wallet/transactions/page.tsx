@@ -5,13 +5,10 @@ import {
   ArrowUpRight,
   ArrowDownLeft,
   Clock,
-  Loader2,
-  AlertTriangle,
   Coins,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/Button";
 import { Pagination } from "@/components/ui/Pagination";
 import { ErrorComponent } from "@/components/ui/ErrorComponent";
 import { EmptyState } from "@/components/common/EmptyState";

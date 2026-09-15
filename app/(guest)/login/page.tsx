@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -23,6 +23,14 @@ export default function LoginPage() {
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const pendingCookieRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (pendingCookieRef.current) {
+      document.cookie = pendingCookieRef.current;
+      pendingCookieRef.current = null;
+    }
+  });
 
   const {
     register,
@@ -66,7 +74,7 @@ export default function LoginPage() {
 
       if (axios.isAxiosError<ApiError>(err) && err.response?.status === 403) {
         const email = data.email;
-        document.cookie = `sax_pending_verify=${encodeURIComponent(email)}; path=/; max-age=600; SameSite=Lax`;
+        pendingCookieRef.current = `sax_pending_verify=${encodeURIComponent(email)}; path=/; max-age=600; SameSite=Lax`;
         toast(
           "Email Not Verified",
           "Please verify your email address before logging in.",
@@ -113,6 +121,7 @@ export default function LoginPage() {
         ),
       }}
     >
+      {/* eslint-disable-next-line react-hooks/refs */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         {apiError && (
           <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-100 rounded text-red-600 text-xs font-semibold animate-in fade-in slide-in-from-top-1">

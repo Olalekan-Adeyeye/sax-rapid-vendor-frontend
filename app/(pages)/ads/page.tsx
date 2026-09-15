@@ -326,8 +326,9 @@ export default function BoostAdsPage() {
 								value: p.id,
 							}))}
 							leftSlot={<ShoppingBag size={14} />}
-							outerClassName="!mb-0"
-						/>
+						outerClassName="!mb-0"
+						searchable
+					/>
 					</div>
 
 					{/* Checkout Summary */}

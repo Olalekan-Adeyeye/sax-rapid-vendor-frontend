@@ -237,6 +237,7 @@ export default function OrdersPage() {
                   ]}
                   outerClassName="w-44 mb-0"
                   className="text-xs! transition-colors py-2.5! pl-5! pr-10! rounded-full border border-gray-100 hover:border-gold shadow-none"
+                  searchable
                 />
                 <Select
                   id="shippingFilter"
@@ -258,6 +259,7 @@ export default function OrdersPage() {
                   ]}
                   outerClassName="w-44 mb-0"
                   className="text-xs! transition-colors py-2.5! pl-5! pr-10! rounded-full border border-gray-100 hover:border-gold shadow-none"
+                  searchable
                 />
               </div>
             </div>

@@ -1,7 +1,6 @@
 "use client";
-import { useState, useEffect, useRef, SetStateAction, Dispatch } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
-	useForm,
 	useWatch,
 	UseFormReturn,
 	UseFormRegister,
@@ -27,7 +26,7 @@ export function useProductFormHandlers(
 	form: UseFormReturn<ProductFormValues>,
 	toast: ToastFn,
 ) {
-	const { setValue, getValues, control } = form;
+	const { setValue, control } = form;
 
 	const registerField = form.register as unknown as UseFormRegister<FlatProductValues>;
 	const setFieldValue = setValue as unknown as UseFormSetValue<FlatProductValues>;

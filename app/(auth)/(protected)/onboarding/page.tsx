@@ -24,8 +24,6 @@ import {
   Rocket,
   User,
   Building2,
-  Crosshair,
-  Trash2,
 } from "lucide-react";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useToast } from "@/lib/context/ToastContext";
@@ -733,6 +731,7 @@ export default function OnboardingPage() {
                         {...register("idType")}
                         error={errors.idType?.message}
                         className="h-12 lg:h-14 rounded"
+                        searchable
                       />
                       <FileUpload
                         label="Upload ID Proof"

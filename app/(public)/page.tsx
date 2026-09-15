@@ -5,7 +5,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { BenefitCard } from "@/components/vendor/BenefitCard";
 import { StepItem } from "@/components/vendor/StepItem";
-import { Logo } from "@/components/common/Logo";
 import {
   Globe,
   Zap,
