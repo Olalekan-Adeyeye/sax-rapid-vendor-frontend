@@ -280,57 +280,64 @@ export default function SubscriptionPlansPage() {
                 </div>
               </div> */}
 
-            {mySub ? (
-              <div className="p-8">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-                  <div className="flex items-center gap-5 min-w-0">
-                    <div className="w-14 h-14 rounded-xl bg-black flex items-center justify-center text-gold shrink-0">
-                      <Zap size={24} fill="currentColor" />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-3 mb-1">
-                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                          Current Plan
-                        </span>
-                        <span className="flex items-center gap-1.5 text-[10px] font-bold text-green-600 bg-green-50 px-2.5 py-0.5 rounded-full border border-green-100">
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                          Active
-                        </span>
+            {mySub?.isActive ? (
+              <div className="bg-black text-white rounded p-6 lg:p-8 relative overflow-hidden group">
+                <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/5 rounded group-hover:bg-gold/10 transition-colors" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gold/5 blur-3xl rounded" />
+
+                <div className="relative z-10">
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                    {/* Left: Plan info */}
+                    <div className="flex items-center gap-5 min-w-0">
+                      <div className="w-14 h-14 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0">
+                        <Zap size={24} fill="currentColor" />
                       </div>
-                      <h3 className="text-xl font-black text-black uppercase tracking-tighter truncate">
-                        {mySub.planName}
-                        <span className="text-gold mx-2">•</span>
-                        {mySub.billingCycle}
-                      </h3>
-                      <p className="text-xs font-medium text-gray-400 mt-1">
-                        Expires{" "}
-                        {new Date(mySub.endDate).toLocaleDateString()}
-                      </p>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-3 mb-1">
+                          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                            Current Plan
+                          </span>
+                          <span className="flex items-center gap-1.5 text-[9px] font-black text-green-400 bg-green-500/10 px-2.5 py-0.5 rounded-full border border-green-500/20">
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                            Active
+                          </span>
+                        </div>
+                        <h3 className="text-xl font-black text-white uppercase tracking-tighter truncate">
+                          {mySub.planName}
+                          <span className="text-gold mx-2">•</span>
+                          {mySub.billingCycle}
+                        </h3>
+                        <p className="text-[10px] font-bold text-gray-500 mt-1 uppercase tracking-widest">
+                          Expires {new Date(mySub.endDate).toLocaleDateString()}
+                        </p>
+                      </div>
                     </div>
+
+                    {/* Right: Cancel button */}
+                    <Button
+                      onClick={() => setShowCancelModal(true)}
+                      variant="outline"
+                      size="sm"
+                      className="text-red-400/70 border-white/10 hover:bg-red-500 hover:text-white hover:border-red-500 shrink-0"
+                    >
+                      <XCircle size={14} /> Cancel Plan
+                    </Button>
                   </div>
-                  <Button
-                    onClick={() => setShowCancelModal(true)}
-                    variant="outline"
-                    size="sm"
-                    className="text-red-500/70 border-red-100 hover:bg-red-500 hover:text-white shrink-0"
-                  >
-                    <XCircle size={14} /> Cancel Plan
-                  </Button>
                 </div>
               </div>
             ) : (
-              <div className="p-8">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
-                  <div className="w-14 h-14 rounded-xl bg-gray-50 flex items-center justify-center text-gray-300 shrink-0">
+              <div className="bg-black text-white rounded p-6 lg:p-8 relative overflow-hidden group">
+                <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/5 rounded" />
+                <div className="relative z-10 flex items-center gap-5">
+                  <div className="w-14 h-14 rounded-xl bg-white/5 flex items-center justify-center text-gray-500 shrink-0">
                     <Zap size={24} />
                   </div>
                   <div>
-                    <h3 className="text-lg font-black text-black uppercase tracking-tighter">
+                    <h3 className="text-lg font-black text-white uppercase tracking-tighter">
                       No Active Plan
                     </h3>
-                    <p className="text-xs font-medium text-gray-400 mt-1">
-                      You don&apos;t have an active subscription. Switch to the
-                      Plans & Pricing tab to get started.
+                    <p className="text-[10px] font-bold text-gray-500 mt-1 uppercase tracking-widest">
+                      Switch to Plans &amp; Pricing to get started.
                     </p>
                   </div>
                 </div>
@@ -459,7 +466,7 @@ export default function SubscriptionPlansPage() {
               {plans.map((plan) => {
                 const Icon = getPlanIcon(plan.name);
                 const tier = getPlanTier(plan.name);
-                const isCurrentPlan = mySub?.planId === plan.id;
+                const isCurrentPlan = mySub?.isActive && mySub?.planId === plan.id && mySub?.billingCycle === (isYearly ? "Yearly" : "Monthly");
                 const isPremium = tier === "premium";
                 const price = isYearly ? plan.yearlyPrice : plan.monthlyPrice;
 
