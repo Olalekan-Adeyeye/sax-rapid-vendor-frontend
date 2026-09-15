@@ -10,7 +10,10 @@ import { CouponDeleteModal } from "@/components/promotions/CouponDeleteModal";
 import { CreateCampaignModal } from "@/components/promotions/CreateCampaignModal";
 import { PromotionTypePickerModal } from "@/components/promotions/PromotionTypePickerModal";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getVendorCoupons, deleteVendorCoupon } from "@/lib/api/services/coupons";
+import {
+  getVendorCoupons,
+  deleteVendorCoupon,
+} from "@/lib/api/services/coupons";
 import type { Coupon } from "@/lib/api/types/coupons.types";
 import { formatDate } from "@/lib/utils/date";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
@@ -40,8 +43,8 @@ export default function PromotionsPage() {
   });
 
   const couponList: Coupon[] = coupons || [];
-  const filteredCoupons = couponList.filter((c) =>
-    c.code?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false,
+  const filteredCoupons = couponList.filter(
+    (c) => c.code?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false,
   );
 
   const deleteMutation = useMutation({
@@ -64,7 +67,6 @@ export default function PromotionsPage() {
     if (!deletingCoupon) return;
     deleteMutation.mutate(deletingCoupon.id);
   };
-
 
   if (isLoading && !couponList.length) {
     return <FullPageLoader label="Loading promotions..." icon={Tag} />;
@@ -90,7 +92,7 @@ export default function PromotionsPage() {
       />
 
       <div className="bg-white border border-gray-100 rounded overflow-hidden">
-        <div className="p-8 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="p-8 py-4 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <h4 className="text-sm font-bold text-black flex items-center gap-3">
             <BarChart3 size={14} className="text-gold" />
             Coupon History
@@ -179,7 +181,10 @@ export default function PromotionsPage() {
                         </button>
                         <button
                           onClick={() => setDeletingCoupon(coupon)}
-                          disabled={deleteMutation.isPending && deleteMutation.variables === coupon.id}
+                          disabled={
+                            deleteMutation.isPending &&
+                            deleteMutation.variables === coupon.id
+                          }
                           className="p-1.5 rounded hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50"
                           title="Delete coupon"
                         >

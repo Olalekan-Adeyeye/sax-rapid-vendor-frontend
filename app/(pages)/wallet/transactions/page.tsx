@@ -147,7 +147,7 @@ export default function TransactionLogPage() {
                           </span>
                         </div>
                       </td>
-                      <td className="px-8 py-6">
+                      <td className="px-8 py-6 min-w-75">
                         <span className="text-xs font-medium text-gray-600">
                           {t.description || t.category || "—"}
                         </span>
@@ -162,7 +162,10 @@ export default function TransactionLogPage() {
                           className={`text-sm font-black ${credit ? "text-green-500" : "text-black"}`}
                         >
                           {credit ? "+" : "-"}
-                          {formatCurrency(t.amount, t.currency || regionCurrency)}
+                          {formatCurrency(
+                            t.amount,
+                            t.currency || regionCurrency,
+                          )}
                         </span>
                       </td>
                       <td className="px-8 py-6">{statusBadge(t.status)}</td>

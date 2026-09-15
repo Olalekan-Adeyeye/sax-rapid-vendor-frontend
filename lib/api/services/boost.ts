@@ -17,12 +17,14 @@ const BASE = "/Boost";
 /**
  * GET /api/Boost/pricing
  * Returns a list of all available boost types and their pricing.
+ * @param country - Required. Must be "Nigeria" or "South Africa".
  */
-export async function getBoostPricing(): Promise<BoostPricingResponseDTO[]> {
-  const response = await apiClient.get<ApiResponse<BoostPricingResponseDTO[]>>(
-    `${BASE}/pricing`
-  );
-  return response.data.data;
+export async function getBoostPricing(country: string): Promise<BoostPricingResponseDTO[]> {
+	const response = await apiClient.get<ApiResponse<BoostPricingResponseDTO[]>>(
+		`${BASE}/pricing`,
+		{ params: { country } }
+	);
+	return response.data.data;
 }
 
 /**

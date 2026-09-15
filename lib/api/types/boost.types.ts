@@ -22,6 +22,9 @@ export interface BoostPricingResponseDTO {
   boostType: BoostType;
   boostTypeName: string;
   pricingByDays: Record<string, number>;
+  countryCode: string;
+  country: string;
+  currency: string;
 }
 
 /**
