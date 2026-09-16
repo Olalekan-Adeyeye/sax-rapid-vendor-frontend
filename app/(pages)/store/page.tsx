@@ -12,6 +12,7 @@ import {
   ArrowUpRight,
   Building2,
   Upload,
+  BadgeCheck,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -139,9 +140,17 @@ export default function StoreProfile() {
             </div>
             <div className="pb-4">
               <div className="flex items-center gap-2 mb-1.5">
-                <span className="text-xs font-bold bg-gold/90 backdrop-blur-sm px-3 py-1 rounded text-black">
-                  {vendor.accountType} Vendor
-                </span>
+                {vendor.accountType === "Business" ? (
+                  <span className="flex items-center gap-1.5 text-xs font-bold bg-gold/90 backdrop-blur-sm px-3 py-1 rounded text-black">
+                    <BadgeCheck size={14} className="text-black" />
+                    Business Account
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1.5 text-xs font-bold bg-blue-500/90 backdrop-blur-sm px-3 py-1 rounded text-white">
+                    <BadgeCheck size={14} className="text-white" />
+                    Individual Account
+                  </span>
+                )}
               </div>
               <h3 className="text-3xl lg:text-4xl font-black tracking-tighter text-white drop-shadow-2xl">
                 {vendor.shopName || "Untitled Store"}

@@ -3,6 +3,7 @@ export type FlatProductValues = {
 	description: string;
 	categoryId: string;
 	brandId: string;
+	dispatchOptionId?: string;
 	type: "simple" | "variable";
 	regularPrice: string;
 	salePrice?: string;

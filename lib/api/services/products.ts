@@ -10,6 +10,7 @@ import type {
 	ProductStatsResponseDTO,
 	ProductListItemDto,
 	ProductStatus,
+	ProductDispatchOption,
 } from "../types/products.types";
 
 const BASE_PATH = "/Products";
@@ -93,5 +94,13 @@ export async function deleteProduct(id: string): Promise<void> {
 
 export async function getProductStats(): Promise<ProductStatsResponseDTO> {
 	const response = await apiClient.get<ApiResponse<ProductStatsResponseDTO>>(`${BASE_PATH}/stats`);
+	return response.data.data;
+}
+
+export async function getDispatchOptions(): Promise<ProductDispatchOption[]> {
+	const response = await apiClient.get<ApiResponse<ProductDispatchOption[]>>(
+		"/product-dispatch-options",
+		{ params: { activeOnly: true } }
+	);
 	return response.data.data;
 }

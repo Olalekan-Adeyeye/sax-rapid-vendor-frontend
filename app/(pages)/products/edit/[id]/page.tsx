@@ -103,6 +103,12 @@ export default function EditProductPage() {
     staleTime: 10 * 60 * 1000,
   });
 
+  const { data: dispatchOptions = [] } = useQuery({
+    queryKey: ["dispatchOptions"],
+    queryFn: productsService.getDispatchOptions,
+    staleTime: 10 * 60 * 1000,
+  });
+
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
@@ -296,6 +302,11 @@ export default function EditProductPage() {
         (setValue as unknown as (name: string, value: string) => void)(
           "brandId",
           product.brandId.toString(),
+        );
+      if (product.dispatchOptionId)
+        (setValue as unknown as (name: string, value: string) => void)(
+          "dispatchOptionId",
+          product.dispatchOptionId.toString(),
         );
 
       // Resolve main category
@@ -564,6 +575,7 @@ export default function EditProductPage() {
         description: data.description,
         categoryId: Number(data.categoryId) || null,
         brandId: rawForm.brandId ? Number(rawForm.brandId) : null,
+        dispatchOptionId: rawForm.dispatchOptionId ? Number(rawForm.dispatchOptionId) : null,
         basePrice: Number(data.regularPrice || 0),
         salePrice: data.salePrice ? Number(data.salePrice) : null,
         salePriceStartDate: data.saleStartDate || null,
@@ -1348,6 +1360,17 @@ export default function EditProductPage() {
                     KG
                   </span>
                 }
+              />
+              <Select
+                id="dispatch-option"
+                label="Dispatch Option"
+                value={formValues.dispatchOptionId || ""}
+                onChange={(e) => setFieldValue("dispatchOptionId", e.target.value)}
+                options={dispatchOptions.map((opt) => ({
+                  label: opt.name || "",
+                  value: opt.id.toString(),
+                }))}
+                disabled={!dispatchOptions.length}
               />
             </div>
 

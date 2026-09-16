@@ -6,6 +6,15 @@ export type ProductStatus =
 	| "Deleted";
 export type ProductType = "Simple" | "Variable";
 
+export interface ProductDispatchOption {
+	id: number;
+	name: string | null;
+	isActive: boolean;
+	displayOrder: number;
+	createdAt: string;
+	updatedAt: string | null;
+}
+
 export interface ProductImageResponseDTO {
 	id: string;
 	imageUrl: string | null;
@@ -35,6 +44,7 @@ export interface ProductVariationResponseDTO {
 export interface ProductResponseDTO {
 	id: string;
 	name: string | null;
+	slug?: string | null;
 	description: string | null;
 	currency: string | null;
 	location: string | null;
@@ -43,8 +53,14 @@ export interface ProductResponseDTO {
 	vendorName?: string | null;
 	categoryId: number;
 	categoryName?: string | null;
+	mainCategoryId?: number | null;
+	mainCategoryName?: string | null;
+	subCategoryId?: number | null;
+	subCategoryName?: string | null;
 	brandId: number | null;
 	brandName?: string | null;
+	dispatchOptionId?: number | null;
+	dispatchOptionName?: string | null;
 	productType: ProductType;
 	basePrice: number;
 	salePrice?: number | null;
@@ -135,6 +151,7 @@ export interface CreateProductDTO {
 	description: string | null;
 	categoryId: number;
 	brandId?: number | null;
+	dispatchOptionId?: number | null;
 	basePrice: number;
 	currency?: string | null;
 	salePrice?: number | null;
@@ -156,6 +173,7 @@ export interface UpdateProductDTO {
 	description: string | null;
 	categoryId?: number | null;
 	brandId?: number | null;
+	dispatchOptionId?: number | null;
 	basePrice?: number | null;
 	currency?: string | null;
 	salePrice?: number | null;

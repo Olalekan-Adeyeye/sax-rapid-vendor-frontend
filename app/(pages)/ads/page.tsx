@@ -239,23 +239,49 @@ export default function BoostAdsPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-100">
-                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Product</th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Type</th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Duration</th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Amount</th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Status</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                  Product
+                </th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                  Type
+                </th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                  Duration
+                </th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                  Amount
+                </th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                  Status
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {paginatedBoosts.length > 0 ? (
                 paginatedBoosts.map((p) => (
-                  <tr key={p.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-6 py-4 text-[11px] font-black uppercase tracking-tight text-black whitespace-nowrap">{p.productName}</td>
-                    <td className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 whitespace-nowrap">{p.boostType}</td>
-                    <td className="px-6 py-4 text-xs font-bold text-black whitespace-nowrap">{p.durationDays} Days</td>
-                    <td className="px-6 py-4 text-xs font-black text-black whitespace-nowrap">{formatCurrency(p.totalAmount || p.amount || 0, activeCurrency)}</td>
+                  <tr
+                    key={p.id}
+                    className="hover:bg-gray-50/50 transition-colors"
+                  >
+                    <td className="px-6 py-4 text-[11px] font-black uppercase tracking-tight text-black whitespace-nowrap">
+                      {p.productName}
+                    </td>
+                    <td className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 whitespace-nowrap">
+                      {p.boostType}
+                    </td>
+                    <td className="px-6 py-4 text-xs font-bold text-black whitespace-nowrap">
+                      {p.durationDays} Days
+                    </td>
+                    <td className="px-6 py-4 text-xs font-black text-black whitespace-nowrap">
+                      {formatCurrency(
+                        p.totalAmount || p.amount || 0,
+                        activeCurrency,
+                      )}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`text-[8px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${p.status === "Active" ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-400"}`}>
+                      <span
+                        className={`text-[8px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${p.status === "Active" ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-400"}`}
+                      >
                         {p.status}
                       </span>
                     </td>
@@ -264,7 +290,10 @@ export default function BoostAdsPage() {
               ) : (
                 <tr>
                   <td colSpan={5}>
-                    <EmptyState icon={AlertCircle} title="No active promotions found" />
+                    <EmptyState
+                      icon={AlertCircle}
+                      title="No active promotions found"
+                    />
                   </td>
                 </tr>
               )}
@@ -272,17 +301,15 @@ export default function BoostAdsPage() {
           </table>
         </div>
 
-        {activeBoosts.length > BOOSTS_PER_PAGE && (
-          <div className="p-6 border-t border-gray-50">
-            <Pagination
-              currentPage={boostsPage}
-              totalPages={boostsTotalPages}
-              onPageChange={setBoostsPage}
-              totalCount={activeBoosts.length}
-              pageSize={BOOSTS_PER_PAGE}
-            />
-          </div>
-        )}
+        <div className="p-6 border-t border-gray-50">
+          <Pagination
+            currentPage={boostsPage}
+            totalPages={boostsTotalPages}
+            onPageChange={setBoostsPage}
+            totalCount={activeBoosts.length}
+            pageSize={BOOSTS_PER_PAGE}
+          />
+        </div>
       </div>
       <Modal
         isOpen={isModalOpen}

@@ -17,7 +17,10 @@ import {
 } from "@/components/ui/Dropdown";
 import { useQuery } from "@tanstack/react-query";
 import * as ordersService from "@/lib/api/services/orders";
-import { OrderStatus, type OrderResponseDTO } from "@/lib/api/types/orders.types";
+import {
+  OrderStatus,
+  type OrderResponseDTO,
+} from "@/lib/api/types/orders.types";
 import { formatCurrency } from "@/lib/utils/currency";
 import { formatDate } from "@/lib/utils/date";
 import { downloadInvoicePdf } from "@/lib/utils/invoice";
@@ -42,10 +45,24 @@ function exportOrdersToCsv(orders: OrderResponseDTO[]) {
   if (!orders.length) return;
 
   const headers = [
-    "Order ID", "Order Number", "Status", "Payment Status", "Payment Method",
-    "Customer Name", "Customer Email", "Customer Phone",
-    "Items Count", "Subtotal", "Shipping", "Tax", "Discount", "Total",
-    "Shipping Address", "City", "State", "Tracking Number",
+    "Order ID",
+    "Order Number",
+    "Status",
+    "Payment Status",
+    "Payment Method",
+    "Customer Name",
+    "Customer Email",
+    "Customer Phone",
+    "Items Count",
+    "Subtotal",
+    "Shipping",
+    "Tax",
+    "Discount",
+    "Total",
+    "Shipping Address",
+    "City",
+    "State",
+    "Tracking Number",
     "Created At",
   ];
 
@@ -93,7 +110,9 @@ export default function OrdersPage() {
   const { toast } = useToast();
   const { currency: activeCurrency } = useCurrency();
 
-  const [searchInput, setSearchInput] = useState(searchParams.get("search") || "");
+  const [searchInput, setSearchInput] = useState(
+    searchParams.get("search") || "",
+  );
   const searchQuery = searchParams.get("search") || "";
   const sortFilter = searchParams.get("sort") || "newest";
   const shippingFilter = searchParams.get("shipping") || "all";
@@ -114,7 +133,8 @@ export default function OrdersPage() {
 
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
-      if (shippingFilter !== "all" && order.status !== shippingFilter) return false;
+      if (shippingFilter !== "all" && order.status !== shippingFilter)
+        return false;
 
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
@@ -130,7 +150,7 @@ export default function OrdersPage() {
 
       return true;
     });
-    }, [orders, searchQuery, shippingFilter]);
+  }, [orders, searchQuery, shippingFilter]);
 
   const sortedOrders = useMemo(() => {
     return [...filteredOrders].sort((a, b) => {
@@ -237,7 +257,8 @@ export default function OrdersPage() {
                   ]}
                   outerClassName="w-44 mb-0"
                   className="text-xs! transition-colors py-2.5! pl-5! pr-10! rounded-full border border-gray-100 hover:border-gold shadow-none"
-                  searchable
+                  optionClassName="text-xs!"
+                  searchInputClassName="text-xs!"
                 />
                 <Select
                   id="shippingFilter"
@@ -259,7 +280,8 @@ export default function OrdersPage() {
                   ]}
                   outerClassName="w-44 mb-0"
                   className="text-xs! transition-colors py-2.5! pl-5! pr-10! rounded-full border border-gray-100 hover:border-gold shadow-none"
-                  searchable
+                  optionClassName="text-xs!"
+                  searchInputClassName="text-xs!"
                 />
               </div>
             </div>
@@ -360,10 +382,14 @@ export default function OrdersPage() {
                                 </Button>
                               }
                             >
-							<DropdownItem
+                              <DropdownItem
                                 icon={<Printer size={14} />}
                                 onClick={() => {
-                                  toast("Invoice", "Generating invoice PDF...", "info");
+                                  toast(
+                                    "Invoice",
+                                    "Generating invoice PDF...",
+                                    "info",
+                                  );
                                   downloadInvoicePdf(order, activeCurrency);
                                 }}
                               >
@@ -380,7 +406,7 @@ export default function OrdersPage() {
                                 }
                               >
                                 Contact Customer
-                              </DropdownItem> 
+                              </DropdownItem>
                               <DropdownDivider />
                               {order.status !== OrderStatus.Cancelled &&
                                 order.status !== OrderStatus.Delivered && (
@@ -409,7 +435,10 @@ export default function OrdersPage() {
                   ) : (
                     <tr>
                       <td colSpan={7}>
-                        <EmptyState icon={ShoppingBag} title="No orders found" />
+                        <EmptyState
+                          icon={ShoppingBag}
+                          title="No orders found"
+                        />
                       </td>
                     </tr>
                   )}

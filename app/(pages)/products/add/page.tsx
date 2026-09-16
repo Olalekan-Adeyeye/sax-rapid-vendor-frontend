@@ -66,6 +66,12 @@ export default function AddProductPage() {
     staleTime: 10 * 60 * 1000,
   });
 
+  const dispatchOptionsQuery = useQuery({
+    queryKey: ["dispatchOptions"],
+    queryFn: productsService.getDispatchOptions,
+    staleTime: 10 * 60 * 1000,
+  });
+
   const categories = useMemo(
     () => categoriesQuery.data || [],
     [categoriesQuery.data],
@@ -360,6 +366,7 @@ export default function AddProductPage() {
         description: data.description,
         categoryId: Number(data.categoryId),
         brandId: rawForm.brandId ? Number(rawForm.brandId) : null,
+        dispatchOptionId: rawForm.dispatchOptionId ? Number(rawForm.dispatchOptionId) : null,
         basePrice: Number(data.regularPrice) || 0,
         salePrice: data.salePrice ? Number(data.salePrice) : null,
         salePriceStartDate: data.saleStartDate || null,
@@ -1108,6 +1115,17 @@ export default function AddProductPage() {
                     KG
                   </span>
                 }
+              />
+              <Select
+                id="dispatch-option"
+                label="Dispatch Option"
+                value={formValues.dispatchOptionId || ""}
+                onChange={(e) => setFieldValue("dispatchOptionId", e.target.value)}
+                options={(dispatchOptionsQuery.data || []).map((opt) => ({
+                  label: opt.name || "",
+                  value: opt.id.toString(),
+                }))}
+                disabled={dispatchOptionsQuery.isLoading}
               />
             </div>
 

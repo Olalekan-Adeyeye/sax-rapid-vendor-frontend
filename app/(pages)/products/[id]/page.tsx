@@ -13,6 +13,8 @@ import {
   Activity,
   Settings2,
   Calendar,
+  Truck,
+  Store,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -172,7 +174,7 @@ export default function SingleProductPage() {
                   </div>
                 )}
                 {/* Status Badge Over Image */}
-                <div className="absolute top-6 left-6">
+                <div className="absolute top-6 left-6 flex items-center gap-2">
                   <span
                     className={`px-4 py-2 rounded text-[10px] font-black uppercase tracking-widest ${
                       product.status === "Active"
@@ -183,6 +185,9 @@ export default function SingleProductPage() {
                     }`}
                   >
                     {product.status || "Pending"}
+                  </span>
+                  <span className="px-4 py-2 rounded text-[10px] font-black uppercase tracking-widest bg-white/90 text-black">
+                    {product.productType}
                   </span>
                 </div>
               </div>
@@ -272,17 +277,34 @@ export default function SingleProductPage() {
                     <p className="text-sm font-bold text-black border-l-2 border-gold pl-4">
                       {product.categoryName || "Uncategorized"}
                     </p>
+                    {product.subCategoryName && product.subCategoryName !== product.categoryName && (
+                      <p className="text-xs font-bold text-gray-400 pl-4">
+                        {product.mainCategoryName} &rsaquo; {product.subCategoryName}
+                      </p>
+                    )}
                   </div>
-                  <div className="space-y-4">
-                    <h5 className="flex items-center gap-2 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
-                      <Package size={12} /> Dimensions
-                    </h5>
-                    <p className="text-sm font-bold text-black">
-                      {product.dimensionLength || 0} x{" "}
-                      {product.dimensionWidth || 0} x{" "}
-                      {product.dimensionHeight || 0} cm
-                    </p>
-                  </div>
+                  {product.brandName && (
+                    <div className="space-y-4">
+                      <h5 className="flex items-center gap-2 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
+                        <Store size={12} /> Brand
+                      </h5>
+                      <p className="text-sm font-bold text-black border-l-2 border-gold pl-4">
+                        {product.brandName}
+                      </p>
+                    </div>
+                  )}
+                  {(product.dimensionLength || product.dimensionWidth || product.dimensionHeight) && (
+                    <div className="space-y-4">
+                      <h5 className="flex items-center gap-2 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
+                        <Package size={12} /> Dimensions
+                      </h5>
+                      <p className="text-sm font-bold text-black">
+                        {product.dimensionLength || 0} x{" "}
+                        {product.dimensionWidth || 0} x{" "}
+                        {product.dimensionHeight || 0} cm
+                      </p>
+                    </div>
+                  )}
                   <div className="space-y-4">
                     <h5 className="flex items-center gap-2 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
                       <Activity size={12} /> Weight
@@ -291,6 +313,16 @@ export default function SingleProductPage() {
                       {product.weight} kg
                     </p>
                   </div>
+                  {product.dispatchOptionName && (
+                    <div className="space-y-4">
+                      <h5 className="flex items-center gap-2 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
+                        <Truck size={12} /> Dispatch
+                      </h5>
+                      <p className="text-sm font-bold text-black border-l-2 border-gold pl-4">
+                        {product.dispatchOptionName}
+                      </p>
+                    </div>
+                  )}
                 </div>
                 {(product.salePriceStartDate || product.salePriceEndDate) && (
                   <div className="pt-8 border-t border-gray-50 space-y-4">
@@ -520,11 +552,13 @@ export default function SingleProductPage() {
                     {product.favoriteCount || 0}
                   </span>
                 </div>
-                <div className="flex items-center justify-between py-4 border-b border-white/5">
+                <div className="flex items-center justify-between py-4">
                   <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                    Total Sales
+                    Reviews
                   </span>
-                  <span className="text-xs font-black">---</span>
+                  <span className="text-xs font-black">
+                    {product.reviewCount || 0}
+                  </span>
                 </div>
               </div>
             </div>
