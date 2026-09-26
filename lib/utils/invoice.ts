@@ -1,7 +1,8 @@
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import type { RGB } from "pdf-lib";
+
 import type { OrderResponseDTO } from "@/lib/api/types/orders.types";
 import { formatDate } from "@/lib/utils/date";
-import type { RGB } from "pdf-lib";
 
 const BLACK = rgb(0, 0, 0);
 const WHITE = rgb(1, 1, 1);

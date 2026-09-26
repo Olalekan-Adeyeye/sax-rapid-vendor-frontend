@@ -1,5 +1,6 @@
 "use client";
-import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
 import {
   Zap,
   Check,
@@ -11,8 +12,14 @@ import {
   XCircle,
   TrendingUp,
 } from "lucide-react";
+import React, { useState } from "react";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
+import { EmptyState } from "@/components/common/EmptyState";
+import { FullPageLoader } from "@/components/common/FullPageLoader";
+import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
+import { PageHeader } from "@/components/ui/PageHeader";
 import {
   getSubscriptionPlans,
   getMySubscription,
@@ -20,16 +27,10 @@ import {
   cancelSubscription,
   getSubscriptionHistory,
 } from "@/lib/api/services/subscriptions";
-import { SubscriptionPlanResponse } from "@/lib/api/types/subscriptions.types";
-import { useToast } from "@/lib/context/ToastContext";
-import { useAuth } from "@/lib/context/AuthContext";
-import axios from "axios";
 import { ApiError } from "@/lib/api/types/auth.types";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { Modal } from "@/components/ui/Modal";
-import { Button } from "@/components/ui/Button";
-import { FullPageLoader } from "@/components/common/FullPageLoader";
-import { EmptyState } from "@/components/common/EmptyState";
+import { SubscriptionPlanResponse } from "@/lib/api/types/subscriptions.types";
+import { useAuth } from "@/lib/context/AuthContext";
+import { useToast } from "@/lib/context/ToastContext";
 import { useCurrency } from "@/lib/hooks/useCurrency";
 import { formatCurrency } from "@/lib/utils/currency";
 

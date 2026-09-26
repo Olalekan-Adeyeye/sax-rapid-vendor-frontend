@@ -1,4 +1,5 @@
 "use client";
+import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, Search } from "lucide-react";
 import React, {
   useState,
@@ -8,7 +9,7 @@ import React, {
   useMemo,
 } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "framer-motion";
+
 import { FormField } from "./FormField";
 
 interface SelectProps

@@ -1,7 +1,5 @@
 "use client";
-import React, { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import {
   MoreVertical,
   Layers,
@@ -11,17 +9,20 @@ import {
   Eye,
   Copy,
 } from "lucide-react";
-import { useToast } from "@/lib/context/ToastContext";
-import { useAuth } from "@/lib/context/AuthContext";
-import { Button } from "@/components/ui/Button";
-import { SearchInput } from "@/components/ui/SearchInput";
-import * as categoriesService from "@/lib/api/services/categories";
-import { getErrorMessage } from "@/lib/utils/errors";
-import { FullPageLoader } from "@/components/common/FullPageLoader";
+import { useRouter } from "next/navigation";
+import React, { useState } from "react";
+
 import { EmptyState } from "@/components/common/EmptyState";
+import { FullPageLoader } from "@/components/common/FullPageLoader";
+import { Button } from "@/components/ui/Button";
+import { Dropdown, DropdownItem } from "@/components/ui/Dropdown";
 import { ErrorComponent } from "@/components/ui/ErrorComponent";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { Dropdown, DropdownItem } from "@/components/ui/Dropdown";
+import { SearchInput } from "@/components/ui/SearchInput";
+import * as categoriesService from "@/lib/api/services/categories";
+import { useAuth } from "@/lib/context/AuthContext";
+import { useToast } from "@/lib/context/ToastContext";
+import { getErrorMessage } from "@/lib/utils/errors";
 
 export default function ProductCategoriesPage() {
   const queryClient = useQueryClient();

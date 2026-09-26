@@ -4,11 +4,11 @@
  */
 
 import apiClient from "../apiClient";
+import type { ApiResponse } from "../types/auth.types";
 import type {
   NotificationCountResponse,
   NotificationResponse,
 } from "../types/notifications.types";
-import type { ApiResponse } from "../types/auth.types";
 
 const BASE = "/Notifications";
 

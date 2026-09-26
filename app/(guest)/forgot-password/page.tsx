@@ -1,22 +1,22 @@
 "use client";
-import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import axios from "axios";
+import { Mail, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Input } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
-import { Mail, ArrowLeft } from "lucide-react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+
+import { AuthPageContainer } from "@/components/auth/AuthPageContainer";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { forgotPassword } from "@/lib/api/services/auth";
+import { ApiError } from "@/lib/api/types/auth.types";
+import { useToast } from "@/lib/context/ToastContext";
 import {
   forgotPasswordSchema,
   ForgotPasswordFormValues,
 } from "@/lib/schemas/auth";
-import { forgotPassword } from "@/lib/api/services/auth";
-import { ApiError } from "@/lib/api/types/auth.types";
-import { useToast } from "@/lib/context/ToastContext";
-import axios from "axios";
-
-import { AuthPageContainer } from "@/components/auth/AuthPageContainer";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();

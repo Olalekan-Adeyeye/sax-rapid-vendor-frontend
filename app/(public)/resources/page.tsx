@@ -1,5 +1,4 @@
 "use client";
-import Link from "next/link";
 import {
   BookOpen,
   Video,
@@ -10,6 +9,7 @@ import {
   Package,
   Wallet,
 } from "lucide-react";
+import Link from "next/link";
 
 const RESOURCES = [
   {

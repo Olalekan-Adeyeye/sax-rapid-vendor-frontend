@@ -1,17 +1,18 @@
 "use client";
-import { Button } from "@/components/ui/Button";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 import { AlertCircle, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
-import { useToast } from "@/lib/context/ToastContext";
-import { useAuth } from "@/lib/context/AuthContext";
 import { useForm, useWatch } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { twoFactorSchema, TwoFactorFormValues } from "@/lib/schemas/auth";
-import { verifyTwoFactor } from "@/lib/api/services/auth";
-import { getErrorMessage } from "@/lib/utils/errors";
+
 import { AuthPageContainer } from "@/components/auth/AuthPageContainer";
+import { Button } from "@/components/ui/Button";
+import { verifyTwoFactor } from "@/lib/api/services/auth";
+import { useAuth } from "@/lib/context/AuthContext";
+import { useToast } from "@/lib/context/ToastContext";
+import { twoFactorSchema, TwoFactorFormValues } from "@/lib/schemas/auth";
+import { getErrorMessage } from "@/lib/utils/errors";
 
 export default function TwoFactorPage() {
   const router = useRouter();

@@ -4,7 +4,6 @@
  */
 
 import apiClient from "../apiClient";
-import type { ApiResponse } from "../types/auth.types";
 import type {
   VendorDashboardStats,
   VendorPerformanceDataPoint,
@@ -13,6 +12,7 @@ import type {
   VendorAnalyticsQueryParams,
   VendorTopSellerQueryParams,
 } from "../types/analytics.types";
+import type { ApiResponse } from "../types/auth.types";
 
 const BASE = "/vendor/analytics";
 

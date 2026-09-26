@@ -1,8 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertCircle, CheckCircle2, Info, X } from "lucide-react";
+import React, { createContext, useContext, useState, useCallback } from "react";
 
 type ToastType = "success" | "error" | "info" | "warning";
 

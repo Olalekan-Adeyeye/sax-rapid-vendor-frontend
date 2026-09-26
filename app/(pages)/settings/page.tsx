@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useRef } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   UserCog,
@@ -11,25 +11,24 @@ import {
   Upload,
   LoaderCircle,
 } from "lucide-react";
-import { Button } from "@/components/ui/Button";
 import Image from "next/image";
-import { Input } from "@/components/ui/Input";
-import { Switch } from "@/components/ui/Switch";
+import React, { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { profileSchema, ProfileFormValues } from "@/lib/schemas/vendor";
-import { useAuth } from "@/lib/context/AuthContext";
-import { useToast } from "@/lib/context/ToastContext";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { updateUserProfile } from "@/lib/api/services/user";
-import { uploadFile } from "@/lib/api/services/files";
-import { setupTwoFactor } from "@/lib/api/services/auth";
-import { getErrorMessage } from "@/lib/utils/errors";
-
 
 import { ChangePasswordModal } from "@/components/auth/ChangePasswordModal";
-import { TwoFactorSetupModal } from "@/components/auth/TwoFactorSetupModal";
 import { Disable2faModal } from "@/components/auth/Disable2faModal";
+import { TwoFactorSetupModal } from "@/components/auth/TwoFactorSetupModal";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Switch } from "@/components/ui/Switch";
+import { setupTwoFactor } from "@/lib/api/services/auth";
+import { uploadFile } from "@/lib/api/services/files";
+import { updateUserProfile } from "@/lib/api/services/user";
+import { useAuth } from "@/lib/context/AuthContext";
+import { useToast } from "@/lib/context/ToastContext";
+import { profileSchema, ProfileFormValues } from "@/lib/schemas/vendor";
+import { getErrorMessage } from "@/lib/utils/errors";
 
 export default function AccountSettingsPage() {
   const { user, updateUser, setTwoFactorVerified } = useAuth();

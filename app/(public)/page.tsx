@@ -1,10 +1,4 @@
 "use client";
-import Image from "next/image";
-import Link from "next/link";
-import { useState } from "react";
-import { Button } from "@/components/ui/Button";
-import { BenefitCard } from "@/components/vendor/BenefitCard";
-import { StepItem } from "@/components/vendor/StepItem";
 import {
   Globe,
   Zap,
@@ -18,6 +12,14 @@ import {
   DollarSign,
   TrendingUp,
 } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import Script from "next/script";
+import { useState } from "react";
+
+import { Button } from "@/components/ui/Button";
+import { BenefitCard } from "@/components/vendor/BenefitCard";
+import { StepItem } from "@/components/vendor/StepItem";
 
 const stats = [
   { value: "5M+", label: "Active Buyers" },
@@ -73,7 +75,6 @@ const testimonials = [
   },
 ];
 
-import Script from "next/script";
 
 export default function VendorCenter() {
   const [activeStep, setActiveStep] = useState(0);

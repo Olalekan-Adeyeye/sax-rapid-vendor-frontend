@@ -2,7 +2,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Bell,
-  CheckCircle,
   Trash2,
   ShoppingBag,
   CreditCard,
@@ -14,23 +13,23 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+
+import { EmptyState } from "@/components/common/EmptyState";
+import { FullPageLoader } from "@/components/common/FullPageLoader";
 import { Button } from "@/components/ui/Button";
+import { ErrorComponent } from "@/components/ui/ErrorComponent";
+import { PageHeader } from "@/components/ui/PageHeader";
 import {
   getNotifications,
   markAsRead,
-  markAllAsRead,
   deleteNotification,
   getNotificationCount,
 } from "@/lib/api/services/notifications";
 import type { NotificationResponse } from "@/lib/api/types/notifications.types";
-import { getRelativeTime } from "@/lib/utils/date";
-import { useToast } from "@/lib/context/ToastContext";
 import { useAuth } from "@/lib/context/AuthContext";
-import { ErrorComponent } from "@/components/ui/ErrorComponent";
+import { useToast } from "@/lib/context/ToastContext";
+import { getRelativeTime } from "@/lib/utils/date";
 import { getErrorMessage } from "@/lib/utils/errors";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { FullPageLoader } from "@/components/common/FullPageLoader";
-import { EmptyState } from "@/components/common/EmptyState";
 
 const typeConfig: Record<string, { icon: React.ElementType; color: string }> = {
   General: { icon: Bell, color: "bg-gray-400" },
@@ -88,18 +87,6 @@ export default function NotificationsPage() {
   const error = queryError ? getErrorMessage(queryError) : null;
 
   // Mutations
-  const markAllReadMutation = useMutation({
-    mutationFn: markAllAsRead,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      queryClient.invalidateQueries({ queryKey: ["notification-count"] });
-      toast("Success", "All notifications marked as read", "success");
-    },
-    onError: (error) => {
-      toast("Error", getErrorMessage(error), "error");
-    },
-  });
-
   const markReadMutation = useMutation({
     mutationFn: markAsRead,
     onSuccess: () => {
@@ -119,11 +106,6 @@ export default function NotificationsPage() {
       toast("Error", getErrorMessage(error), "error");
     },
   });
-
-  const handleMarkAllRead = () => {
-    if (counts.unread === 0) return;
-    markAllReadMutation.mutate();
-  };
 
   const handleMarkOneRead = (id: string) => {
     const notification = notifications.find((n) => n.id === id);
@@ -186,17 +168,6 @@ export default function NotificationsPage() {
             description="Stay updated with your store activities"
             actions={
               <>
-                {/* <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleMarkAllRead}
-                  loading={markAllReadMutation.isPending}
-                  disabled={counts.unread === 0 || loadingNotifications}
-                  className="px-6 rounded-full text-xs font-bold"
-                >
-                  <CheckCircle size={14} />
-                  Mark all read
-                </Button> */}
                 <Button   
                   variant="outline"
                   size="sm"

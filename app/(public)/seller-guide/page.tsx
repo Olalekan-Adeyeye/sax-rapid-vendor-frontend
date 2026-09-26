@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
 import {
   ChevronDown,
   Mail,
@@ -25,6 +23,8 @@ import {
   Scale,
   Gavel,
 } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
 
 const STEPS = [
   { number: 1, title: "Create Your Seller Account", desc: "Register your business and complete your seller profile." },

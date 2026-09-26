@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
-import Link from "next/link";
 import { RefreshCw } from "lucide-react";
+import Link from "next/link";
+import React from "react";
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;

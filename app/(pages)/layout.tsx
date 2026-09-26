@@ -1,9 +1,10 @@
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { AuthProvider } from "@/lib/context/AuthContext";
-import { getServerSession, isVendorRole } from "@/lib/auth";
-import VendorVerificationStatus from "@/components/vendor/VendorVerificationStatus";
+
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
+import VendorVerificationStatus from "@/components/vendor/VendorVerificationStatus";
+import { getServerSession, isVendorRole } from "@/lib/auth";
+import { AuthProvider } from "@/lib/context/AuthContext";
 
 export const metadata: Metadata = {
   description: "SAX-RAPID Vendor Center — All-in-one business management tool.",

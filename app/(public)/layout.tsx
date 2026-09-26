@@ -1,15 +1,18 @@
-import Link from "next/link";
-import { LandingNav } from "@/components/vendor/LandingNav";
-import { Logo } from "@/components/common/Logo";
-import { NAV_LINKS } from "@/lib/constants/navLinks";
-import { redirect } from "next/navigation";
-import { getServerSession, shouldRedirectToDashboard } from "@/lib/auth";
 import {
   Twitter,
   Facebook,
   Instagram,
   Linkedin,
 } from "lucide-react";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+
+import { Logo } from "@/components/common/Logo";
+import { LandingNav } from "@/components/vendor/LandingNav";
+import { getServerSession, shouldRedirectToDashboard } from "@/lib/auth";
+import { NAV_LINKS } from "@/lib/constants/navLinks";
+
+
 
 const FOOTER_COLUMNS = [
   {

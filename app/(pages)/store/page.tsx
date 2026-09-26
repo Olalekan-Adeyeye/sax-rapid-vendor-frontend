@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Store,
   Save,
@@ -16,21 +16,22 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import React, { useState, useRef } from "react";
+
+import { FullPageLoader } from "@/components/common/FullPageLoader";
+import { Button } from "@/components/ui/Button";
+import { ErrorComponent } from "@/components/ui/ErrorComponent";
+import { Input } from "@/components/ui/Input";
+import { Modal } from "@/components/ui/Modal";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { uploadFile } from "@/lib/api/services/files";
 import {
   getMyVendorProfile,
   upgradeToBusiness,
 } from "@/lib/api/services/vendor";
-import { uploadFile } from "@/lib/api/services/files";
-import { getErrorMessage } from "@/lib/utils/errors";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { Button } from "@/components/ui/Button";
-import { Modal } from "@/components/ui/Modal";
-import { Input } from "@/components/ui/Input";
-import { ErrorComponent } from "@/components/ui/ErrorComponent";
-import { FullPageLoader } from "@/components/common/FullPageLoader";
-import { useToast } from "@/lib/context/ToastContext";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useToast } from "@/lib/context/ToastContext";
+import { getErrorMessage } from "@/lib/utils/errors";
 
 export default function StoreProfile() {
   const queryClient = useQueryClient();

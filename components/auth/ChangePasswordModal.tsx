@@ -1,20 +1,22 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { Lock, AlertCircle } from "lucide-react";
 import React from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Modal } from "@/components/ui/Modal";
-import { Input } from "@/components/ui/Input";
+
 import { Button } from "@/components/ui/Button";
-import { useMutation } from "@tanstack/react-query";
+import { Input } from "@/components/ui/Input";
+import { Modal } from "@/components/ui/Modal";
 import { changePassword } from "@/lib/api/services/auth";
 import { useToast } from "@/lib/context/ToastContext";
-import { getErrorMessage } from "@/lib/utils/errors";
 import {
 	changePasswordSchema,
 	ChangePasswordFormValues,
 } from "@/lib/schemas/auth";
-import { Lock, AlertCircle } from "lucide-react";
+import { getErrorMessage } from "@/lib/utils/errors";
+
 
 interface ChangePasswordModalProps {
 	isOpen: boolean;

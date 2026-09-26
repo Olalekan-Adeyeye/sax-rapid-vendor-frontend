@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   User,
   Send,
@@ -11,24 +11,24 @@ import {
   ChevronLeft,
   Check,
 } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import React from "react";
+
+import { EmptyState } from "@/components/common/EmptyState";
+import { FullPageLoader } from "@/components/common/FullPageLoader";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { SearchInput } from "@/components/ui/SearchInput";
 import {
   getConversations,
   getMessages,
   markAsRead,
   sendMessage,
 } from "@/lib/api/services/chat";
-import { getRelativeTime } from "@/lib/utils/date";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useToast } from "@/lib/context/ToastContext";
-import { Button } from "@/components/ui/Button";
-import { SearchInput } from "@/components/ui/SearchInput";
-import { Input } from "@/components/ui/Input";
-
+import { getRelativeTime } from "@/lib/utils/date";
 import { getErrorMessage } from "@/lib/utils/errors";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { FullPageLoader } from "@/components/common/FullPageLoader";
-import { EmptyState } from "@/components/common/EmptyState";
 
 export default function MessagesPage() {
   const { user, isAuthenticated } = useAuth();

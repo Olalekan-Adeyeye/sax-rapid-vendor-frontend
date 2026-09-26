@@ -1,7 +1,8 @@
 import { Metadata } from "next";
-import { AuthProvider } from "@/lib/context/AuthContext";
 import { redirect } from "next/navigation";
+
 import { getServerSession, shouldRedirectToDashboard } from "@/lib/auth";
+import { AuthProvider } from "@/lib/context/AuthContext";
 
 export const metadata: Metadata = {
   description: "Log in or sign up to your SAX-RAPID Vendor account.",

@@ -1,7 +1,8 @@
 "use client";
 import React, { useState } from "react";
-import { Sidebar } from "@/components/layout/Sidebar";
+
 import { Header } from "@/components/layout/Header";
+import { Sidebar } from "@/components/layout/Sidebar";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 export default function PageLayoutWrapper({

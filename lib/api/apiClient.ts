@@ -8,9 +8,12 @@ import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from "axios";
-import { 
-  AuthResponse, 
-  ApiResponse 
+
+import { cookies } from "../utils/cookies";
+
+import {
+  AuthResponse,
+  ApiResponse
 } from "./types/auth.types";
 
 // ─── Base URL ─────────────────────────────────────────────────────────────────
@@ -19,8 +22,6 @@ export const BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://api.saxrapid.com";
 
 // ─── Token Storage Helpers ────────────────────────────────────────────────────
-
-import { cookies } from "../utils/cookies";
 
 const TOKEN_KEY = "sax_access_token";
 const REFRESH_TOKEN_KEY = "sax_refresh_token";

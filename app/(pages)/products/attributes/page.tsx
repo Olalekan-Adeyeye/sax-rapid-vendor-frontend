@@ -1,10 +1,11 @@
 "use client";
-import React from "react";
 import { Plus, Settings2, Trash2, Edit } from "lucide-react";
+import React from "react";
+
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { SearchInput } from "@/components/ui/SearchInput";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { SearchInput } from "@/components/ui/SearchInput";
 
 export default function ProductAttributesPage() {
 	const allAttributes = [

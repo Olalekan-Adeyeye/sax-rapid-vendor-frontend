@@ -1,10 +1,11 @@
-import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { cache } from "react";
-import type { UserProfile, ApiResponse } from "@/lib/api/types/auth.types";
-import type { VendorProfileResponse } from "@/lib/api/types/vendor.types";
-import { mapUserToProfile, type UserProfileResponse } from "@/lib/api/types/user.types";
+
 import { BASE_URL } from "@/lib/api/apiClient";
+import type { UserProfile, ApiResponse } from "@/lib/api/types/auth.types";
+import { mapUserToProfile, type UserProfileResponse } from "@/lib/api/types/user.types";
+import type { VendorProfileResponse } from "@/lib/api/types/vendor.types";
 import {
   TWO_FACTOR_MAX_AGE_SEC,
   isTwoFactorFlagValid,

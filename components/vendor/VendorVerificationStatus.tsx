@@ -1,6 +1,7 @@
 import { Store, Clock, XCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+
 import type { VerificationStatus } from "@/lib/api/types/auth.types";
 
 const STATUS_CONFIG = {

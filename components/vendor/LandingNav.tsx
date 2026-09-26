@@ -1,9 +1,10 @@
 "use client";
-import { useState, useEffect } from "react";
-import Link from "next/link";
 import { Menu, X, ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import Link from "next/link";
+import { useState, useEffect } from "react";
+
 import { Logo } from "@/components/common/Logo";
+import { Button } from "@/components/ui/Button";
 import type { NavLink } from "@/lib/constants/navLinks";
 
 interface LandingNavProps {

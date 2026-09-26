@@ -1,6 +1,6 @@
+import { ShoppingBag, ArrowUpRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { ShoppingBag, ArrowUpRight } from "lucide-react";
 
 interface TopSellerCardProps {
 	image: string;

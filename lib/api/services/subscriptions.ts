@@ -3,8 +3,9 @@
  * All endpoints under the "Subscriptions" tag — /api/Subscription/*
  */
 
-import apiClient from "../apiClient";
 import axios from "axios";
+
+import apiClient from "../apiClient";
 import type { ApiResponse } from "../types/auth.types";
 import type {
 	SubscriptionPlanResponse,

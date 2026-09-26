@@ -1,7 +1,4 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
-import Image from "next/image";
 import {
   Edit,
   Trash2,
@@ -16,16 +13,20 @@ import {
   Truck,
   Store,
 } from "lucide-react";
-import { Button } from "@/components/ui/Button";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { ErrorComponent } from "@/components/ui/ErrorComponent";
+import Image from "next/image";
+import { useParams, useRouter } from "next/navigation";
+import React, { useState, useEffect, useCallback } from "react";
+
 import { FullPageLoader } from "@/components/common/FullPageLoader";
-import { useToast } from "@/lib/context/ToastContext";
+import { Button } from "@/components/ui/Button";
+import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
+import { ErrorComponent } from "@/components/ui/ErrorComponent";
+import { PageHeader } from "@/components/ui/PageHeader";
 import * as productsService from "@/lib/api/services/products";
 import { ProductResponseDTO } from "@/lib/api/types/products.types";
-import { getErrorMessage } from "@/lib/utils/errors";
+import { useToast } from "@/lib/context/ToastContext";
 import { useCurrency } from "@/lib/hooks/useCurrency";
-import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
+import { getErrorMessage } from "@/lib/utils/errors";
 
 export default function SingleProductPage() {
   const params = useParams();

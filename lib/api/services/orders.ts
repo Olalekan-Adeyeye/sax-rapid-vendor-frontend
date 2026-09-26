@@ -1,11 +1,11 @@
 import apiClient from "../apiClient";
+import type { ApiResponse } from "../types/auth.types";
 import type { 
   OrderResponseDTO, 
   UpdateOrderStatusRequest,
   OrderStatsDTO,
   CreateOrderRequestDTO
 } from "../types/orders.types";
-import type { ApiResponse } from "../types/auth.types";
 
 const BASE = "/Orders";
 

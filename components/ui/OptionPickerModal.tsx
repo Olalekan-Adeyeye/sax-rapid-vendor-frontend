@@ -1,7 +1,8 @@
 "use client";
-import React from "react";
-import { Modal } from "@/components/ui/Modal";
 import type { LucideIcon } from "lucide-react";
+import React from "react";
+
+import { Modal } from "@/components/ui/Modal";
 
 export interface PickerOption<T extends string> {
   key: T;

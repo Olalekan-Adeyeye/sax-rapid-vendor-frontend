@@ -1,13 +1,14 @@
 "use client";
 
+import { useMutation } from "@tanstack/react-query";
+import { ShieldOff, AlertTriangle } from "lucide-react";
 import React from "react";
-import { Modal } from "@/components/ui/Modal";
+
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { ShieldOff, AlertTriangle } from "lucide-react";
-import { useToast } from "@/lib/context/ToastContext";
+import { Modal } from "@/components/ui/Modal";
 import { disableTwoFactor } from "@/lib/api/services/auth";
-import { useMutation } from "@tanstack/react-query";
+import { useToast } from "@/lib/context/ToastContext";
 import { getErrorMessage } from "@/lib/utils/errors";
 
 interface Disable2faModalProps {

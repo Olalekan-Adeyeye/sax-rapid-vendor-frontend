@@ -1,5 +1,6 @@
-import { VariationDetails, VariationAttributeDTO } from "../api/types/orders.types";
 import { Attribute, Variation } from "@/lib/types/product-form.types";
+
+import { VariationDetails, VariationAttributeDTO } from "../api/types/orders.types";
 
 /**
  * Formats variation details from various possible API formats (string, JSON string, or object).

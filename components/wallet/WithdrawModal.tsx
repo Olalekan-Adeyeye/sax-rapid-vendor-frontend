@@ -1,17 +1,18 @@
 "use client";
-import React, { useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { ArrowUpRight, Building2 } from "lucide-react";
+import React, { useState } from "react";
+
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Select";
-import { useToast } from "@/lib/context/ToastContext";
-import * as walletService from "@/lib/api/services/wallet";
-import * as bankAccountService from "@/lib/api/services/bank-accounts";
 import { Modal } from "@/components/ui/Modal";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { getErrorMessage } from "@/lib/utils/errors";
-import { getCurrencySymbol } from "@/lib/utils/countries";
+import { Select } from "@/components/ui/Select";
+import * as bankAccountService from "@/lib/api/services/bank-accounts";
+import * as walletService from "@/lib/api/services/wallet";
 import type { BankAccountResponseDTO } from "@/lib/api/types/bank-accounts.types";
+import { useToast } from "@/lib/context/ToastContext";
+import { getCurrencySymbol } from "@/lib/utils/countries";
+import { getErrorMessage } from "@/lib/utils/errors";
 
 interface WithdrawModalProps {
   isOpen: boolean;

@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
+
 import "./globals.css";
-import { ToastProvider } from "@/lib/context/ToastContext";
 import { QueryProvider } from "@/lib/context/QueryProvider";
+import { ToastProvider } from "@/lib/context/ToastContext";
 
 const inter = Inter({
   variable: "--font-inter",

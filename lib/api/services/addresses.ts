@@ -1,10 +1,10 @@
 import apiClient from "../apiClient";
-import type { ApiResponse } from "../types/auth.types";
 import type {
   AddressResponseDTO,
   CreateAddressRequestDTO,
   UpdateAddressRequestDTO,
 } from "../types/addresses.types";
+import type { ApiResponse } from "../types/auth.types";
 
 const BASE = "/Address";
 

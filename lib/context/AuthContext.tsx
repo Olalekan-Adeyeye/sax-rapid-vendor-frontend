@@ -1,19 +1,20 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import React, { createContext, useContext, useState, ReactNode } from "react";
+
 import { tokenStorage } from "../api/apiClient";
+import { getUserProfile } from "../api/services/user";
+import { getMyVendorProfile } from "../api/services/vendor";
+import type { UserProfile } from "../api/types/auth.types";
+import { mapUserToProfile } from "../api/types/user.types";
+import type { VendorProfileResponse } from "../api/types/vendor.types";
 import { cookies } from "../utils/cookies";
 import {
   createTwoFactorFlag,
   isTwoFactorFlagValid,
 } from "../utils/twoFactorFlag";
-import type { UserProfile } from "../api/types/auth.types";
-import { mapUserToProfile } from "../api/types/user.types";
-import { getUserProfile } from "../api/services/user";
-import type { VendorProfileResponse } from "../api/types/vendor.types";
-import { getMyVendorProfile } from "../api/services/vendor";
 
 interface AuthContextType {
 	user: UserProfile | null;

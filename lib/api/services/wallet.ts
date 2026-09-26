@@ -5,6 +5,7 @@
 
 import apiClient from "../apiClient";
 import { ApiResponse } from "../types/auth.types";
+import { InitializePaymentResponseDTO } from "../types/payments.types";
 import {
   WalletDetailsResponseDTO,
   WalletFundRequestDTO,
@@ -12,7 +13,6 @@ import {
   UpdateWalletCurrencyDTO,
   PagedTransactionsDTO,
 } from "../types/wallet.types";
-import { InitializePaymentResponseDTO } from "../types/payments.types";
 
 const BASE = "/vendor/wallet";
 

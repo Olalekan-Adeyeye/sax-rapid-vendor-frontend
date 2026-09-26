@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowDownCircle,
   CreditCard,
@@ -8,26 +8,25 @@ import {
   CheckCircle,
   Check,
   Plus,
-} from "lucide-react";
-import { StatCard } from "@/components/dashboard/StatCard";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import * as walletService from "@/lib/api/services/wallet";
-import * as bankAccountService from "@/lib/api/services/bank-accounts";
-import { formatCurrency } from "@/lib/utils/currency";
-import { useCurrency } from "@/lib/hooks/useCurrency";
-import { formatDate } from "@/lib/utils/date";
-import { Button } from "@/components/ui/Button";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { EmptyState } from "@/components/common/EmptyState";
-import { SearchInput } from "@/components/ui/SearchInput";
-import { Modal } from "@/components/ui/Modal";
-import { useToast } from "@/lib/context/ToastContext";
-import { useAuth } from "@/lib/context/AuthContext";
-import { getErrorMessage } from "@/lib/utils/errors";
-import { Loader2 } from "lucide-react";
+ Loader2 } from "lucide-react";
+import React from "react";
 
-import { WithdrawModal } from "@/components/wallet/WithdrawModal";
+import { EmptyState } from "@/components/common/EmptyState";
+import { StatCard } from "@/components/dashboard/StatCard";
+import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { SearchInput } from "@/components/ui/SearchInput";
 import { AddBankAccountModal } from "@/components/wallet/AddBankAccountModal";
+import { WithdrawModal } from "@/components/wallet/WithdrawModal";
+import * as bankAccountService from "@/lib/api/services/bank-accounts";
+import * as walletService from "@/lib/api/services/wallet";
+import { useAuth } from "@/lib/context/AuthContext";
+import { useToast } from "@/lib/context/ToastContext";
+import { useCurrency } from "@/lib/hooks/useCurrency";
+import { formatCurrency } from "@/lib/utils/currency";
+import { formatDate } from "@/lib/utils/date";
+import { getErrorMessage } from "@/lib/utils/errors";
 
 export default function PayoutsPage() {
   const queryClient = useQueryClient();

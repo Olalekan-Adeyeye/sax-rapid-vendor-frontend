@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
-import Link from "next/link";
 import { ChevronDown, Search, HelpCircle } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
 
 const FAQ_ITEMS = [
   {

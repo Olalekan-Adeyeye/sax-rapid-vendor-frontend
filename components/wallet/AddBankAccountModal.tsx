@@ -1,21 +1,22 @@
 "use client";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Plus, Building2, Landmark, User, Loader2, CheckCircle2 } from "lucide-react";
 import React, { useState, useMemo } from "react";
 import { useForm, Controller, useWatch } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Building2, Landmark, User, Loader2, CheckCircle2 } from "lucide-react";
+
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Select";
 import { Modal } from "@/components/ui/Modal";
-import { useToast } from "@/lib/context/ToastContext";
+import { Select } from "@/components/ui/Select";
 import * as bankAccountService from "@/lib/api/services/bank-accounts";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getErrorMessage } from "@/lib/utils/errors";
+import { useToast } from "@/lib/context/ToastContext";
 import { useCurrency } from "@/lib/hooks/useCurrency";
 import {
   bankAccountSchema,
   type BankAccountFormValues,
 } from "@/lib/schemas/finance";
+import { getErrorMessage } from "@/lib/utils/errors";
 
 interface AddBankAccountModalProps {
   isOpen: boolean;

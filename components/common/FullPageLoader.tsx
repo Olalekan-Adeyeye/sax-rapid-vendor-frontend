@@ -1,6 +1,6 @@
 "use client";
-import React from "react";
 import { Loader2, LucideIcon } from "lucide-react";
+import React from "react";
 
 interface FullPageLoaderProps {
 	label?: string;

@@ -1,21 +1,21 @@
 "use client";
-import { useState, Suspense } from "react";
-import { Input } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
-import { Lock, Eye, EyeOff, KeyRound, Mail } from "lucide-react";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import axios from "axios";
+import { Lock, Eye, EyeOff, KeyRound, Mail } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useForm } from "react-hook-form";
+
+import { AuthPageContainer } from "@/components/auth/AuthPageContainer";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { resetPassword, forgotPassword } from "@/lib/api/services/auth";
+import { ApiError } from "@/lib/api/types/auth.types";
+import { useToast } from "@/lib/context/ToastContext";
 import {
   resetPasswordSchema,
   ResetPasswordFormValues,
 } from "@/lib/schemas/auth";
-import { resetPassword, forgotPassword } from "@/lib/api/services/auth";
-import { ApiError } from "@/lib/api/types/auth.types";
-import { useToast } from "@/lib/context/ToastContext";
-import axios from "axios";
-
-import { AuthPageContainer } from "@/components/auth/AuthPageContainer";
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams();

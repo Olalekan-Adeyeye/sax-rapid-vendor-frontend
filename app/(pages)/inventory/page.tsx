@@ -1,22 +1,23 @@
 "use client";
-import React from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
 	Database,
 	AlertCircle,
 	TrendingDown,
 	PackageOpen,
 	ArrowUpRight,
-} from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+ Loader2 } from "lucide-react";
+import Link from "next/link";
+import React from "react";
+
+import { EmptyState } from "@/components/common/EmptyState";
+import { Button } from "@/components/ui/Button";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { SearchInput } from "@/components/ui/SearchInput";
 import { getProductStats, getProducts } from "@/lib/api/services/products";
 import { getMyVendorProfile } from "@/lib/api/services/vendor";
 import { useAuth } from "@/lib/context/AuthContext";
-import { Button } from "@/components/ui/Button";
-import { SearchInput } from "@/components/ui/SearchInput";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { EmptyState } from "@/components/common/EmptyState";
-import { Loader2 } from "lucide-react";
-import Link from "next/link";
+
 
 export default function InventoryManagementPage() {
 	const { isAuthenticated } = useAuth();

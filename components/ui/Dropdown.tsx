@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import React, {
   useState,
   useRef,
@@ -12,7 +13,6 @@ import React, {
   useContext,
 } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "framer-motion";
 
 interface DropdownContextValue {
   close: () => void;

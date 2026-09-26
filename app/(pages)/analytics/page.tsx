@@ -1,5 +1,4 @@
 "use client";
-import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   TrendingUp,
@@ -14,25 +13,27 @@ import {
   BarChart3,
   PieChart as PieChartIcon,
 } from "lucide-react";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { FullPageLoader } from "@/components/common/FullPageLoader";
+import Image from "next/image";
+import Link from "next/link";
+import React, { useState, useMemo } from "react";
+
 import { EmptyState } from "@/components/common/EmptyState";
+import { FullPageLoader } from "@/components/common/FullPageLoader";
 import { Button } from "@/components/ui/Button";
-import { formatCurrency } from "@/lib/utils/currency";
-import { useCurrency } from "@/lib/hooks/useCurrency";
+import { PageHeader } from "@/components/ui/PageHeader";
 import {
   getVendorDashboardStats,
   getVendorPerformanceAnalytics,
   getVendorTopSellers,
 } from "@/lib/api/services/analytics";
-import { getProductStats } from "@/lib/api/services/products";
-import { getVendorOrders } from "@/lib/api/services/orders";
 import { getMyBoosts } from "@/lib/api/services/boost";
 import { getCategories } from "@/lib/api/services/categories";
-import { formatDate } from "@/lib/utils/date";
-import Image from "next/image";
-import Link from "next/link";
+import { getVendorOrders } from "@/lib/api/services/orders";
+import { getProductStats } from "@/lib/api/services/products";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useCurrency } from "@/lib/hooks/useCurrency";
+import { formatCurrency } from "@/lib/utils/currency";
+import { formatDate } from "@/lib/utils/date";
 
 type TimeRange = "7D" | "30D" | "1Y" | "ALL";
 

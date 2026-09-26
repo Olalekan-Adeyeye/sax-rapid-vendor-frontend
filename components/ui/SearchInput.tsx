@@ -1,6 +1,6 @@
 "use client";
-import React, { useCallback } from "react";
 import { Search } from "lucide-react";
+import React, { useCallback } from "react";
 
 interface SearchInputProps {
   /** Controlled value */

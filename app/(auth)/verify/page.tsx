@@ -1,21 +1,22 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
-import { Button } from "@/components/ui/Button";
-import { useRouter } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
+import { useForm, useWatch } from "react-hook-form";
+
+import { AuthPageContainer } from "@/components/auth/AuthPageContainer";
+import { Button } from "@/components/ui/Button";
+import { tokenStorage } from "@/lib/api/apiClient";
+import { verifyOtp, resendOtp } from "@/lib/api/services/auth";
 import { ApiError, mapAuthToProfile } from "@/lib/api/types/auth.types";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useToast } from "@/lib/context/ToastContext";
-import { verifyOtp, resendOtp } from "@/lib/api/services/auth";
-import { tokenStorage } from "@/lib/api/apiClient";
-import { useForm, useWatch } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { otpSchema, OtpFormValues } from "@/lib/schemas/auth";
-import { AuthPageContainer } from "@/components/auth/AuthPageContainer";
-import { cookies } from "@/lib/utils/cookies";
 import { resolvePostAuthDestination } from "@/lib/utils/authRouting";
+import { cookies } from "@/lib/utils/cookies";
 
 export default function VerifyPage() {
   const router = useRouter();

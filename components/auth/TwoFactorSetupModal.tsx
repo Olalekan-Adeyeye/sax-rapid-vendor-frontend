@@ -1,15 +1,16 @@
 "use client";
 
-import React from "react";
-import { Modal } from "@/components/ui/Modal";
-import { Button } from "@/components/ui/Button";
-import { QRCodeSVG } from "qrcode.react";
-import { ShieldCheck, Copy, Check, ArrowRight } from "lucide-react";
-import { useToast } from "@/lib/context/ToastContext";
-import { verifyTwoFactor } from "@/lib/api/services/auth";
 import { useMutation } from "@tanstack/react-query";
-import { getErrorMessage } from "@/lib/utils/errors";
+import { ShieldCheck, Copy, Check, ArrowRight } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
+import React from "react";
+
+import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
 import { OTPInput } from "@/components/ui/OTPInput";
+import { verifyTwoFactor } from "@/lib/api/services/auth";
+import { useToast } from "@/lib/context/ToastContext";
+import { getErrorMessage } from "@/lib/utils/errors";
 
 interface TwoFactorSetupModalProps {
 	isOpen: boolean;

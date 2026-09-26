@@ -3,8 +3,8 @@
  * All endpoints under the "Authentication" tag — /api/Auth/*
  */
 
-import apiClient from "../apiClient";
 import { cookies } from "../../utils/cookies";
+import apiClient from "../apiClient";
 import type {
   RegisterRequest,
   LoginRequest,
