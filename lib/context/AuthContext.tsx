@@ -5,6 +5,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { tokenStorage } from "../api/apiClient";
 import { cookies } from "../utils/cookies";
+import {
+  createTwoFactorFlag,
+  isTwoFactorFlagValid,
+} from "../utils/twoFactorFlag";
 import type { UserProfile } from "../api/types/auth.types";
 import { mapUserToProfile } from "../api/types/user.types";
 import { getUserProfile } from "../api/services/user";
@@ -51,7 +55,10 @@ export const AuthProvider = ({
 			return serverAuth.isTwoFactorVerified;
 		}
 		if (typeof window !== "undefined") {
-			return cookies.get("sax_2fa") === "true";
+			return isTwoFactorFlagValid(
+				cookies.get("sax_2fa"),
+				tokenStorage.getToken(),
+			);
 		}
 		return false;
 	});
@@ -94,7 +101,17 @@ export const AuthProvider = ({
 
 	const setUser = (userData: UserProfile | null) => {
 		queryClient.setQueryData(["auth", "user"], userData);
-		setToken(tokenStorage.getToken());
+		const nextToken =
+			typeof window !== "undefined" ? tokenStorage.getToken() : null;
+		setToken(nextToken);
+		if (!userData) {
+			setIsTwoFactorVerified(false);
+			cookies.remove("sax_2fa");
+		} else if (typeof window !== "undefined") {
+			setIsTwoFactorVerified(
+				isTwoFactorFlagValid(cookies.get("sax_2fa"), nextToken),
+			);
+		}
 	};
 
 	const updateUser = (data: Partial<UserProfile>) => {
@@ -115,7 +132,10 @@ export const AuthProvider = ({
 		setIsTwoFactorVerified(value);
 		if (typeof window !== "undefined") {
 			if (value) {
-				cookies.set("sax_2fa", "true");
+				const flag = createTwoFactorFlag(tokenStorage.getToken());
+				if (flag) {
+					cookies.set("sax_2fa", flag);
+				}
 			} else {
 				cookies.remove("sax_2fa");
 			}

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -20,6 +20,10 @@ import { ApiError, mapAuthToProfile } from "@/lib/api/types/auth.types";
 import { useToast } from "@/lib/context/ToastContext";
 import { useAuth } from "@/lib/context/AuthContext";
 import { tokenStorage } from "@/lib/api/apiClient";
+import {
+  resolvePostAuthDestination,
+  setPendingVerifyCookie,
+} from "@/lib/utils/authRouting";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signupSchema, SignupFormValues } from "@/lib/schemas/auth";
@@ -36,14 +40,6 @@ export default function SignupPage() {
   const [showPass, setShowPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
-  const pendingCookieRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (pendingCookieRef.current) {
-      document.cookie = pendingCookieRef.current;
-      pendingCookieRef.current = null;
-    }
-  });
 
   const { data: countries = [], isLoading: loadingCountries } = useQuery({
     queryKey: ["countries"],
@@ -108,22 +104,24 @@ export default function SignupPage() {
         role: "Vendor",
       });
 
-      // 1. Update context with user
-      setUser(mapAuthToProfile(response));
-
-      // 2. Manually manage tokens
       if (response.token && response.refreshToken) {
         tokenStorage.setTokens(response.token, response.refreshToken);
       }
 
-      // Navigate to verify
-      pendingCookieRef.current = `sax_pending_verify=${encodeURIComponent(data.email)}; path=/; max-age=600; SameSite=Lax`;
-      toast(
-        "Account Created",
-        "Your account was created successfully. Let's verify your email.",
-        "success",
-      );
-      router.push("/verify");
+      setUser(mapAuthToProfile(response));
+
+      if (!response.isVerified) {
+        setPendingVerifyCookie(data.email);
+        toast(
+          "Account Created",
+          "Your account was created successfully. Let's verify your email.",
+          "success",
+        );
+        router.replace("/verify");
+        return;
+      }
+      toast("Account Created", "Your account was created successfully.", "success");
+      router.replace(await resolvePostAuthDestination(response));
     } catch (err: unknown) {
       setUser(null);
       tokenStorage.clearTokens();
@@ -169,7 +167,6 @@ export default function SignupPage() {
       }}
     >
       <form
-        // eslint-disable-next-line react-hooks/refs
         onSubmit={handleSubmit(onSubmit)}
         className="space-y-5 animate-in fade-in slide-in-from-bottom-4"
       >

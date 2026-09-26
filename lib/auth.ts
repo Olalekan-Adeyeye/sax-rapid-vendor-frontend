@@ -5,6 +5,10 @@ import type { UserProfile, ApiResponse } from "@/lib/api/types/auth.types";
 import type { VendorProfileResponse } from "@/lib/api/types/vendor.types";
 import { mapUserToProfile, type UserProfileResponse } from "@/lib/api/types/user.types";
 import { BASE_URL } from "@/lib/api/apiClient";
+import {
+  TWO_FACTOR_MAX_AGE_SEC,
+  isTwoFactorFlagValid,
+} from "@/lib/utils/twoFactorFlag";
 
 export interface AuthSession {
   user: UserProfile | null;
@@ -16,6 +20,15 @@ export interface AuthSession {
 const TOKEN_KEY = "sax_access_token";
 const REFRESH_TOKEN_KEY = "sax_refresh_token";
 const TFA_COOKIE_KEY = "sax_2fa";
+export const TWO_FACTOR_MAX_AGE_SECONDS = TWO_FACTOR_MAX_AGE_SEC;
+
+export const ALLOWED_VENDOR_ROLES = ["Vendor", "Seller"] as const;
+
+export function isVendorRole(role: string | null | undefined): boolean {
+  return (
+    role === ALLOWED_VENDOR_ROLES[0] || role === ALLOWED_VENDOR_ROLES[1]
+  );
+}
 
 export async function getServerToken(): Promise<string | null> {
   const cookieStore = await cookies();
@@ -27,9 +40,13 @@ export async function getServerRefreshToken(): Promise<string | null> {
   return cookieStore.get(REFRESH_TOKEN_KEY)?.value ?? null;
 }
 
-export async function getServerTwoFactorVerified(): Promise<boolean> {
+export async function getServerTwoFactorVerified(
+  token: string | null,
+): Promise<boolean> {
+  if (!token) return false;
   const cookieStore = await cookies();
-  return cookieStore.get(TFA_COOKIE_KEY)?.value === "true";
+  const flag = cookieStore.get(TFA_COOKIE_KEY)?.value;
+  return isTwoFactorFlagValid(flag, token);
 }
 
 export async function getCurrentUser(
@@ -78,7 +95,7 @@ export const getServerSession = cache(async (): Promise<AuthSession> => {
   const [user, vendorProfile, isTwoFactorVerified] = await Promise.all([
     getCurrentUser(token),
     getServerVendor(token),
-    getServerTwoFactorVerified(),
+    getServerTwoFactorVerified(token),
   ]);
 
   return {
@@ -93,6 +110,7 @@ export function shouldRedirectToDashboard(session: AuthSession): boolean {
   return !!(
     session.token &&
     session.user &&
+    isVendorRole(session.user.role) &&
     session.user.isVerified &&
     session.vendorProfile !== null &&
     session.vendorProfile.verificationStatus === "Verified" &&

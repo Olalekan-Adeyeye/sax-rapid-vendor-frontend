@@ -275,7 +275,7 @@ export default function OnboardingPage() {
           "Your shop has been created and is pending review.",
           "success",
         );
-        router.push("/dashboard");
+        router.replace("/dashboard");
       } catch (err: unknown) {
         console.error("Onboarding failed:", err);
         let message =

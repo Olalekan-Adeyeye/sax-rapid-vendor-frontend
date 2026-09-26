@@ -14,6 +14,10 @@ export default async function OnboardingLayout({
 }) {
   const session = await getServerSession();
 
+  if (!session.token || !session.user) {
+    redirect("/login");
+  }
+
   if (session.token && session.user) {
     if (session.vendorProfile !== null) {
       redirect("/dashboard");

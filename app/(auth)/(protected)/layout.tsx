@@ -22,6 +22,10 @@ export default async function AuthLayout({
     redirect("/login");
   }
 
+  if (!session.user.isVerified) {
+    redirect("/verify");
+  }
+
   if (
     session.user.isVerified &&
     session.vendorProfile !== null &&

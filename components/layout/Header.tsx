@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/context/AuthContext";
-import { tokenStorage } from "@/lib/api/apiClient";
+import { logout } from "@/lib/api/services/auth";
 import {
   Menu,
   ChevronDown,
@@ -13,6 +13,7 @@ import {
   LogOut,
   PanelLeftClose,
   PanelLeft,
+  Loader2,
 } from "lucide-react";
 
 interface HeaderProps {
@@ -30,6 +31,7 @@ export function Header({
   const queryClient = useQueryClient();
   const { user, setUser, setTwoFactorVerified } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -46,11 +48,17 @@ export function Header({
   }, []);
 
   const handleLogout = () => {
-    tokenStorage.clearTokens();
-    setTwoFactorVerified(false);
-    setUser(null);
-    queryClient.clear();
-    router.push("/login");
+    if (loggingOut) return;
+    setIsDropdownOpen(false);
+    setLoggingOut(true);
+    requestAnimationFrame(() => {
+      logout();
+      setTwoFactorVerified(false);
+      setUser(null);
+      queryClient.cancelQueries();
+      queryClient.clear();
+      router.replace("/login");
+    });
   };
 
   const menuItems = [
@@ -60,7 +68,8 @@ export function Header({
   ];
 
   return (
-    <header className="h-20 border-b border-gray-100 px-4 lg:px-8 flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur-md z-100 text-black w-full">
+    <>
+      <header className="h-20 border-b border-gray-100 px-4 lg:px-8 flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur-md z-100 text-black w-full">
       <div className="flex items-center gap-2 lg:gap-4 flex-1 min-w-0 max-w-xl">
         {/* Mobile hamburger */}
         <button
@@ -176,5 +185,17 @@ export function Header({
         )}
       </div>
     </header>
+      {loggingOut && (
+        <div className="fixed inset-0 z-[9999] bg-white/85 backdrop-blur-sm flex flex-col items-center justify-center gap-4">
+          <Loader2
+            className="w-10 h-10 text-gold animate-spin"
+            strokeWidth={1.5}
+          />
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 animate-pulse">
+            Signing you out…
+          </p>
+        </div>
+      )}
+    </>
   );
 }

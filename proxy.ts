@@ -21,6 +21,20 @@ function isPublicOrAuthRoute(pathname: string): boolean {
   );
 }
 
+const SECURITY_HEADERS: Record<string, string> = {
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "SAMEORIGIN",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+};
+
+function applySecurityHeaders(response: NextResponse): NextResponse {
+  for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
+    response.headers.set(key, value);
+  }
+  return response;
+}
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get(TOKEN_KEY)?.value;
@@ -39,12 +53,14 @@ export function proxy(request: NextRequest) {
   if (!token && !isPublicOrAuthRoute(pathname)) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("from", pathname);
-    return NextResponse.redirect(loginUrl);
+    return applySecurityHeaders(NextResponse.redirect(loginUrl));
   }
 
-  return NextResponse.next({
-    request: { headers: requestHeaders },
-  });
+  return applySecurityHeaders(
+    NextResponse.next({
+      request: { headers: requestHeaders },
+    }),
+  );
 }
 
 export const config = {

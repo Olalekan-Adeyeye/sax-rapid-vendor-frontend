@@ -24,6 +24,12 @@ export default async function VerifyLayout({
   const session = await getServerSession();
 
   if (session.token && session.user?.isVerified) {
+    if (session.user.isTwoFactorEnabled && !session.isTwoFactorVerified) {
+      redirect("/2fa");
+    }
+    if (session.vendorProfile === null) {
+      redirect("/onboarding");
+    }
     redirect("/dashboard");
   }
 

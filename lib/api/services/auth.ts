@@ -4,6 +4,7 @@
  */
 
 import apiClient from "../apiClient";
+import { cookies } from "../../utils/cookies";
 import type {
   RegisterRequest,
   LoginRequest,
@@ -91,12 +92,8 @@ export async function resendOtp(data: ResendOtpRequest): Promise<void> {
   await apiClient.post(`${BASE}/resend-otp`, data);
 }
 
-/**
- * Logout — clears stored tokens locally.
- * Note: Actual token clearing should be handled by the caller.
- */
 export function logout(): void {
-	// Pure function, side effects moved to components/pages
+  cookies.clearAuthCookies();
 }
 
 /**

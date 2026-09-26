@@ -15,6 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { otpSchema, OtpFormValues } from "@/lib/schemas/auth";
 import { AuthPageContainer } from "@/components/auth/AuthPageContainer";
 import { cookies } from "@/lib/utils/cookies";
+import { resolvePostAuthDestination } from "@/lib/utils/authRouting";
 
 export default function VerifyPage() {
   const router = useRouter();
@@ -101,7 +102,7 @@ export default function VerifyPage() {
 
       cookies.remove("sax_pending_verify");
 
-      router.replace("/dashboard");
+      router.replace(await resolvePostAuthDestination(response));
     } catch (err: unknown) {
       let message = "Invalid or expired OTP";
       if (axios.isAxiosError<ApiError>(err)) {

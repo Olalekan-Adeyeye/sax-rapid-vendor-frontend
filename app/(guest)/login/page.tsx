@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -9,6 +9,10 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import { ApiError, mapAuthToProfile } from "@/lib/api/types/auth.types";
 import { tokenStorage } from "@/lib/api/apiClient";
+import {
+  resolvePostAuthDestination,
+  setPendingVerifyCookie,
+} from "@/lib/utils/authRouting";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,14 +27,6 @@ export default function LoginPage() {
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
-  const pendingCookieRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (pendingCookieRef.current) {
-      document.cookie = pendingCookieRef.current;
-      pendingCookieRef.current = null;
-    }
-  });
 
   const {
     register,
@@ -59,28 +55,30 @@ export default function LoginPage() {
         return;
       }
 
-      // 2. Update context with user
-      setUser(mapAuthToProfile(response));
-
-      // 3. Manually manage tokens
       if (response.token && response.refreshToken) {
         tokenStorage.setTokens(response.token, response.refreshToken);
       }
-      // 4. Server-side layouts handle progression redirects
-      router.push("/dashboard");
+
+      setUser(mapAuthToProfile(response));
+
+      if (!response.isVerified) {
+        setPendingVerifyCookie(data.email);
+        router.replace("/verify");
+        return;
+      }
+      router.replace(await resolvePostAuthDestination(response));
     } catch (err: unknown) {
       setUser(null);
       tokenStorage.clearTokens();
 
       if (axios.isAxiosError<ApiError>(err) && err.response?.status === 403) {
-        const email = data.email;
-        pendingCookieRef.current = `sax_pending_verify=${encodeURIComponent(email)}; path=/; max-age=600; SameSite=Lax`;
+        setPendingVerifyCookie(data.email);
         toast(
           "Email Not Verified",
           "Please verify your email address before logging in.",
           "error",
         );
-        router.push("/verify");
+        router.replace("/verify");
         return;
       }
 
@@ -121,7 +119,6 @@ export default function LoginPage() {
         ),
       }}
     >
-      {/* eslint-disable-next-line react-hooks/refs */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         {apiError && (
           <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-100 rounded text-red-600 text-xs font-semibold animate-in fade-in slide-in-from-top-1">

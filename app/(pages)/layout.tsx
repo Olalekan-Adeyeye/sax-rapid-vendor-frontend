@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AuthProvider } from "@/lib/context/AuthContext";
-import { getServerSession } from "@/lib/auth";
+import { getServerSession, isVendorRole } from "@/lib/auth";
 import VendorVerificationStatus from "@/components/vendor/VendorVerificationStatus";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 
@@ -20,7 +20,15 @@ export default async function PageLayout({
     redirect("/login");
   }
 
-  if (!session.user || !session.user.isVerified) {
+  if (!session.user) {
+    redirect("/login");
+  }
+
+  if (!isVendorRole(session.user.role)) {
+    redirect("/login");
+  }
+
+  if (!session.user.isVerified) {
     redirect("/verify");
   }
 

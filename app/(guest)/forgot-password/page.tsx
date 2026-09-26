@@ -41,7 +41,7 @@ export default function ForgotPasswordPage() {
         "Check your inbox for the password reset code.",
         "success",
       );
-      router.push(`/reset-password?email=${encodeURIComponent(data.email)}`);
+      router.replace(`/reset-password?email=${encodeURIComponent(data.email)}`);
     } catch (err: unknown) {
       let message = "Failed to send reset email. Please try again.";
       if (axios.isAxiosError<ApiError>(err)) {

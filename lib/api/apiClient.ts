@@ -144,6 +144,7 @@ apiClient.interceptors.response.use(
         flushQueue(refreshError, null);
         tokenStorage.clearTokens();
         cookies.remove("sax_2fa");
+        cookies.remove("sax_pending_verify");
         if (typeof window !== "undefined") {
           window.location.href = "/login";
         }

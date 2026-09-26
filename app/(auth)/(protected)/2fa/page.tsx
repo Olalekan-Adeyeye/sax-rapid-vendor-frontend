@@ -15,7 +15,7 @@ import { AuthPageContainer } from "@/components/auth/AuthPageContainer";
 
 export default function TwoFactorPage() {
   const router = useRouter();
-  const { setTwoFactorVerified } = useAuth();
+  const { setTwoFactorVerified, vendorProfile } = useAuth();
   const { toast } = useToast();
 
   const verificationMutation = useMutation({
@@ -23,7 +23,7 @@ export default function TwoFactorPage() {
     onSuccess: () => {
       toast("Verified", "Two-factor authentication successful!", "success");
       setTwoFactorVerified(true);
-      router.replace("/dashboard");
+      router.replace(vendorProfile === null ? "/onboarding" : "/dashboard");
     },
     onError: (error) => {
       toast("Invalid Code", getErrorMessage(error), "error");

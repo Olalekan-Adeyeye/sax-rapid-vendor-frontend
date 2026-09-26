@@ -23,14 +23,19 @@ export default async function TwoFALayout({
 }) {
   const session = await getServerSession();
 
-  if (session.token && session.user) {
-    if (!session.user.isTwoFactorEnabled) {
-      redirect("/dashboard");
-    }
+  if (!session.token || !session.user) {
+    redirect("/login");
+  }
 
-    if (session.user.isTwoFactorEnabled && session.isTwoFactorVerified) {
-      redirect("/dashboard");
+  if (!session.user.isVerified) {
+    redirect("/verify");
+  }
+
+  if (!session.user.isTwoFactorEnabled || session.isTwoFactorVerified) {
+    if (session.vendorProfile === null) {
+      redirect("/onboarding");
     }
+    redirect("/dashboard");
   }
 
   return <>{children}</>;

@@ -76,7 +76,7 @@ function ResetPasswordForm() {
         "Your password has been updated successfully.",
         "success",
       );
-      router.push("/login");
+      router.replace("/login");
     } catch (err: unknown) {
       let message = "Failed to reset password. Please try again.";
       if (axios.isAxiosError<ApiError>(err)) {

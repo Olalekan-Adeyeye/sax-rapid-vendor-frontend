@@ -37,11 +37,24 @@ export const cookies = {
     return null;
   },
 
-  /**
-   * Remove a cookie by name.
-   */
   remove: (name: string): void => {
     if (typeof document === "undefined") return;
-    document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Lax;`;
+    const base = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; SameSite=Lax;`;
+    document.cookie = base;
+    document.cookie = `${base} Secure;`;
+  },
+
+  clearAuthCookies: (): void => {
+    if (typeof document === "undefined") return;
+    for (const name of [
+      "sax_access_token",
+      "sax_refresh_token",
+      "sax_2fa",
+      "sax_pending_verify",
+    ]) {
+      const base = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; SameSite=Lax;`;
+      document.cookie = base;
+      document.cookie = `${base} Secure;`;
+    }
   },
 };
