@@ -1,5 +1,7 @@
 "use client";
 import React, { useState } from "react";
+import { useForm, Controller, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
@@ -10,6 +12,10 @@ import { Tag, Calendar, Hash, Percent, Banknote } from "lucide-react";
 import { updateVendorCoupon } from "@/lib/api/services/coupons";
 import type { ApiError } from "@/lib/api/types/auth.types";
 import type { Coupon } from "@/lib/api/types/coupons.types";
+import {
+  editCouponSchema,
+  type EditCouponFormValues,
+} from "@/lib/schemas/coupons";
 import { useToast } from "@/lib/context/ToastContext";
 
 interface EditCouponModalProps {
@@ -27,32 +33,40 @@ export function EditCouponModal({
 }: EditCouponModalProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    code: coupon.code ?? "",
-    discountType: coupon.discountType || "",
-    value: coupon.value,
-    usageLimit: coupon.usageLimit ?? 0,
-    endDate: coupon.endDate ? coupon.endDate.split("T")[0] : "",
-    minimumOrderAmount: coupon.minimumOrderAmount ?? 0,
-    maximumDiscountAmount: coupon.maximumDiscountAmount ?? 0,
-    description: coupon.description ?? "",
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+  } = useForm<EditCouponFormValues>({
+    resolver: zodResolver(editCouponSchema),
+    defaultValues: {
+      code: coupon.code ?? "",
+      discountType:
+        coupon.discountType === "FixedAmount" ? "FixedAmount" : "Percentage",
+      value: String(coupon.value ?? ""),
+      usageLimit: String(coupon.usageLimit ?? ""),
+      minimumOrderAmount: String(coupon.minimumOrderAmount ?? ""),
+      maximumDiscountAmount: String(coupon.maximumDiscountAmount ?? ""),
+      endDate: coupon.endDate ? coupon.endDate.split("T")[0] : "",
+      description: coupon.description ?? "",
+    },
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const discountType = useWatch({ control, name: "discountType" });
+
+  const onSubmit = async (data: EditCouponFormValues) => {
     setLoading(true);
     try {
-      const payload = {
-        code: formData.code,
-        discountType: formData.discountType,
-        discountValue: Number(formData.value),
+      await updateVendorCoupon(coupon.id, {
+        code: data.code,
+        discountType: data.discountType,
+        discountValue: Number(data.value),
         usageLimit:
-          formData.usageLimit > 0 ? Number(formData.usageLimit) : null,
-        expiryDate: new Date(formData.endDate).toISOString(),
-        description: formData.description || null,
-      };
-
-      await updateVendorCoupon(coupon.id, payload);
+          Number(data.usageLimit) > 0 ? Number(data.usageLimit) : null,
+        expiryDate: new Date(data.endDate).toISOString(),
+        description: data.description || null,
+      });
       toast("Success", "Coupon updated successfully", "success");
       onSuccess?.();
       onClose();
@@ -67,30 +81,6 @@ export function EditCouponModal({
     }
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >,
-  ) => {
-    const { id, value, type } = e.target;
-    const val =
-      type === "checkbox" ? (e.target as HTMLInputElement).checked : value;
-    const fieldMap: Record<string, string> = {
-      "coupon-code": "code",
-      "discount-type": "discountType",
-      "discount-value": "value",
-      "usage-limit": "usageLimit",
-      "minimum-order-amount": "minimumOrderAmount",
-      "maximum-discount-amount": "maximumDiscountAmount",
-      "expiry-date": "endDate",
-      "coupon-description": "description",
-    };
-    setFormData((prev) => ({
-      ...prev,
-      [fieldMap[id] || id]: val,
-    }));
-  };
-
   return (
     <Modal
       isOpen={isOpen}
@@ -100,28 +90,36 @@ export function EditCouponModal({
       icon={Tag}
       size="lg"
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Input
             id="coupon-code"
             label="Coupon Code"
             placeholder="e.g. SUMMER20"
             required
-            value={formData.code}
-            onChange={handleChange}
+            {...register("code")}
+            error={errors.code?.message}
             leftSlot={<Hash size={14} className="text-gray-400" />}
           />
-          <Select
-            id="discount-type"
-            label="Discount Type"
-            value={formData.discountType}
-            onChange={handleChange}
-            options={[
-              { label: "Percentage (%)", value: "Percentage" },
-              { label: "Fixed Amount", value: "FixedAmount" },
-            ]}
-            required
-            searchable
+          <Controller
+            control={control}
+            name="discountType"
+            render={({ field }) => (
+              <Select
+                id="discount-type"
+                label="Discount Type"
+                value={field.value ?? ""}
+                onChange={(e) => field.onChange(e.target.value)}
+                onBlur={field.onBlur}
+                options={[
+                  { label: "Percentage (%)", value: "Percentage" },
+                  { label: "Fixed Amount", value: "FixedAmount" },
+                ]}
+                required
+                error={errors.discountType?.message}
+                searchable
+              />
+            )}
           />
         </div>
 
@@ -130,12 +128,13 @@ export function EditCouponModal({
             id="discount-value"
             label="Discount Value"
             type="number"
+            min={0}
             placeholder="0"
             required
-            value={formData.value}
-            onChange={handleChange}
+            {...register("value")}
+            error={errors.value?.message}
             leftSlot={
-              formData.discountType === "Percentage" ? (
+              discountType === "Percentage" ? (
                 <Percent size={14} className="text-gray-400" />
               ) : (
                 <Banknote size={14} className="text-gray-400" />
@@ -146,9 +145,10 @@ export function EditCouponModal({
             id="usage-limit"
             label="Usage Limit"
             type="number"
+            min={0}
             placeholder="e.g. 100 (0 for unlimited)"
-            value={formData.usageLimit}
-            onChange={handleChange}
+            {...register("usageLimit")}
+            error={errors.usageLimit?.message}
             leftSlot={<Hash size={14} className="text-gray-400" />}
           />
         </div>
@@ -158,18 +158,20 @@ export function EditCouponModal({
             id="minimum-order-amount"
             label="Minimum Order Amount"
             type="number"
+            min={0}
             placeholder="0.00"
-            value={formData.minimumOrderAmount}
-            onChange={handleChange}
+            {...register("minimumOrderAmount")}
+            error={errors.minimumOrderAmount?.message}
             leftSlot={<Banknote size={14} className="text-gray-400" />}
           />
           <Input
             id="maximum-discount-amount"
             label="Maximum Discount Amount"
             type="number"
+            min={0}
             placeholder="0.00"
-            value={formData.maximumDiscountAmount}
-            onChange={handleChange}
+            {...register("maximumDiscountAmount")}
+            error={errors.maximumDiscountAmount?.message}
             leftSlot={<Banknote size={14} className="text-gray-400" />}
           />
         </div>
@@ -179,8 +181,8 @@ export function EditCouponModal({
           label="Expiry Date"
           type="date"
           required
-          value={formData.endDate}
-          onChange={handleChange}
+          {...register("endDate")}
+          error={errors.endDate?.message}
           leftSlot={<Calendar size={14} className="text-gray-400" />}
         />
 
@@ -188,8 +190,8 @@ export function EditCouponModal({
           id="coupon-description"
           label="Description"
           placeholder="Brief details about this coupon"
-          value={formData.description}
-          onChange={handleChange}
+          {...register("description")}
+          error={errors.description?.message}
           rows={3}
         />
 

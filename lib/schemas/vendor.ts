@@ -1,5 +1,23 @@
 import * as z from "zod";
 
+const positiveAmount = (label: string) =>
+  z
+    .string()
+    .min(1, `${label} is required`)
+    .refine(
+      (v) => !Number.isNaN(Number(v)) && Number(v) > 0,
+      `${label} must be a positive number`,
+    );
+
+const nonNegativeInteger = (label: string) =>
+  z
+    .string()
+    .min(1, `${label} is required`)
+    .refine(
+      (v) => !Number.isNaN(Number(v)) && Number.isInteger(Number(v)) && Number(v) >= 0,
+      `${label} must be a whole number (0 or more)`,
+    );
+
 /**
  * Profile Schema
  */
@@ -19,7 +37,7 @@ const baseProductSchema = z.object({
   description: z.string().min(1, "Description is required"),
   categoryId: z.string().min(1, "Please select a category"),
   sku: z.string().optional(),
-  weight: z.string().min(1, "Weight is required"),
+  weight: positiveAmount("Weight"),
   length: z.string().optional(),
   width: z.string().optional(),
   height: z.string().optional(),
@@ -29,11 +47,11 @@ const baseProductSchema = z.object({
 
 export const simpleProductSchema = baseProductSchema.extend({
   type: z.literal("simple"),
-  regularPrice: z.string().min(1, "Regular price is required"),
+  regularPrice: positiveAmount("Regular price"),
   salePrice: z.string().optional(),
   saleStartDate: z.string().optional(),
   saleEndDate: z.string().optional(),
-  stockQuantity: z.string().min(1, "Stock quantity is required"),
+  stockQuantity: nonNegativeInteger("Stock quantity"),
 });
 
 export const variableProductSchema = baseProductSchema.extend({
@@ -46,11 +64,11 @@ export const variableProductSchema = baseProductSchema.extend({
   variations: z.array(z.object({
     id: z.string(),
     name: z.string(),
-    price: z.string().min(1, "Price is required"),
+    price: positiveAmount("Price"),
     salePrice: z.string().optional(),
     saleStartDate: z.string().optional(),
     saleEndDate: z.string().optional(),
-    stock: z.string().min(1, "Stock is required"),
+    stock: nonNegativeInteger("Stock"),
     attributes: z.array(z.object({
       attributeName: z.string(),
       attributeValue: z.string(),

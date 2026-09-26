@@ -1,5 +1,7 @@
 "use client";
 import React, { useState, useMemo } from "react";
+import { useForm, Controller, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Building2, Landmark, User, Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -10,6 +12,10 @@ import * as bankAccountService from "@/lib/api/services/bank-accounts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getErrorMessage } from "@/lib/utils/errors";
 import { useCurrency } from "@/lib/hooks/useCurrency";
+import {
+  bankAccountSchema,
+  type BankAccountFormValues,
+} from "@/lib/schemas/finance";
 
 interface AddBankAccountModalProps {
   isOpen: boolean;
@@ -24,36 +30,48 @@ export function AddBankAccountModal({
   const queryClient = useQueryClient();
   const { currency: defaultCurrency, currencySymbol } = useCurrency();
 
-  const [formData, setFormData] = useState({
-    bankName: "",
-    accountName: "",
-    accountNumber: "",
-    bankCode: "",
-    currency: defaultCurrency,
+  const {
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm<BankAccountFormValues>({
+    resolver: zodResolver(bankAccountSchema),
+    defaultValues: {
+      bankCode: "",
+      accountNumber: "",
+      accountName: "",
+      currency: defaultCurrency,
+    },
   });
+
+  const currency = useWatch({ control, name: "currency" });
+  const bankCode = useWatch({ control, name: "bankCode" });
 
   const [resolving, setResolving] = useState(false);
   const [resolved, setResolved] = useState<string | null>(null);
 
   const { data: supportedBanks = [], isLoading: loadingBanks } = useQuery({
-    queryKey: ["supported-banks", formData.currency],
-    queryFn: () => bankAccountService.getSupportedBanks(formData.currency),
+    queryKey: ["supported-banks", currency],
+    queryFn: () => bankAccountService.getSupportedBanks(currency),
     enabled: isOpen,
   });
 
   const handleResolveAccount = async (accountNumber: string) => {
     const acct = accountNumber.trim();
-    if (!formData.bankCode || acct.length !== 10) return;
+    if (!bankCode || acct.length !== 10) return;
     setResolving(true);
     setResolved(null);
     try {
       const result = await bankAccountService.resolveBankAccount(
         acct,
-        formData.bankCode,
-        formData.currency,
+        bankCode,
+        currency,
       );
       if (result.accountName) {
-        setFormData((prev) => ({ ...prev, accountName: result.accountName! }));
+        setValue("accountName", result.accountName);
         setResolved(result.accountName);
       } else {
         toast("Resolution Failed", "Could not verify account details.", "error");
@@ -68,11 +86,7 @@ export function AddBankAccountModal({
   const handleBankSelect = (bankId: string) => {
     const bank = supportedBanks.find((b) => b.code === bankId);
     if (bank) {
-      setFormData((prev) => ({
-        ...prev,
-        bankName: bank.name || "",
-        bankCode: bank.code || "",
-      }));
+      setValue("bankCode", bank.code || "", { shouldValidate: true });
       setResolved(null);
     }
   };
@@ -86,13 +100,7 @@ export function AddBankAccountModal({
         "success",
       );
       queryClient.invalidateQueries({ queryKey: ["bank-accounts"] });
-      setFormData({
-        bankName: "",
-        accountName: "",
-        accountNumber: "",
-        bankCode: "",
-        currency: defaultCurrency,
-      });
+      reset({ bankCode: "", accountNumber: "", accountName: "", currency: defaultCurrency });
       onClose();
     },
     onError: (error) => {
@@ -100,14 +108,14 @@ export function AddBankAccountModal({
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = (data: BankAccountFormValues) => {
+    const bank = supportedBanks.find((b) => b.code === data.bankCode);
     mutation.mutate({
-      bankName: formData.bankName,
-      accountName: formData.accountName,
-      accountNumber: formData.accountNumber,
-      bankCode: formData.bankCode,
-      currency: formData.currency,
+      bankName: bank?.name || "",
+      accountName: data.accountName || "",
+      accountNumber: data.accountNumber,
+      bankCode: data.bankCode,
+      currency: data.currency,
     });
   };
 
@@ -126,43 +134,57 @@ export function AddBankAccountModal({
       icon={Plus}
       size="lg"
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-2 gap-6">
-          <Select
-            id="bank-select"
-            label="Bank"
-            required
-            value={formData.bankCode}
-            onChange={(e) => handleBankSelect(e.target.value)}
-            leftSlot={
-              loadingBanks ? (
-                <Loader2 size={14} className="animate-spin" />
-              ) : (
-                <Building2 size={14} />
-              )
-            }
-            options={[
-              ...supportedBanks.map((b) => ({
-                label: b.name || "Unknown",
-                value: b.code || "",
-              })),
-            ]}
-            searchable
+          <Controller
+            control={control}
+            name="bankCode"
+            render={({ field }) => (
+              <Select
+                id="bank-select"
+                label="Bank"
+                required
+                value={field.value ?? ""}
+                onChange={(e) => handleBankSelect(e.target.value)}
+                onBlur={field.onBlur}
+                disabled={loadingBanks}
+                error={errors.bankCode?.message}
+                leftSlot={
+                  loadingBanks ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <Building2 size={14} />
+                  )
+                }
+                options={[
+                  ...supportedBanks.map((b) => ({
+                    label: b.name || "Unknown",
+                    value: b.code || "",
+                  })),
+                ]}
+                searchable
+              />
+            )}
           />
-          <Select
-            id="currency"
-            label="Currency"
-            value={formData.currency}
-            onChange={(e) => {
-              setFormData({
-                ...formData,
-                currency: e.target.value,
-                bankName: "",
-                bankCode: "",
-              });
-            }}
-            options={currencyOptions}
-            searchable
+          <Controller
+            control={control}
+            name="currency"
+            render={({ field }) => (
+              <Select
+                id="currency"
+                label="Currency"
+                value={field.value ?? ""}
+                onChange={(e) => {
+                  field.onChange(e.target.value);
+                  setValue("bankCode", "");
+                  setResolved(null);
+                }}
+                onBlur={field.onBlur}
+                options={currencyOptions}
+                error={errors.currency?.message}
+                searchable
+              />
+            )}
           />
         </div>
 
@@ -171,12 +193,16 @@ export function AddBankAccountModal({
           label="Account Number"
           required
           placeholder="10 digits"
-          value={formData.accountNumber}
-          onChange={(e) => {
-            const val = e.target.value;
-            setFormData({ ...formData, accountNumber: val, ...(val.length !== 10 && { accountName: "" }) });
-            setResolved(null);
-          }}
+          inputMode="numeric"
+          maxLength={10}
+          {...register("accountNumber", {
+            onChange: (e) => {
+              const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+              setValue("accountNumber", digits, { shouldValidate: true });
+              setResolved(null);
+            },
+          })}
+          error={errors.accountNumber?.message}
           onBlur={(e) => handleResolveAccount(e.target.value)}
           leftSlot={
             resolving ? (
@@ -194,10 +220,8 @@ export function AddBankAccountModal({
           disabled
           required
           placeholder="Auto-filled on verification"
-          value={formData.accountName}
-          onChange={(e) =>
-            setFormData({ ...formData, accountName: e.target.value })
-          }
+          {...register("accountName")}
+          error={errors.accountName?.message}
           leftSlot={
             resolving ? (
               <Loader2 size={14} className="animate-spin" />
