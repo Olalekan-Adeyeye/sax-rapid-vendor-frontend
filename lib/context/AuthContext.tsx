@@ -20,7 +20,7 @@ interface AuthContextType {
 	loading: boolean;
 	isAuthenticated: boolean;
 	isTwoFactorVerified: boolean;
-	vendorProfile: VendorProfileResponse | null | undefined;
+	vendorProfile: VendorProfileResponse | null;
 	vendorLoading: boolean;
 	setUser: (user: UserProfile | null) => void;
 	updateUser: (data: Partial<UserProfile>) => void;
@@ -64,41 +64,41 @@ export const AuthProvider = ({
 		return false;
 	});
 
-	const hasServerUser =
-		serverAuth?.user !== undefined && serverAuth?.user !== null;
-
 	const { data: userProfile, isPending: userPending } = useQuery({
 		queryKey: ["auth", "user"],
 		queryFn: () => getUserProfile().then(mapUserToProfile),
-		enabled: !!token && !hasServerUser,
+		enabled: !!token,
+		initialData: serverAuth?.user ?? undefined,
 	});
 
 	const {
 		data: vendorData,
 		isPending: vendorPending,
 		isFetching: vendorFetching,
-		isError: isVendorError,
-		error: vendorError,
 	} = useQuery({
 		queryKey: ["auth", "vendor"],
-		queryFn: getMyVendorProfile,
-		enabled: !!token && serverAuth?.vendorProfile === undefined,
+		queryFn: async (): Promise<VendorProfileResponse | null> => {
+			try {
+				return await getMyVendorProfile();
+			} catch (err: unknown) {
+				if (
+					axios.isAxiosError(err) &&
+					err.response?.status === 404
+				) {
+					return null;
+				}
+				throw err;
+			}
+		},
+		enabled: !!token,
+		initialData: serverAuth?.vendorProfile ?? undefined,
 	});
 
-	const loading = !!token && userPending && !hasServerUser;
-	const vendorLoading =
-		!!token &&
-		((vendorPending || vendorFetching) && serverAuth?.vendorProfile === undefined);
+	const loading = !!token && userPending;
+	const vendorLoading = !!token && (vendorPending || vendorFetching);
 
-	const user = hasServerUser ? serverAuth.user : (userProfile ?? null);
-	const vendorProfile =
-		serverAuth?.vendorProfile !== undefined
-			? serverAuth.vendorProfile
-			: isVendorError &&
-				  axios.isAxiosError(vendorError) &&
-				  vendorError.response?.status === 404
-				? null
-				: vendorData;
+	const user = userProfile ?? null;
+	const vendorProfile = vendorData ?? null;
 
 	const setUser = (userData: UserProfile | null) => {
 		queryClient.setQueryData(["auth", "user"], userData);

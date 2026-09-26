@@ -4,6 +4,7 @@
  */
 
 import apiClient from "../apiClient";
+import axios from "axios";
 import type { ApiResponse } from "../types/auth.types";
 import type {
 	SubscriptionPlanResponse,
@@ -56,10 +57,17 @@ export async function subscribeToPlan(data: SubscribeRequest): Promise<void> {
  * Returns the current active subscription for the authenticated vendor.
  */
 export async function getMySubscription(): Promise<VendorSubscriptionResponse | null> {
-	const response = await apiClient.get<ApiResponse<VendorSubscriptionResponse>>(
-		`${BASE}/my`,
-	);
-	return response.data.data;
+	try {
+		const response = await apiClient.get<ApiResponse<VendorSubscriptionResponse>>(
+			`${BASE}/my`,
+		);
+		return response.data.data;
+	} catch (err: unknown) {
+		if (axios.isAxiosError(err) && err.response?.status === 404) {
+			return null;
+		}
+		throw err;
+	}
 }
 
 /**
