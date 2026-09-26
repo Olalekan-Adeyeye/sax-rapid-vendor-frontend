@@ -24,7 +24,7 @@ import {
   resolvePostAuthDestination,
   setPendingVerifyCookie,
 } from "@/lib/utils/authRouting";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signupSchema, SignupFormValues } from "@/lib/schemas/auth";
 import { useQuery } from "@tanstack/react-query";
@@ -50,7 +50,6 @@ export default function SignupPage() {
   const countryOptions = countries.map((c) => ({
     label: c.isComingSoon ? `${c.name || ""} (Coming Soon)` : c.name || "",
     value: c.code || "",
-    code: c.code || "",
     disabled: c.isComingSoon || !c.isActive,
   }));
 
@@ -98,7 +97,6 @@ export default function SignupPage() {
     setApiError(null);
 
     try {
-      // Persist registration
       const response = await registerUser({
         ...data,
         role: "Vendor",
@@ -207,19 +205,28 @@ export default function SignupPage() {
           leftSlot={<Mail size={16} className="text-gray-400" />}
         />
 
-        <Select
-          label="Country"
-          id="countryCode"
-          options={countryOptions}
-          {...register("countryCode")}
-          disabled={loadingCountries}
-          leftSlot={
-            loadingCountries ? (
-              <Loader2 size={14} className="animate-spin text-gray-400" />
-            ) : undefined
-          }
-          className="h-12.5 rounded"
-          searchable
+        <Controller
+          control={control}
+          name="countryCode"
+          render={({ field }) => (
+            <Select
+              label="Country"
+              id="countryCode"
+              options={countryOptions}
+              value={field.value ?? ""}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              disabled={loadingCountries}
+              error={errors.countryCode?.message}
+              leftSlot={
+                loadingCountries ? (
+                  <Loader2 size={14} className="animate-spin text-gray-400" />
+                ) : undefined
+              }
+              className="h-12.5 rounded"
+              searchable
+            />
+          )}
         />
 
         <div className="space-y-2">
@@ -241,7 +248,7 @@ export default function SignupPage() {
               <div className="flex items-center gap-3 pr-5 border-r border-gray-200 transition-colors group-focus-within:border-gold/30 h-5">
                 <Phone size={16} className="text-gray-400 shrink-0" />
                 <span className="text-xs font-bold text-gray-400 pointer-events-none select-none">
-                  {selectedCountry?.code || "+234"}
+                  {countryCode || "+234"}
                 </span>
               </div>
             }

@@ -11,7 +11,11 @@ import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { FormField } from "./FormField";
 
-interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+interface SelectProps
+  extends Omit<
+    React.SelectHTMLAttributes<HTMLSelectElement>,
+    "onBlur" | "value" | "onChange"
+  > {
   label?: string;
   id: string;
   required?: boolean;
@@ -26,6 +30,9 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   searchInputClassName?: string;
   ref?: React.Ref<HTMLSelectElement>;
   searchable?: boolean;
+  value?: string | number | readonly string[];
+  onChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  onBlur?: React.FocusEventHandler<HTMLDivElement>;
 }
 
 export function Select({
@@ -44,6 +51,8 @@ export function Select({
   searchInputClassName = "",
   value,
   onChange,
+  onBlur,
+  disabled,
   searchable = false,
   ...props
 }: SelectProps) {
@@ -71,10 +80,11 @@ export function Select({
   }, [options, search]);
 
   const openDropdown = useCallback(() => {
+    if (disabled) return;
     setSearch("");
     setActiveIndex(-1);
     setIsOpen(true);
-  }, []);
+  }, [disabled]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -123,7 +133,8 @@ export function Select({
   }, [isOpen, updateCoords]);
 
   const selectOption = useCallback(
-    (opt: { label: string; value: string | number }) => {
+    (opt: { label: string; value: string | number; disabled?: boolean }) => {
+      if (opt.disabled) return;
       if (onChange) {
         const syntheticEvent = {
           target: { value: opt.value.toString(), name: props.name },
@@ -163,8 +174,7 @@ export function Select({
           if (activeIndex >= 0 && filteredOptions[activeIndex]) {
             selectOption(filteredOptions[activeIndex]);
           }
-          break;
-        case "Escape":
+          break;        case "Escape":
           setIsOpen(false);
           break;
       }
@@ -199,17 +209,23 @@ export function Select({
           ref={triggerRef}
           role="combobox"
           aria-expanded={isOpen}
+          aria-disabled={!!disabled}
           aria-controls={`${id}-listbox`}
-          tabIndex={0}
-          onClick={() => (isOpen ? setIsOpen(false) : openDropdown())}
+          tabIndex={disabled ? -1 : 0}
+          onClick={() => {
+            if (disabled) return;
+            if (isOpen) setIsOpen(false);
+            else openDropdown();
+          }}
           onKeyDown={handleKeyDown}
+          onBlur={onBlur}
           className={`w-full bg-white border ${
             isOpen ? "border-gold" : "border-gray-300"
           } focus:border-gold text-sm font-medium rounded ${
             leftSlot ? "pl-12" : "px-5"
           } pr-12 py-3.5 outline-none transition-all cursor-pointer flex items-center ${className} ${
-            !selectedOption ? "text-gray-400" : "text-black"
-          }`}
+            disabled ? "opacity-60 cursor-not-allowed" : ""
+          } ${!selectedOption ? "text-gray-400" : "text-black"}`}
         >
           <span className="truncate flex-1">
             {selectedOption?.label || "Select an option"}

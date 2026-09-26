@@ -103,7 +103,7 @@ const accountTypes = [
   },
 ];
 
-import { useForm, useWatch } from "react-hook-form";
+import { useForm, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { onboardingSchema, OnboardingFormValues } from "@/lib/schemas/auth";
 import { AuthPageContainer } from "@/components/auth/AuthPageContainer";
@@ -724,14 +724,22 @@ export default function OnboardingPage() {
                           Goverment ID
                         </h4>
                       </div>
-                      <Select
-                        label="ID Type"
-                        id="idType"
-                        options={idTypes}
-                        {...register("idType")}
-                        error={errors.idType?.message}
-                        className="h-12 lg:h-14 rounded"
-                        searchable
+                      <Controller
+                        control={control}
+                        name="idType"
+                        render={({ field }) => (
+                          <Select
+                            label="ID Type"
+                            id="idType"
+                            options={idTypes}
+                            value={field.value ?? ""}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            error={errors.idType?.message}
+                            className="h-12 lg:h-14 rounded"
+                            searchable
+                          />
+                        )}
                       />
                       <FileUpload
                         label="Upload ID Proof"
