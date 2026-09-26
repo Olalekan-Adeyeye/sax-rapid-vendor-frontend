@@ -52,7 +52,7 @@ export function OTPInput({
 	};
 
 	return (
-		<div className="flex gap-2 justify-center">
+		<div className="flex gap-2 justify-center" role="group" aria-label="One-time code">
 			{Array.from({ length }).map((_, i) => (
 				<input
 					key={i}
@@ -62,6 +62,7 @@ export function OTPInput({
 					type="text"
 					inputMode="numeric"
 					maxLength={1}
+					aria-label={`Digit ${i + 1} of ${length}`}
 					value={value[i] || ""}
 					onChange={(e) => handleChange(e, i)}
 					onKeyDown={(e) => handleKeyDown(e, i)}

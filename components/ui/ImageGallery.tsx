@@ -1,7 +1,7 @@
 "use client";
-import React, { useRef, useState, useCallback } from "react";
 import { GripVertical, X, Upload, Loader2 } from "lucide-react";
 import Image from "next/image";
+import React, { useRef, useState, useCallback } from "react";
 
 export type GalleryItem = {
   id: string;
@@ -141,7 +141,8 @@ export default function ImageGallery({
           <button
             type="button"
             onClick={() => onRemove(idx)}
-            className="absolute top-1 right-1 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+            aria-label={`Remove image ${idx + 1}`}
+            className="absolute top-1 right-1 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity z-10"
           >
             <X size={12} />
           </button>

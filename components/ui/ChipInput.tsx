@@ -1,6 +1,6 @@
 "use client";
-import React, { useState } from "react";
 import { X } from "lucide-react";
+import React, { useState } from "react";
 
 interface ChipInputProps {
 	values: string[];
@@ -35,11 +35,14 @@ export default function ChipInput({
 					className="bg-black text-white text-xs font-bold px-3 py-1.5 rounded flex items-center gap-1.5"
 				>
 					{val}
-					<X
-						size={12}
-						className="cursor-pointer hover:text-gold transition-colors"
+					<button
+						type="button"
 						onClick={() => removeValue(val)}
-					/>
+						aria-label={`Remove ${val}`}
+						className="flex items-center hover:text-gold transition-colors outline-none focus-visible:text-gold"
+					>
+						<X size={12} />
+					</button>
 				</span>
 			))}
 			<input

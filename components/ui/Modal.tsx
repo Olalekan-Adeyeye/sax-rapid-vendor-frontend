@@ -1,7 +1,7 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 import { X, LucideIcon } from "lucide-react";
+import React, { useEffect, useState, useId, useRef } from "react";
+import { createPortal } from "react-dom";
 
 interface ModalProps {
 	isOpen: boolean;
@@ -22,7 +22,9 @@ export function Modal({
 	children,
 	size = "md",
 }: ModalProps) {
-	const [mounted, setMounted] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const titleId = useId();
+  const dialogRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
 		// Handle hydration properly to avoid cascading render warnings
@@ -42,6 +44,16 @@ export function Modal({
 			document.body.style.overflow = "unset";
 		};
 	}, [isOpen]);
+
+	useEffect(() => {
+		if (!isOpen || !mounted) return;
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key === "Escape") onClose();
+		};
+		document.addEventListener("keydown", handleKeyDown);
+		dialogRef.current?.focus();
+		return () => document.removeEventListener("keydown", handleKeyDown);
+	}, [isOpen, mounted, onClose]);
 
 	if (!isOpen || !mounted) return null;
 
@@ -65,7 +77,12 @@ export function Modal({
 				<div className="flex min-h-full items-center justify-center p-4 md:p-20">
 					{/* 4. Actual Modal Box */}
 					<div
-						className={`bg-white rounded w-full ${sizeClasses[size]} relative animate-in fade-in zoom-in duration-200 shadow-2xl shadow-black/20 overflow-hidden`}
+						ref={dialogRef}
+						role="dialog"
+						aria-modal="true"
+						aria-labelledby={titleId}
+						tabIndex={-1}
+						className={`bg-white rounded w-full ${sizeClasses[size]} relative animate-in fade-in zoom-in duration-200 shadow-2xl shadow-black/20 overflow-hidden outline-none`}
 					>
 						{/* Header */}
 						<div className="p-8 border-b border-gray-50 flex items-center justify-between">
@@ -76,7 +93,10 @@ export function Modal({
 									</div>
 								)}
 								<div>
-									<h3 className="text-sm font-black uppercase tracking-widest text-black">
+									<h3
+										id={titleId}
+										className="text-sm font-black uppercase tracking-widest text-black"
+									>
 										{title}
 									</h3>
 									{subtitle && (
@@ -88,6 +108,7 @@ export function Modal({
 							</div>
 							<button
 								onClick={onClose}
+								aria-label="Close dialog"
 								className="text-gray-300 hover:text-black transition-colors p-2"
 							>
 								<X size={20} />
