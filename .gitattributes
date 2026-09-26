@@ -1,0 +1,3 @@
+# Enforce LF line endings on checkout to prevent CRLF noise (see git status showing
+# 138 files modified with only \r additions).
+* text=auto eol=lf
