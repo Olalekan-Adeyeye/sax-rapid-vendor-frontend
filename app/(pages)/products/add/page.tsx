@@ -41,9 +41,11 @@ import { CreateProductDTO } from "@/lib/api/types/products.types";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useProductFormHandlers } from "@/lib/hooks/useProductFormHandlers";
 import { generateSku } from "@/lib/utils/product";
+import { useAuth } from "@/lib/context/AuthContext";
 
 export default function AddProductPage() {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const { currencySymbol } = useCurrency();
   const { toast } = useToast();
 
@@ -58,18 +60,21 @@ export default function AddProductPage() {
       return data;
     },
     staleTime: 5 * 60 * 1000,
+    enabled: isAuthenticated,
   });
 
   const brandsQuery = useQuery({
     queryKey: ["brands"],
     queryFn: brandsService.getBrands,
     staleTime: 10 * 60 * 1000,
+    enabled: isAuthenticated,
   });
 
   const dispatchOptionsQuery = useQuery({
     queryKey: ["dispatchOptions"],
     queryFn: productsService.getDispatchOptions,
     staleTime: 10 * 60 * 1000,
+    enabled: isAuthenticated,
   });
 
   const categories = useMemo(

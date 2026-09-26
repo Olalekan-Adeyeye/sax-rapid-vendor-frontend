@@ -25,6 +25,7 @@ import { formatCurrency } from "../../../../lib/utils/currency";
 import { formatDate } from "@/lib/utils/date";
 import { formatVariationDetails } from "@/lib/utils/product";
 import { useToast } from "@/lib/context/ToastContext";
+import { useAuth } from "@/lib/context/AuthContext";
 import { useCurrency } from "@/lib/hooks/useCurrency";
 import { Button } from "@/components/ui/Button";
 import { Dropdown, DropdownItem, DropdownDivider } from "@/components/ui/Dropdown";
@@ -68,6 +69,7 @@ export default function OrderDetailsPage() {
 	const orderId = params.id as string;
 	const router = useRouter();
 	const { toast } = useToast();
+	const { isAuthenticated } = useAuth();
 	const { currency: activeCurrency } = useCurrency();
 
 	const [updating, setUpdating] = useState(false);
@@ -80,7 +82,7 @@ export default function OrderDetailsPage() {
 	} = useQuery({
 		queryKey: ["order", orderId],
 		queryFn: () => ordersService.getOrderById(orderId),
-		enabled: !!orderId,
+		enabled: !!orderId && isAuthenticated,
 	});
 
 	const handleUpdateStatus = async (newStatus: OrderStatus) => {

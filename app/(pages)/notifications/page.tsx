@@ -25,6 +25,7 @@ import {
 import type { NotificationResponse } from "@/lib/api/types/notifications.types";
 import { getRelativeTime } from "@/lib/utils/date";
 import { useToast } from "@/lib/context/ToastContext";
+import { useAuth } from "@/lib/context/AuthContext";
 import { ErrorComponent } from "@/components/ui/ErrorComponent";
 import { getErrorMessage } from "@/lib/utils/errors";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -57,6 +58,7 @@ const notificationRouteMap: Record<string, (id?: string | null) => string> = {
 export default function NotificationsPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
 
   // Queries
@@ -69,11 +71,13 @@ export default function NotificationsPage() {
   } = useQuery({
     queryKey: ["notifications"],
     queryFn: () => getNotifications(1, 100),
+    enabled: isAuthenticated,
   });
 
   const { data: countData, isLoading: loadingCount } = useQuery({
     queryKey: ["notification-count"],
     queryFn: getNotificationCount,
+    enabled: isAuthenticated,
   });
 
   const notifications = notificationsData || [];
@@ -182,7 +186,7 @@ export default function NotificationsPage() {
             description="Stay updated with your store activities"
             actions={
               <>
-                <Button
+                {/* <Button
                   variant="outline"
                   size="sm"
                   onClick={handleMarkAllRead}
@@ -192,8 +196,8 @@ export default function NotificationsPage() {
                 >
                   <CheckCircle size={14} />
                   Mark all read
-                </Button>
-                <Button
+                </Button> */}
+                <Button   
                   variant="outline"
                   size="sm"
                   onClick={handleRefresh}

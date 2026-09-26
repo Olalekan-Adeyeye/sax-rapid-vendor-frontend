@@ -55,7 +55,6 @@ export async function getMessages(
   );
   const messages = response.data.data;
 
-  // Transform array response into PagedMessagesResponseDTO format
   return {
     items: messages,
     totalCount: messages.length,
@@ -63,7 +62,7 @@ export async function getMessages(
     pageSize: pageSize,
     totalPages: 1,
     hasPreviousPage: page > 1,
-    hasNextPage: false,
+    hasNextPage: pageSize > 0 && messages.length >= pageSize,
   };
 }
 

@@ -31,7 +31,7 @@ export function CreateCouponModal({
     usageLimit: 0,
     endDate: "",
     minimumOrderAmount: 0,
-    maximumdiscountAmount: 0,
+    maximumDiscountAmount: 0,
     description: "",
   });
 
@@ -41,15 +41,15 @@ export function CreateCouponModal({
     try {
       const payload = {
         code: formData.code,
-        DiscountType: formData.discountType,
+        discountType: formData.discountType,
         value: Number(formData.value),
         minimumOrderAmount:
           formData.minimumOrderAmount > 0
             ? Number(formData.minimumOrderAmount)
             : null,
-        maximumdiscountAmount:
-          formData.maximumdiscountAmount > 0
-            ? Number(formData.maximumdiscountAmount)
+        maximumDiscountAmount:
+          formData.maximumDiscountAmount > 0
+            ? Number(formData.maximumDiscountAmount)
             : null,
         usageLimit:
           formData.usageLimit > 0 ? Number(formData.usageLimit) : null,
@@ -86,7 +86,7 @@ export function CreateCouponModal({
       "discount-value": "value",
       "usage-limit": "usageLimit",
       "minimum-order-amount": "minimumOrderAmount",
-      "maximum-discount-amount": "maximumdiscountAmount",
+      "maximum-discount-amount": "maximumDiscountAmount",
       "expiry-date": "endDate",
       "coupon-description": "description",
     };
@@ -173,7 +173,7 @@ export function CreateCouponModal({
             label="Maximum Discount Amount"
             type="number"
             placeholder="0.00"
-            value={formData.maximumdiscountAmount}
+            value={formData.maximumDiscountAmount}
             onChange={handleChange}
             leftSlot={<Banknote size={14} className="text-gray-400" />}
           />

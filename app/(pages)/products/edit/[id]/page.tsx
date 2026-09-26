@@ -49,8 +49,10 @@ import {
 } from "@/lib/types/product-form.types";
 import { UpdateProductDTO } from "@/lib/api/types/products.types";
 import { useProductFormHandlers } from "@/lib/hooks/useProductFormHandlers";
+import { useAuth } from "@/lib/context/AuthContext";
 export default function EditProductPage() {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const params = useParams();
   const productId = params.id as string;
   const { toast } = useToast();
@@ -101,12 +103,14 @@ export default function EditProductPage() {
     queryKey: ["brands"],
     queryFn: brandsService.getBrands,
     staleTime: 10 * 60 * 1000,
+    enabled: isAuthenticated,
   });
 
   const { data: dispatchOptions = [] } = useQuery({
     queryKey: ["dispatchOptions"],
     queryFn: productsService.getDispatchOptions,
     staleTime: 10 * 60 * 1000,
+    enabled: isAuthenticated,
   });
 
   const form = useForm<ProductFormValues>({

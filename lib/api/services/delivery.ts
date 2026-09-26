@@ -8,8 +8,8 @@ const BASE = "/Delivery";
  * GET /api/Delivery/quotes/{orderId}
  * Get delivery quotes for an order from available providers
  */
-export async function getDeliveryQuotes(orderId: string): Promise<void> {
-  const response = await apiClient.get<ApiResponse<void>>(`${BASE}/quotes/${orderId}`);
+export async function getDeliveryQuotes(orderId: string): Promise<unknown> {
+  const response = await apiClient.get<ApiResponse<unknown>>(`${BASE}/quotes/${orderId}`);
   return response.data.data;
 }
 
@@ -30,8 +30,8 @@ export async function requestDelivery(
  * GET /api/Delivery/{orderId}/status
  * Get delivery status for an order
  */
-export async function getDeliveryStatus(orderId: string): Promise<void> {
-  const response = await apiClient.get<ApiResponse<void>>(`${BASE}/${orderId}/status`);
+export async function getDeliveryStatus(orderId: string): Promise<unknown> {
+  const response = await apiClient.get<ApiResponse<unknown>>(`${BASE}/${orderId}/status`);
   return response.data.data;
 }
 

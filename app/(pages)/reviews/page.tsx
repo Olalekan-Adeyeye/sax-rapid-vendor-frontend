@@ -18,12 +18,14 @@ import { Select } from "@/components/ui/Select";
 import { Pagination } from "@/components/ui/Pagination";
 import * as reviewsService from "@/lib/api/services/reviews";
 import * as productsService from "@/lib/api/services/products";
+import { useAuth } from "@/lib/context/AuthContext";
 import { formatDate } from "@/lib/utils/date";
 
 const PAGE_SIZE = 10;
 
 function ReviewsContent() {
   const searchParams = useSearchParams();
+  const { isAuthenticated } = useAuth();
   const router = useRouter();
   const productId = searchParams.get("productId");
 
@@ -41,20 +43,21 @@ function ReviewsContent() {
       productId
         ? reviewsService.getProductReviews(productId)
         : reviewsService.getMyReviews(),
+    enabled: isAuthenticated,
   });
 
   const { data: summary, isLoading: loadingSummary } = useQuery({
     queryKey: ["review-summary", productId],
     queryFn: () =>
       productId ? reviewsService.getProductReviewSummary(productId) : null,
-    enabled: !!productId,
+    enabled: !!productId && isAuthenticated,
   });
 
   const { data: product, isLoading: loadingProduct } = useQuery({
     queryKey: ["product", productId],
     queryFn: () =>
       productId ? productsService.getProductById(productId) : null,
-    enabled: !!productId,
+    enabled: !!productId && isAuthenticated,
   });
 
   const reviews = useMemo(() => reviewsData?.items || [], [reviewsData]);

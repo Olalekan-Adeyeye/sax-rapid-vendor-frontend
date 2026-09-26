@@ -33,7 +33,7 @@ export interface CreateCouponRequestDTO {
 
 export interface UpdateCouponRequestDTO {
   code: string | null;
-  DiscountType: string | null;
+  discountType: string | null;
   discountValue: number;
   scope?: string | null;
   vendorId?: string | null;
@@ -78,7 +78,7 @@ export interface Coupon {
 
 export interface CreateVendorCouponRequestDTO {
   code: string;
-  DiscountType: string;
+  discountType: string;
   value: number;
   minimumOrderAmount?: number | null;
   maximumDiscountAmount?: number | null;

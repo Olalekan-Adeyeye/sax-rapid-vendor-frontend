@@ -17,7 +17,6 @@ export async function uploadFile(file: File | Blob, folder: string = "general"):
 		formData,
 		{
 			params: { folder },
-			headers: { "Content-Type": "multipart/form-data" },
 		}
 	);
 	return response.data;
@@ -37,7 +36,6 @@ export async function uploadFiles(files: (File | Blob)[], folder: string = "gene
 		formData,
 		{
 			params: { folder },
-			headers: { "Content-Type": "multipart/form-data" },
 		}
 	);
 	return response.data;

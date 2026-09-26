@@ -44,16 +44,8 @@ export function EditCouponModal({
     try {
       const payload = {
         code: formData.code,
-        DiscountType: formData.discountType,
+        discountType: formData.discountType,
         discountValue: Number(formData.value),
-        minimumOrderAmount:
-          formData.minimumOrderAmount > 0
-            ? Number(formData.minimumOrderAmount)
-            : null,
-        maximumDiscountAmount:
-          formData.maximumDiscountAmount > 0
-            ? Number(formData.maximumDiscountAmount)
-            : null,
         usageLimit:
           formData.usageLimit > 0 ? Number(formData.usageLimit) : null,
         expiryDate: new Date(formData.endDate).toISOString(),

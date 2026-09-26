@@ -18,6 +18,7 @@ import { getMyVendorProfile } from "../api/services/vendor";
 interface AuthContextType {
 	user: UserProfile | null;
 	loading: boolean;
+	isAuthenticated: boolean;
 	isTwoFactorVerified: boolean;
 	vendorProfile: VendorProfileResponse | null | undefined;
 	vendorLoading: boolean;
@@ -147,6 +148,7 @@ export const AuthProvider = ({
 			value={{
 				user: user ?? null,
 				loading,
+				isAuthenticated: !!token,
 				vendorProfile,
 				vendorLoading,
 				isTwoFactorVerified,

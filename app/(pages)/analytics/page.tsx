@@ -32,10 +32,12 @@ import { getCategories } from "@/lib/api/services/categories";
 import { formatDate } from "@/lib/utils/date";
 import Image from "next/image";
 import Link from "next/link";
+import { useAuth } from "@/lib/context/AuthContext";
 
 type TimeRange = "7D" | "30D" | "1Y" | "ALL";
 
 export default function AnalyticsPage() {
+  const { isAuthenticated } = useAuth();
   const [timeRange, setTimeRange] = useState<TimeRange>("30D");
   const [chartMetric, setChartMetric] = useState<"revenue" | "orders">(
     "revenue",
@@ -63,6 +65,7 @@ export default function AnalyticsPage() {
   } = useQuery({
     queryKey: ["vendor-analytics-dashboard", queryParams],
     queryFn: () => getVendorDashboardStats(queryParams),
+    enabled: isAuthenticated,
   });
 
   const {
@@ -76,6 +79,7 @@ export default function AnalyticsPage() {
         groupBy:
           timeRange === "7D" ? "Day" : timeRange === "30D" ? "Week" : "Month",
       }),
+    enabled: isAuthenticated,
   });
 
   const {
@@ -88,26 +92,31 @@ export default function AnalyticsPage() {
         ...queryParams,
         pageSize: 5,
       }),
+    enabled: isAuthenticated,
   });
 
   const { data: productStats, isLoading: loadingProductStats } = useQuery({
     queryKey: ["vendor-product-stats"],
     queryFn: () => getProductStats(),
+    enabled: isAuthenticated,
   });
 
   const { data: recentOrders, isLoading: loadingOrders } = useQuery({
     queryKey: ["vendor-recent-orders"],
     queryFn: () => getVendorOrders(1, 10),
+    enabled: isAuthenticated,
   });
 
   const { data: activeBoosts, isLoading: loadingBoosts } = useQuery({
     queryKey: ["vendor-active-boosts"],
     queryFn: () => getMyBoosts("Active"),
+    enabled: isAuthenticated,
   });
 
   const { data: categories } = useQuery({
     queryKey: ["categories"],
     queryFn: () => getCategories(),
+    enabled: isAuthenticated,
   });
 
   const pendingOrdersCount = useMemo(() => {

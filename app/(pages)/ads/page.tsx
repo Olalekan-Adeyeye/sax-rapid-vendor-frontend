@@ -37,7 +37,7 @@ import { getCountryByPhoneCode } from "@/lib/utils/countries";
 export default function BoostAdsPage() {
   const { toast } = useToast();
   const { currency: activeCurrency } = useCurrency();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const [selectedDays, setSelectedDays] = useState(7);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -58,12 +58,14 @@ export default function BoostAdsPage() {
   } = useQuery({
     queryKey: ["vendor-wallet"],
     queryFn: walletService.getWalletDetails,
+    enabled: isAuthenticated,
   });
 
   // Queries
   const { data: vendor } = useQuery({
     queryKey: ["vendor-profile"],
     queryFn: getMyVendorProfile,
+    enabled: isAuthenticated,
   });
 
   const {
@@ -73,7 +75,7 @@ export default function BoostAdsPage() {
   } = useQuery({
     queryKey: ["boost-pricing", countryName],
     queryFn: () => getBoostPricing(countryName!),
-    enabled: !!countryName,
+    enabled: !!countryName && isAuthenticated,
   });
 
   const {
@@ -83,6 +85,7 @@ export default function BoostAdsPage() {
   } = useQuery({
     queryKey: ["my-boosts"],
     queryFn: () => getMyBoosts(),
+    enabled: isAuthenticated,
   });
 
   const {
@@ -95,7 +98,7 @@ export default function BoostAdsPage() {
       vendor
         ? getProducts({ VendorId: vendor.userId, PageIndex: 1, PageSize: 100 })
         : null,
-    enabled: !!vendor?.userId,
+    enabled: !!vendor?.userId && isAuthenticated,
   });
 
   const pricing = pricingData || [];

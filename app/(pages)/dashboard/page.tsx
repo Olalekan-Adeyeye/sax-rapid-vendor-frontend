@@ -33,8 +33,10 @@ import { InventoryHealth } from "@/components/dashboard/InventoryHealth";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { formatCurrency } from "@/lib/utils/currency";
 import { useCurrency } from "@/lib/hooks/useCurrency";
+import { useAuth } from "@/lib/context/AuthContext";
 
 export default function DashboardOverview() {
+  const { isAuthenticated } = useAuth();
   const {
     data: orders,
     isLoading: loadingOrders,
@@ -42,6 +44,7 @@ export default function DashboardOverview() {
   } = useQuery({
     queryKey: ["vendor-orders", 1, 5],
     queryFn: () => getVendorOrders(1, 5),
+    enabled: isAuthenticated,
   });
 
   const {
@@ -51,6 +54,7 @@ export default function DashboardOverview() {
   } = useQuery({
     queryKey: ["notifications", 1, 4],
     queryFn: () => getNotifications(1, 4),
+    enabled: isAuthenticated,
   });
 
   const {
@@ -60,6 +64,7 @@ export default function DashboardOverview() {
   } = useQuery({
     queryKey: ["vendor-analytics-dashboard"],
     queryFn: () => getVendorDashboardStats(),
+    enabled: isAuthenticated,
   });
 
   const {
@@ -72,6 +77,7 @@ export default function DashboardOverview() {
       getVendorPerformanceAnalytics({
         groupBy: "Month",
       }),
+    enabled: isAuthenticated,
   });
 
   const {
@@ -85,6 +91,7 @@ export default function DashboardOverview() {
         pageNumber: 1,
         pageSize: 3,
       }),
+    enabled: isAuthenticated,
   });
 
   const notifications = useMemo(

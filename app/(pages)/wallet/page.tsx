@@ -28,7 +28,7 @@ import { useCurrency } from "@/lib/hooks/useCurrency";
 
 export default function WalletPage() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { currency: regionCurrency } = useCurrency();
 
   // Modal States
@@ -42,6 +42,7 @@ export default function WalletPage() {
   } = useQuery({
     queryKey: ["vendor-wallet"],
     queryFn: walletService.getWalletDetails,
+    enabled: isAuthenticated,
   });
 
   const activeCurrency = wallet?.currency || regionCurrency;

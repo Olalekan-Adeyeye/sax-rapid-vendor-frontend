@@ -26,6 +26,7 @@ import { formatDate } from "@/lib/utils/date";
 import { downloadInvoicePdf } from "@/lib/utils/invoice";
 import { getOrderStatusColor } from "@/lib/utils/orderStatus";
 import { useToast } from "@/lib/context/ToastContext";
+import { useAuth } from "@/lib/context/AuthContext";
 import { ErrorComponent } from "@/components/ui/ErrorComponent";
 import { getErrorMessage } from "@/lib/utils/errors";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
@@ -108,6 +109,7 @@ export default function OrdersPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
   const { currency: activeCurrency } = useCurrency();
 
   const [searchInput, setSearchInput] = useState(
@@ -127,6 +129,7 @@ export default function OrdersPage() {
   } = useQuery({
     queryKey: ["vendor-orders"],
     queryFn: () => ordersService.getVendorOrders(1, 1000),
+    enabled: isAuthenticated,
   });
 
   const orders = useMemo(() => ordersData || [], [ordersData]);

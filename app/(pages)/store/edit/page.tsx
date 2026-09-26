@@ -26,6 +26,7 @@ import type {
   UpdateVendorProfileRequest,
 } from "@/lib/api/types/vendor.types";
 import { useToast } from "@/lib/context/ToastContext";
+import { useAuth } from "@/lib/context/AuthContext";
 import { Input } from "@/components/ui/Input";
 import { TextArea } from "@/components/ui/TextArea";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
@@ -34,6 +35,7 @@ import { ErrorComponent } from "@/components/ui/ErrorComponent";
 export default function EditStoreProfile() {
   const router = useRouter();
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
@@ -50,6 +52,7 @@ export default function EditStoreProfile() {
   } = useQuery({
     queryKey: ["vendor-profile"],
     queryFn: getMyVendorProfile,
+    enabled: isAuthenticated,
   });
 
   if (vendor && !formData) {

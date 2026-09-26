@@ -30,10 +30,12 @@ import { Input } from "@/components/ui/Input";
 import { ErrorComponent } from "@/components/ui/ErrorComponent";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
 import { useToast } from "@/lib/context/ToastContext";
+import { useAuth } from "@/lib/context/AuthContext";
 
 export default function StoreProfile() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
 
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [companyName, setCompanyName] = useState("");
@@ -49,6 +51,7 @@ export default function StoreProfile() {
   } = useQuery({
     queryKey: ["vendor-profile"],
     queryFn: getMyVendorProfile,
+    enabled: isAuthenticated,
   });
 
   const upgradeMutation = useMutation({

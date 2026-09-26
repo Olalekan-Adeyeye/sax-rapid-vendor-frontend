@@ -10,6 +10,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { getProductStats, getProducts } from "@/lib/api/services/products";
 import { getMyVendorProfile } from "@/lib/api/services/vendor";
+import { useAuth } from "@/lib/context/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -18,23 +19,26 @@ import { Loader2 } from "lucide-react";
 import Link from "next/link";
 
 export default function InventoryManagementPage() {
+	const { isAuthenticated } = useAuth();
 	const [searchInput, setSearchInput] = React.useState("");
 	const [searchQuery, setSearchQuery] = React.useState("");
 
 	const { data: vendor } = useQuery({
 		queryKey: ["vendor-profile"],
 		queryFn: getMyVendorProfile,
+		enabled: isAuthenticated,
 	});
 
 	const { data: stats, isLoading: loadingStats } = useQuery({
 		queryKey: ["product-stats"],
 		queryFn: getProductStats,
+		enabled: isAuthenticated,
 	});
 
 	const { data: productsData, isLoading: loadingProducts } = useQuery({
 		queryKey: ["vendor-inventory", vendor?.userId],
 		queryFn: () => (vendor?.userId ? getProducts({ VendorId: vendor.userId, PageIndex: 1, PageSize: 50 }) : null),
-		enabled: !!vendor?.userId,
+		enabled: !!vendor?.userId && isAuthenticated,
 	});
 
 	const products = productsData?.items || [];

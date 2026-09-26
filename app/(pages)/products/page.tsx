@@ -41,7 +41,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 const PAGE_SIZE = 20;
 
 export default function ProductsPage() {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { currency: activeCurrency } = useCurrency();
   const { toast } = useToast();
   const searchParams = useSearchParams();
@@ -83,13 +83,14 @@ export default function ProductsPage() {
         PageIndex: currentPage,
         PageSize: PAGE_SIZE,
       }),
-    enabled: !!user?.userId,
+    enabled: !!user?.userId && isAuthenticated,
   });
 
   const categoriesQuery = useQuery({
     queryKey: ["categories"],
     queryFn: () => categoriesService.getCategories(),
     staleTime: 5 * 60 * 1000, // categories rarely change — cache for 5 min
+    enabled: isAuthenticated,
   });
 
   // ── Mutation ─────────────────────────────────────────────────────────────

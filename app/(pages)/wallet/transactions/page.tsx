@@ -18,9 +18,11 @@ import { useCurrency } from "@/lib/hooks/useCurrency";
 import { formatDateTime } from "@/lib/utils/date";
 import { getErrorMessage } from "@/lib/utils/errors";
 import * as walletService from "@/lib/api/services/wallet";
+import { useAuth } from "@/lib/context/AuthContext";
 
 export default function TransactionLogPage() {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const [page, setPage] = useState(1);
   const pageSize = 20;
   const { currency: regionCurrency } = useCurrency();
@@ -28,6 +30,7 @@ export default function TransactionLogPage() {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["wallet-transactions", page],
     queryFn: () => walletService.getTransactionLog(page, pageSize),
+    enabled: isAuthenticated,
   });
 
   const transactions = data?.items || [];

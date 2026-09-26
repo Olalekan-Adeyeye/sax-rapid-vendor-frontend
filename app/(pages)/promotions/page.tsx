@@ -21,12 +21,14 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { useCurrency } from "@/lib/hooks/useCurrency";
 import { formatCurrency } from "@/lib/utils/currency";
 import { useToast } from "@/lib/context/ToastContext";
+import { useAuth } from "@/lib/context/AuthContext";
 import axios from "axios";
 import type { ApiError } from "@/lib/api/types/auth.types";
 
 export default function PromotionsPage() {
   const { currency: activeCurrency } = useCurrency();
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
   const [isCampaignModalOpen, setIsCampaignModalOpen] = useState(false);
@@ -40,6 +42,7 @@ export default function PromotionsPage() {
   const { data: coupons, isLoading } = useQuery({
     queryKey: ["vendor-coupons"],
     queryFn: () => getVendorCoupons(),
+    enabled: isAuthenticated,
   });
 
   const couponList: Coupon[] = coupons || [];

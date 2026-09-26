@@ -12,6 +12,7 @@ import {
   Copy,
 } from "lucide-react";
 import { useToast } from "@/lib/context/ToastContext";
+import { useAuth } from "@/lib/context/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { SearchInput } from "@/components/ui/SearchInput";
 import * as categoriesService from "@/lib/api/services/categories";
@@ -24,6 +25,7 @@ import { Dropdown, DropdownItem } from "@/components/ui/Dropdown";
 
 export default function ProductCategoriesPage() {
   const queryClient = useQueryClient();
+  const { isAuthenticated } = useAuth();
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
@@ -38,6 +40,7 @@ export default function ProductCategoriesPage() {
   } = useQuery({
     queryKey: ["category-tree"],
     queryFn: categoriesService.getCategoryTree,
+    enabled: isAuthenticated,
   });
 
   const categories = React.useMemo(

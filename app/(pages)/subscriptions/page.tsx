@@ -22,6 +22,7 @@ import {
 } from "@/lib/api/services/subscriptions";
 import { SubscriptionPlanResponse } from "@/lib/api/types/subscriptions.types";
 import { useToast } from "@/lib/context/ToastContext";
+import { useAuth } from "@/lib/context/AuthContext";
 import axios from "axios";
 import { ApiError } from "@/lib/api/types/auth.types";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -43,21 +44,25 @@ export default function SubscriptionPlansPage() {
 
   const { currency: activeCurrency } = useCurrency();
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
 
   const { data: plansData, isLoading: loadingPlans } = useQuery({
     queryKey: ["subscription-plans"],
     queryFn: () => getSubscriptionPlans(),
+    enabled: isAuthenticated,
   });
 
   const { data: mySub, isLoading: loadingSub } = useQuery({
     queryKey: ["my-subscription"],
     queryFn: getMySubscription,
+    enabled: isAuthenticated,
   });
 
   const { data: historyData } = useQuery({
     queryKey: ["subscription-history"],
     queryFn: getSubscriptionHistory,
+    enabled: isAuthenticated,
   });
 
   const subscribeMutation = useMutation({

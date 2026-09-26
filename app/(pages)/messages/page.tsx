@@ -31,7 +31,7 @@ import { FullPageLoader } from "@/components/common/FullPageLoader";
 import { EmptyState } from "@/components/common/EmptyState";
 
 export default function MessagesPage() {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedChatId, setSelectedChatId] = React.useState<string | null>(
@@ -51,6 +51,7 @@ export default function MessagesPage() {
   } = useQuery({
     queryKey: ["conversations"],
     queryFn: getConversations,
+    enabled: isAuthenticated,
   });
 
   const {
@@ -61,7 +62,7 @@ export default function MessagesPage() {
     queryKey: ["messages", selectedChatId],
     queryFn: () =>
       selectedChatId ? getMessages(selectedChatId, 1, 100) : null,
-    enabled: !!selectedChatId,
+    enabled: !!selectedChatId && isAuthenticated,
   });
 
   const conversations = React.useMemo(

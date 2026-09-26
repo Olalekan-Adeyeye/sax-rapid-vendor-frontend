@@ -22,6 +22,7 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/lib/context/ToastContext";
+import { useAuth } from "@/lib/context/AuthContext";
 import { getErrorMessage } from "@/lib/utils/errors";
 import { Loader2 } from "lucide-react";
 
@@ -37,16 +38,19 @@ export default function PayoutsPage() {
   const [deleteTarget, setDeleteTarget] = React.useState<string | null>(null);
 
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
   const { currency: activeCurrency } = useCurrency();
 
   const { data: wallet, isLoading: loadingWallet } = useQuery({
     queryKey: ["vendor-wallet"],
     queryFn: walletService.getWalletDetails,
+    enabled: isAuthenticated,
   });
 
   const { data: bankAccounts = [] } = useQuery({
     queryKey: ["bank-accounts"],
     queryFn: bankAccountService.getBankAccounts,
+    enabled: isAuthenticated,
   });
 
   const setDefaultMutation = useMutation({
