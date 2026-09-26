@@ -35,7 +35,7 @@ import {
   DropdownItem,
   DropdownDivider,
 } from "@/components/ui/Dropdown";
-import { ProductDeleteModal } from "@/components/products/ProductDeleteModal";
+import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const PAGE_SIZE = 20;
@@ -581,7 +581,7 @@ export default function ProductsPage() {
       </div>
 
       {/* Delete Confirmation Modal */}
-      <ProductDeleteModal
+      <ConfirmDeleteModal
         isOpen={isDeleteModalOpen}
         onClose={() => {
           setIsDeleteModalOpen(false);
@@ -590,7 +590,11 @@ export default function ProductsPage() {
         onConfirm={() => {
           if (productToDelete) deleteMutation.mutate(productToDelete.id);
         }}
-        productName={productToDelete?.name}
+        itemName={productToDelete?.name}
+        itemFallback="this product"
+        title="Delete Product"
+        keepLabel="Keep Product"
+        description="This action cannot be undone. All associated data, including images and variations, will be permanently removed from the marketplace."
         loading={deleteMutation.isPending}
       />
     </div>

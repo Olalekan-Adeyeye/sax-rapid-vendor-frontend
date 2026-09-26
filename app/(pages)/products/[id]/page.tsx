@@ -25,7 +25,7 @@ import * as productsService from "@/lib/api/services/products";
 import { ProductResponseDTO } from "@/lib/api/types/products.types";
 import { getErrorMessage } from "@/lib/utils/errors";
 import { useCurrency } from "@/lib/hooks/useCurrency";
-import { ProductDeleteModal } from "@/components/products/ProductDeleteModal";
+import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
 
 export default function SingleProductPage() {
   const params = useParams();
@@ -141,11 +141,15 @@ export default function SingleProductPage() {
       </div>
       {/* Delete Confirmation Modal */}
       {product && (
-        <ProductDeleteModal
+        <ConfirmDeleteModal
           isOpen={isDeleteModalOpen}
           onClose={() => setIsDeleteModalOpen(false)}
           onConfirm={handleDelete}
-          productName={product.name ?? undefined}
+          itemName={product.name ?? undefined}
+          itemFallback="this product"
+          title="Delete Product"
+          keepLabel="Keep Product"
+          description="This action cannot be undone. All associated data, including images and variations, will be permanently removed from the marketplace."
           loading={isDeleting}
         />
       )}

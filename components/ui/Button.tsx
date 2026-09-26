@@ -64,10 +64,36 @@ export function Button({
 	`;
 
 	if (asChild && React.isValidElement(children)) {
-		const child = children as React.ReactElement<{ className?: string }>;
+		const child = children as React.ReactElement<{
+			className?: string;
+			children?: React.ReactNode;
+			onClick?: (e: React.MouseEvent) => void;
+			"aria-disabled"?: boolean | "true" | "false";
+		}>;
+		const { onClick } = props;
+		const childSafeProps = { ...props };
+		delete childSafeProps.type;
+		const childProps = child.props;
 		return React.cloneElement(child, {
-			className: `${child.props.className || ""} ${baseClasses}`,
-			...props,
+			...childSafeProps,
+			className: `${childProps.className || ""} ${baseClasses}`,
+			"aria-disabled": disabled || loading || undefined,
+			onClick: (e: React.MouseEvent) => {
+				if (disabled || loading) {
+					e.preventDefault();
+					return;
+				}
+				childProps.onClick?.(e);
+				onClick?.(e as React.MouseEvent<HTMLButtonElement>);
+			},
+			children: loading ? (
+				<>
+					<span className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin shrink-0" />
+					{childProps.children}
+				</>
+			) : (
+				childProps.children
+			),
 		});
 	}
 

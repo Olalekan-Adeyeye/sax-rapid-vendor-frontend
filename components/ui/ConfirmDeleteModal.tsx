@@ -1,28 +1,37 @@
+"use client";
 import React from "react";
 import { AlertTriangle } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 
-interface CouponDeleteModalProps {
+interface ConfirmDeleteModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  couponCode: string | null | undefined;
   loading: boolean;
+  title: string;
+  itemName: string | null | undefined;
+  itemFallback?: string;
+  keepLabel?: string;
+  description: string;
 }
 
-export function CouponDeleteModal({
+export function ConfirmDeleteModal({
   isOpen,
   onClose,
   onConfirm,
-  couponCode,
   loading,
-}: CouponDeleteModalProps) {
+  title,
+  itemName,
+  itemFallback = "this item",
+  keepLabel = "Keep",
+  description,
+}: ConfirmDeleteModalProps) {
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Delete Coupon"
+      title={title}
       subtitle="Permanent Action Warning"
       icon={AlertTriangle}
     >
@@ -31,12 +40,12 @@ export function CouponDeleteModal({
           <p className="text-xs font-bold text-black uppercase tracking-widest leading-relaxed">
             Are you sure you want to delete{" "}
             <span className="text-red-600">
-              &ldquo;{couponCode || "this coupon"}&rdquo;
+              &ldquo;{itemName || itemFallback}&rdquo;
             </span>
             ?
           </p>
           <p className="text-[10px] font-medium text-gray-500 uppercase tracking-widest leading-loose">
-            This action cannot be undone. The coupon will be permanently removed.
+            {description}
           </p>
         </div>
 
@@ -46,7 +55,7 @@ export function CouponDeleteModal({
             className="flex-1 border-gray-100 text-black hover:border-black transition-all font-black uppercase tracking-widest text-[9px]"
             onClick={onClose}
           >
-            Keep Coupon
+            {keepLabel}
           </Button>
           <Button
             variant="black"

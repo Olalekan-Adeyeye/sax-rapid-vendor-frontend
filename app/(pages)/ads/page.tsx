@@ -28,7 +28,7 @@ import { Button } from "@/components/ui/Button";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
 import { EmptyState } from "@/components/common/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { BoostTypePickerModal } from "@/components/promotions/BoostTypePickerModal";
+import { OptionPickerModal } from "@/components/ui/OptionPickerModal";
 import { Pagination } from "@/components/ui/Pagination";
 import { getErrorMessage } from "@/lib/utils/errors";
 import { useAuth } from "@/lib/context/AuthContext";
@@ -218,7 +218,7 @@ export default function BoostAdsPage() {
       />
 
       {/* Boost Type Picker Modal */}
-      <BoostTypePickerModal
+      <OptionPickerModal
         isOpen={isBoostTypePickerOpen}
         onClose={() => setIsBoostTypePickerOpen(false)}
         onSelect={(type) => {
@@ -229,7 +229,22 @@ export default function BoostAdsPage() {
             setIsModalOpen(true);
           }
         }}
-        pricing={displayPricing}
+        title="Choose Promotion Type"
+        subtitle="Select how you want to promote your product"
+        options={displayPricing.map((item) => {
+          const [days, price] = Object.entries(item.pricingByDays).sort(
+            ([a], [b]) => Number(a) - Number(b),
+          )[0] || [];
+          return {
+            key: item.boostType,
+            title: item.boostTypeName,
+            desc:
+              days !== undefined && price !== undefined
+                ? `From ${formatCurrency(Number(price), item.currency)} for ${days} day(s)`
+                : null,
+            icon: Zap,
+          };
+        })}
       />
 
       {/* Active Promotions List */}

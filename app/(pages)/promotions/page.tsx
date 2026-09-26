@@ -6,9 +6,8 @@ import { Button } from "@/components/ui/Button";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { CreateCouponModal } from "@/components/promotions/CreateCouponModal";
 import { EditCouponModal } from "@/components/promotions/EditCouponModal";
-import { CouponDeleteModal } from "@/components/promotions/CouponDeleteModal";
-import { CreateCampaignModal } from "@/components/promotions/CreateCampaignModal";
-import { PromotionTypePickerModal } from "@/components/promotions/PromotionTypePickerModal";
+import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
+import { OptionPickerModal } from "@/components/ui/OptionPickerModal";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getVendorCoupons,
@@ -31,7 +30,6 @@ export default function PromotionsPage() {
   const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
-  const [isCampaignModalOpen, setIsCampaignModalOpen] = useState(false);
   const [isPromoTypePickerOpen, setIsPromoTypePickerOpen] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
   const [deletingCoupon, setDeletingCoupon] = useState<Coupon | null>(null);
@@ -210,14 +208,25 @@ export default function PromotionsPage() {
       </div>
 
       {/* Modals */}
-      <PromotionTypePickerModal
+      <OptionPickerModal
         isOpen={isPromoTypePickerOpen}
         onClose={() => setIsPromoTypePickerOpen(false)}
-        onSelect={(type) => {
+        onSelect={() => {
           setIsPromoTypePickerOpen(false);
-          if (type === "coupon") setIsCouponModalOpen(true);
-          if (type === "campaign") setIsCampaignModalOpen(true);
+          setIsCouponModalOpen(true);
         }}
+        title="Choose Promotion Type"
+        subtitle="Select what kind of promotion you want to create"
+        options={[
+          {
+            key: "coupon" as "coupon" | "campaign",
+            title: "Discount Coupons",
+            desc: "Create percentage or fixed amount discounts for your customers.",
+            icon: Tag,
+            color: "bg-gold/20 text-gold",
+            hover: "hover:border-gold hover:bg-gold/5",
+          },
+        ]}
       />
       <CreateCouponModal
         isOpen={isCouponModalOpen}
@@ -238,16 +247,16 @@ export default function PromotionsPage() {
           }}
         />
       )}
-      <CouponDeleteModal
+      <ConfirmDeleteModal
         isOpen={!!deletingCoupon}
         onClose={() => setDeletingCoupon(null)}
         onConfirm={handleDelete}
-        couponCode={deletingCoupon?.code}
+        itemName={deletingCoupon?.code}
+        itemFallback="this coupon"
+        title="Delete Coupon"
+        keepLabel="Keep Coupon"
+        description="This action cannot be undone. The coupon will be permanently removed."
         loading={deleteMutation.isPending}
-      />
-      <CreateCampaignModal
-        isOpen={isCampaignModalOpen}
-        onClose={() => setIsCampaignModalOpen(false)}
       />
     </div>
   );
