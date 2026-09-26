@@ -1,9 +1,7 @@
 "use client";
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { Input } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
-import { Select } from "@/components/ui/Select";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 import {
   Mail,
   Lock,
@@ -11,26 +9,31 @@ import {
   Check,
   Phone,
   AlertCircle,
-} from "lucide-react";
-import axios from "axios";
+ Loader2 } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useForm, useWatch, Controller } from "react-hook-form";
+
+import { AuthPageContainer } from "@/components/auth/AuthPageContainer";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { tokenStorage } from "@/lib/api/apiClient";
 import { register as registerUser } from "@/lib/api/services/auth";
 import * as locationsService from "@/lib/api/services/locations";
-import { useRouter } from "next/navigation";
 import { ApiError, mapAuthToProfile } from "@/lib/api/types/auth.types";
-import { useToast } from "@/lib/context/ToastContext";
 import { useAuth } from "@/lib/context/AuthContext";
-import { tokenStorage } from "@/lib/api/apiClient";
+import { useToast } from "@/lib/context/ToastContext";
+import { signupSchema, SignupFormValues } from "@/lib/schemas/auth";
 import {
   resolvePostAuthDestination,
   setPendingVerifyCookie,
 } from "@/lib/utils/authRouting";
-import { useForm, useWatch, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { signupSchema, SignupFormValues } from "@/lib/schemas/auth";
-import { useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
 
-import { AuthPageContainer } from "@/components/auth/AuthPageContainer";
+
+
+
 
 export default function SignupPage() {
   const router = useRouter();
@@ -311,30 +314,6 @@ export default function SignupPage() {
         >
           Create Account
         </Button>
-
-        {/* <div className="flex items-center gap-4 py-4">
-					<div className="flex-1 h-px bg-gray-100" />
-					<span className="text-[10px] font-black tracking-widest text-gray-400">
-						or
-					</span>
-					<div className="flex-1 h-px bg-gray-100" />
-				</div>
-
-				<Button
-					type="button"
-					variant="outline"
-					fullWidth
-					className="gap-3 transition-all"
-				>
-					<Image
-						src="/assets/icons/google.svg"
-						alt="Google"
-						width={16}
-						height={16}
-						className="shrink-0"
-					/>
-					Join with Google
-				</Button> */}
       </form>
     </AuthPageContainer>
   );

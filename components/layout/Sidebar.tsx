@@ -1,7 +1,4 @@
 "use client";
-import React from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import {
   X,
   LayoutDashboard,
@@ -23,6 +20,10 @@ import {
   ArrowUpRight,
   Headphones,
 } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import React from "react";
+
 import { Logo } from "@/components/common/Logo";
 
 const navGroups = [
@@ -40,13 +41,6 @@ const navGroups = [
       { name: "All Products", href: "/products", icon: Package },
       { name: "Add Product", href: "/products/add", icon: Plus },
       { name: "Categories", href: "/products/categories", icon: Tags },
-      // {
-      // 	name: "Product Features",
-      // 	href: "/products/attributes",
-      // 	icon: Settings2,
-      // },
-      // { name: "Variations", href: "/products/variations", icon: Layers },
-      // { name: "Stock", href: "/inventory", icon: Database },
     ],
   },
   {
@@ -113,8 +107,7 @@ export function Sidebar({
         <div
           className={`flex items-center ${isDesktopCollapsed ? "justify-center p-4 lg:p-0 lg:pt-4 lg:pb-4" : "p-8 justify-between"}`}
         >
-          <Link
-            href="/"
+          <div
             className="group transition-opacity hover:opacity-80"
             onClick={onClose}
           >
@@ -125,7 +118,7 @@ export function Sidebar({
             ) : (
               <Logo size="sm" showCaption={true} withBackground={false} />
             )}
-          </Link>
+          </div>
           <button
             onClick={onClose}
             className="lg:hidden w-8 h-8 rounded bg-white/5 flex items-center justify-center text-gray-500 hover:text-white transition-colors"

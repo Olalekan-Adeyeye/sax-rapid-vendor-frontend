@@ -1,5 +1,6 @@
 "use client";
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Plus,
   Upload,
@@ -13,35 +14,35 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useCurrency } from "@/lib/hooks/useCurrency";
-import { useToast } from "@/lib/context/ToastContext";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as categoriesService from "@/lib/api/services/categories";
-import * as productsService from "@/lib/api/services/products";
-import * as brandsService from "@/lib/api/services/brands";
-import * as filesService from "@/lib/api/services/files";
-import { CategoryResponseDTO } from "@/lib/api/types/categories.types";
-import { ATTRIBUTE_CATEGORIES } from "@/lib/constants/attributeCategories";
-import { getErrorMessage } from "@/lib/utils/errors";
-import { Input } from "@/components/ui/Input";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { TextArea } from "@/components/ui/TextArea";
-import { Select } from "@/components/ui/Select";
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useForm } from "react-hook-form";
+
 import { Button } from "@/components/ui/Button";
 import ChipInput from "@/components/ui/ChipInput";
 import ImageGallery, { GalleryItem } from "@/components/ui/ImageGallery";
-import { useForm } from "react-hook-form";
+import { Input } from "@/components/ui/Input";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Select } from "@/components/ui/Select";
+import { TextArea } from "@/components/ui/TextArea";
+import * as brandsService from "@/lib/api/services/brands";
+import * as categoriesService from "@/lib/api/services/categories";
+import * as filesService from "@/lib/api/services/files";
+import * as productsService from "@/lib/api/services/products";
+import { CategoryResponseDTO } from "@/lib/api/types/categories.types";
+import { CreateProductDTO } from "@/lib/api/types/products.types";
+import { ATTRIBUTE_CATEGORIES } from "@/lib/constants/attributeCategories";
+import { useAuth } from "@/lib/context/AuthContext";
+import { useToast } from "@/lib/context/ToastContext";
+import { useCurrency } from "@/lib/hooks/useCurrency";
+import { useProductFormHandlers } from "@/lib/hooks/useProductFormHandlers";
 import { productSchema, ProductFormValues } from "@/lib/schemas/vendor";
 import {
   FlatProductValues,
   Attribute,
   Variation,
 } from "@/lib/types/product-form.types";
-import { CreateProductDTO } from "@/lib/api/types/products.types";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useProductFormHandlers } from "@/lib/hooks/useProductFormHandlers";
+import { getErrorMessage } from "@/lib/utils/errors";
 import { generateSku } from "@/lib/utils/product";
-import { useAuth } from "@/lib/context/AuthContext";
 
 export default function AddProductPage() {
   const router = useRouter();
@@ -321,7 +322,6 @@ export default function AddProductPage() {
               .filter(Boolean);
             galleryDirtyRef.current = false;
           } catch (e) {
-            console.error("Failed to upload images:", e);
             throw e;
           } finally {
             setIsUploading(false);
@@ -358,7 +358,6 @@ export default function AddProductPage() {
           });
           varDirtyRef.current = false;
         } catch (e) {
-          console.error("Failed to upload variation images:", e);
           throw e;
         } finally {
           setIsUploading(false);

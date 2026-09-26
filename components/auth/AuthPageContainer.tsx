@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
 import Link from "next/link";
+import React from "react";
+
 import { Logo } from "@/components/common/Logo";
 
 interface AuthPageContainerProps {
@@ -92,10 +93,6 @@ export function AuthPageContainer({
 
           {lp.extraContent}
         </div>
-
-        {/* <p className="mt-auto pt-16 text-[10px] font-black uppercase tracking-widest text-gray-600">
-          {footerTextValue}
-        </p> */}
       </aside>
 
       {/* ======================================================
@@ -110,7 +107,6 @@ export function AuthPageContainer({
         {/* ==========================
             MOBILE HEADER
         ========================== */}
-        {/* {(mainPanel.stickyMobileHeader || mainPanel.mobileHeaderExtra) && ( */}
         <div
           className={`w-full lg:hidden ${
             mainPanel.stickyMobileHeader ? "sticky top-0 z-30" : ""
@@ -130,7 +126,6 @@ export function AuthPageContainer({
             {mainPanel.mobileHeaderExtra}
           </div>
         </div>
-        {/* )} */}
 
         {/* ==========================
             PAGE CONTENT
@@ -143,22 +138,6 @@ export function AuthPageContainer({
           }`}
         >
           <div className={`w-full ${mainPanel.maxWidthClass || "max-w-sm"}`}>
-            {/* Mobile Logo */}
-            {/* {!mainPanel.stickyMobileHeader && !mainPanel.mobileHeaderExtra && (
-              <div className="mb-10 lg:hidden">
-                <Link
-                  href="/"
-                  className="inline-block transition-opacity hover:opacity-80"
-                >
-                  <Logo
-                    size={mainPanel.mobileLogoSize || "md"}
-                    className="items-start"
-                    withBackground
-                  />
-                </Link>
-              </div>
-            )} */}
-
             {/* Heading */}
             {(mainPanel.heading || mainPanel.subheading) && (
               <div className="mb-10">

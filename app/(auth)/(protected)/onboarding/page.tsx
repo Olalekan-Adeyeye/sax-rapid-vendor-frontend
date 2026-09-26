@@ -1,22 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { isAxiosError } from "axios";
 import { AnimatePresence, motion } from "framer-motion";
-import { Input } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
-import { Select } from "@/components/ui/Select";
-import { TextArea } from "@/components/ui/TextArea";
-import { FileUpload } from "@/components/ui/FileUpload";
-import dynamic from "next/dynamic";
-
-const LocationPicker = dynamic(
-  () => import("@/components/ui/LocationPicker").then((m) => m.LocationPicker),
-  { ssr: false },
-);
 import {
   Store,
   ShieldCheck,
   Check,
+  ChevronLeft,
   ChevronRight,
   MapPin,
   Globe,
@@ -25,17 +16,32 @@ import {
   User,
   Building2,
 } from "lucide-react";
-import { useAuth } from "@/lib/context/AuthContext";
-import { useToast } from "@/lib/context/ToastContext";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { isAxiosError } from "axios";
+import { useState, useEffect } from "react";
+import { useForm, useWatch, Controller } from "react-hook-form";
+
+import { AuthPageContainer } from "@/components/auth/AuthPageContainer";
+import { Button } from "@/components/ui/Button";
+import { FileUpload } from "@/components/ui/FileUpload";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { TextArea } from "@/components/ui/TextArea";
+import { uploadFile } from "@/lib/api/services/files";
 import {
   createVendorProfile,
   uploadVendorDocuments,
 } from "@/lib/api/services/vendor";
-import { uploadFile } from "@/lib/api/services/files";
 import type { AccountType } from "@/lib/api/types/vendor.types";
+import { useAuth } from "@/lib/context/AuthContext";
+import { useToast } from "@/lib/context/ToastContext";
+import { onboardingSchema, OnboardingFormValues } from "@/lib/schemas/auth";
 import { getCountryByPhoneCode } from "@/lib/utils/countries";
+
+const LocationPicker = dynamic(
+  () => import("@/components/ui/LocationPicker").then((m) => m.LocationPicker),
+  { ssr: false },
+);
 
 const STEPS = [
   {
@@ -102,11 +108,6 @@ const accountTypes = [
     icon: Building2,
   },
 ];
-
-import { useForm, useWatch, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { onboardingSchema, OnboardingFormValues } from "@/lib/schemas/auth";
-import { AuthPageContainer } from "@/components/auth/AuthPageContainer";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -248,8 +249,12 @@ export default function OnboardingPage() {
           try {
             const res = await uploadFile(data.idFile, "kyc");
             if (res?.url) governmentIdUrl = res.url;
-          } catch (err) {
-            console.error("ID upload failed:", err);
+          } catch {
+            toast(
+              "Upload Failed",
+              "Could not upload your ID document. You can add it later.",
+              "error",
+            );
           }
         }
 
@@ -257,8 +262,12 @@ export default function OnboardingPage() {
           try {
             const res = await uploadFile(data.bizFile, "kyc");
             if (res?.url) businessDocumentUrl = res.url;
-          } catch (err) {
-            console.error("Business doc upload failed:", err);
+          } catch {
+            toast(
+              "Upload Failed",
+              "Could not upload your business document. You can add it later.",
+              "error",
+            );
           }
         }
 
@@ -277,7 +286,6 @@ export default function OnboardingPage() {
         );
         router.replace("/dashboard");
       } catch (err: unknown) {
-        console.error("Onboarding failed:", err);
         let message =
           "We encountered an issue while setting up your shop. Please try again.";
         if (isAxiosError(err)) {
@@ -660,43 +668,6 @@ export default function OnboardingPage() {
                       error={errors.suite?.message}
                       className="h-12 lg:h-14 rounded w-full"
                     />
-
-                    {/* Map Location Picker */}
-                    {/* <div className="pt-4 border-t border-gray-100">
-                      <p className="text-xs font-bold text-black mb-3">
-                        Pickup Location (Optional)
-                      </p>
-                      {storeLat !== undefined && storeLng !== undefined ? (
-                        <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded">
-                          <div className="flex items-center gap-2">
-                            <MapPin size={14} className="text-green-600" />
-                            <span className="text-xs font-bold text-green-700">
-                              {storeLat.toFixed(6)}°N, {storeLng.toFixed(6)}°E
-                            </span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setStoreLat(undefined);
-                              setStoreLng(undefined);
-                            }}
-                            className="text-[10px] font-black uppercase tracking-widest text-red-400 hover:text-red-600 transition-colors flex items-center gap-1"
-                          >
-                            <Trash2 size={12} />
-                            Remove
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setLocationPickerOpen(true)}
-                          className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gold bg-gold/5 border border-gold/20 rounded px-4 py-3 hover:bg-gold/10 transition-colors w-full"
-                        >
-                          <Crosshair size={14} />
-                          Set Store Location on Map
-                        </button>
-                      )}
-                    </div> */}
                   </div>
                 </div>
               </div>
@@ -978,25 +949,3 @@ function DetailRow({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-
-const ChevronLeft = ({
-  size,
-  className,
-}: {
-  size?: number;
-  className?: string;
-}) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <path d="m15 18-6-6 6-6" />
-  </svg>
-);

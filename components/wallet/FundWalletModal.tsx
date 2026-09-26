@@ -1,14 +1,15 @@
 "use client";
-import React, { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { ShieldCheck, CreditCard, Check } from "lucide-react";
+import React, { useState } from "react";
+
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { useToast } from "@/lib/context/ToastContext";
-import * as walletService from "@/lib/api/services/wallet";
 import { Modal } from "@/components/ui/Modal";
-import { useMutation } from "@tanstack/react-query";
-import { getErrorMessage } from "@/lib/utils/errors";
+import * as walletService from "@/lib/api/services/wallet";
+import { useToast } from "@/lib/context/ToastContext";
 import { getCurrencySymbol } from "@/lib/utils/countries";
+import { getErrorMessage } from "@/lib/utils/errors";
 
 interface FundWalletModalProps {
   isOpen: boolean;
@@ -25,7 +26,6 @@ const PROVIDERS: {
   logo: string;
 }[] = [
   { id: "Paystack", name: "Paystack", region: "Nigeria & Africa", logo: "PS" },
-  // { id: "PayFast", name: "PayFast", region: "South Africa", logo: "PF" },
 ];
 
 export function FundWalletModal({

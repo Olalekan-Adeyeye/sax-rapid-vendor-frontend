@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Store,
   Camera,
@@ -11,26 +11,27 @@ import {
   AlertCircle,
   X,
 } from "lucide-react";
-import { Button } from "@/components/ui/Button";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getErrorMessage } from "@/lib/utils/errors";
+import React, { useState } from "react";
+
+import { FullPageLoader } from "@/components/common/FullPageLoader";
+import { Button } from "@/components/ui/Button";
+import { ErrorComponent } from "@/components/ui/ErrorComponent";
+import { Input } from "@/components/ui/Input";
+import { TextArea } from "@/components/ui/TextArea";
+import { uploadFile } from "@/lib/api/services/files";
 import {
   getMyVendorProfile,
   updateVendorProfile,
 } from "@/lib/api/services/vendor";
-import { uploadFile } from "@/lib/api/services/files";
 import type {
   UpdateVendorProfileRequest,
 } from "@/lib/api/types/vendor.types";
-import { useToast } from "@/lib/context/ToastContext";
 import { useAuth } from "@/lib/context/AuthContext";
-import { Input } from "@/components/ui/Input";
-import { TextArea } from "@/components/ui/TextArea";
-import { FullPageLoader } from "@/components/common/FullPageLoader";
-import { ErrorComponent } from "@/components/ui/ErrorComponent";
+import { useToast } from "@/lib/context/ToastContext";
+import { getErrorMessage } from "@/lib/utils/errors";
 
 export default function EditStoreProfile() {
   const router = useRouter();
@@ -88,8 +89,7 @@ export default function EditStoreProfile() {
       if (res?.url) {
         setFormData((prev) => ({ ...prev, [`${type}Url`]: res.url }));
       }
-    } catch (err) {
-      console.error(`${type} upload failed:`, err);
+    } catch {
       toast("Upload Failed", `Could not upload ${type}. Please try again.`, "error");
     } finally {
       setLoading(false);
@@ -104,7 +104,6 @@ export default function EditStoreProfile() {
       toast("Success", "Store profile updated successfully", "success");
       router.push("/store");
     } catch (err: unknown) {
-      console.error("Failed to update vendor profile:", err);
       const message = getErrorMessage(
         err,
         "We couldn't save your changes. Please check your connection.",

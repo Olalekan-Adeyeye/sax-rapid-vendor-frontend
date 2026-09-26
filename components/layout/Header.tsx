@@ -1,10 +1,5 @@
 "use client";
-import React, { useState, useRef, useEffect } from "react";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/lib/context/AuthContext";
-import { logout } from "@/lib/api/services/auth";
 import {
   Menu,
   ChevronDown,
@@ -15,6 +10,13 @@ import {
   PanelLeft,
   Loader2,
 } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import React, { useState, useRef, useEffect } from "react";
+
+import { logout } from "@/lib/api/services/auth";
+import { useAuth } from "@/lib/context/AuthContext";
+
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -93,19 +95,6 @@ export function Header({
             <PanelLeftClose size={20} />
           )}
         </button>
-
-        {/* Search Bar */}
-        {/* <div className="relative flex-1 min-w-0 group">
-          <Search
-            size={16}
-            className="absolute left-3 lg:left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-gold transition-colors"
-          />
-          <input
-            type="text"
-            placeholder="Search..."
-            className="w-full bg-gray-50 border border-gray-100 rounded pl-9 lg:pl-11 pr-3 lg:pr-4 py-2 lg:py-2.5 text-xs text-black placeholder-gray-400 outline-none focus:bg-white focus:border-gold/50 transition-all font-medium truncate"
-          />
-        </div> */}
       </div>
 
       <div

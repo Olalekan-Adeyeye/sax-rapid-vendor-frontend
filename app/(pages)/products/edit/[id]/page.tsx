@@ -1,11 +1,6 @@
 "use client";
-import React, {
-  useState,
-  useEffect,
-  useMemo,
-  useCallback,
-  useRef,
-} from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery } from "@tanstack/react-query";
 import {
   Plus,
   Upload,
@@ -19,37 +14,42 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useParams } from "next/navigation";
-import { useCurrency } from "@/lib/hooks/useCurrency";
-import { useToast } from "@/lib/context/ToastContext";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as categoriesService from "@/lib/api/services/categories";
-import * as productsService from "@/lib/api/services/products";
-import * as brandsService from "@/lib/api/services/brands";
-import * as filesService from "@/lib/api/services/files";
-import { CategoryResponseDTO } from "@/lib/api/types/categories.types";
-import { ATTRIBUTE_CATEGORIES } from "@/lib/constants/attributeCategories";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
+import { useForm } from "react-hook-form";
 
-import { getErrorMessage } from "@/lib/utils/errors";
+import { FullPageLoader } from "@/components/common/FullPageLoader";
+import { Button } from "@/components/ui/Button";
+import ChipInput from "@/components/ui/ChipInput";
+import { ErrorComponent } from "@/components/ui/ErrorComponent";
+import ImageGallery, { GalleryItem } from "@/components/ui/ImageGallery";
 import { Input } from "@/components/ui/Input";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { TextArea } from "@/components/ui/TextArea";
 import { Select } from "@/components/ui/Select";
-import { Button } from "@/components/ui/Button";
-import { ErrorComponent } from "@/components/ui/ErrorComponent";
-import { FullPageLoader } from "@/components/common/FullPageLoader";
-import ChipInput from "@/components/ui/ChipInput";
-import ImageGallery, { GalleryItem } from "@/components/ui/ImageGallery";
-import { useForm } from "react-hook-form";
-import { useQuery } from "@tanstack/react-query";
+import { TextArea } from "@/components/ui/TextArea";
+import * as brandsService from "@/lib/api/services/brands";
+import * as categoriesService from "@/lib/api/services/categories";
+import * as filesService from "@/lib/api/services/files";
+import * as productsService from "@/lib/api/services/products";
+import { CategoryResponseDTO } from "@/lib/api/types/categories.types";
+import { UpdateProductDTO } from "@/lib/api/types/products.types";
+import { ATTRIBUTE_CATEGORIES } from "@/lib/constants/attributeCategories";
+import { useAuth } from "@/lib/context/AuthContext";
+import { useToast } from "@/lib/context/ToastContext";
+import { useCurrency } from "@/lib/hooks/useCurrency";
+import { useProductFormHandlers } from "@/lib/hooks/useProductFormHandlers";
 import { productSchema, ProductFormValues } from "@/lib/schemas/vendor";
 import {
   FlatProductValues,
   Attribute,
   Variation,
 } from "@/lib/types/product-form.types";
-import { UpdateProductDTO } from "@/lib/api/types/products.types";
-import { useProductFormHandlers } from "@/lib/hooks/useProductFormHandlers";
-import { useAuth } from "@/lib/context/AuthContext";
+import { getErrorMessage } from "@/lib/utils/errors";
 export default function EditProductPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
@@ -129,7 +129,6 @@ export default function EditProductPage() {
       length: "",
       width: "",
       height: "",
-      //         status: "",
       attributes: [],
       variations: [],
       images: [],
@@ -259,7 +258,6 @@ export default function EditProductPage() {
         pendingCategoryIdRef.current = null;
       }
     } catch (err) {
-      console.error("Failed to load categories:", err);
       setError(getErrorMessage(err));
     } finally {
       setLoadingCategories(false);
@@ -290,7 +288,6 @@ export default function EditProductPage() {
         saleEndDate: product.salePriceEndDate
           ? product.salePriceEndDate.split("T")[0]
           : "",
-        //         status: "",
         weight: product.weight?.toString() || "",
         length: product.dimensionLength?.toString() || "",
         width: product.dimensionWidth?.toString() || "",
@@ -531,7 +528,6 @@ export default function EditProductPage() {
             .filter(Boolean);
           galleryDirtyRef.current = false;
         } catch (e) {
-          console.error("Failed to upload images:", e);
           throw e;
         } finally {
           setIsUploading(false);
@@ -566,7 +562,6 @@ export default function EditProductPage() {
           setVarDirty(false);
           varDirtyRef.current = false;
         } catch (e) {
-          console.error("Failed to upload variation images:", e);
           throw e;
         } finally {
           setIsUploading(false);

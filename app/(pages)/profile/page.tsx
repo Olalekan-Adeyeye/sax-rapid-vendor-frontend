@@ -1,13 +1,9 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
 import {
   User,
   Mail,
   Phone,
-  Globe,
   Calendar,
   ShieldCheck,
   Edit3,
@@ -16,10 +12,14 @@ import {
   Clock,
   ExternalLink,
 } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import React, { useEffect, useState } from "react";
+
 import { Button } from "@/components/ui/Button";
-import { useToast } from "@/lib/context/ToastContext";
 import { getUserProfile } from "@/lib/api/services/user";
 import { UserProfileResponse } from "@/lib/api/types/user.types";
+import { useToast } from "@/lib/context/ToastContext";
 import { formatDate } from "@/lib/utils/date";
 
 export default function ProfilePage() {
@@ -126,20 +126,13 @@ export default function ProfilePage() {
               </div>
               {profile.phoneNumber && (
                 <div className="flex items-center gap-2 text-gray-500 bg-gray-50 px-4 py-2 rounded border border-gray-100/50">
-                  <Phone size={14} className="text-gold" />
+                  <Phone size={14} className="text-gold" /> 
                   <span className="text-xs font-bold">
-                    {profile.phoneNumber}
+                    {profile.countryCode}{profile.phoneNumber}
                   </span>
                 </div>
               )}
-              {profile.countryCode && (
-                <div className="flex items-center gap-2 text-gray-500 bg-gray-50 px-4 py-2 rounded border border-gray-100/50">
-                  <Globe size={14} className="text-gold" />
-                  <span className="text-xs font-bold uppercase">
-                    {profile.countryCode}
-                  </span>
-                </div>
-              )}
+              
             </div>
           </div>
         </div>

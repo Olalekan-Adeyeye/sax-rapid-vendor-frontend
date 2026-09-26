@@ -1,24 +1,27 @@
 "use client";
-import { useState } from "react";
-import Link from "next/link";
-import { Input } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
-import { Eye, EyeOff, AlertCircle } from "lucide-react";
-import { login } from "@/lib/api/services/auth";
-import { useRouter } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
-import { ApiError, mapAuthToProfile } from "@/lib/api/types/auth.types";
+import { Eye, EyeOff, AlertCircle } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+
+import { AuthPageContainer } from "@/components/auth/AuthPageContainer";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { tokenStorage } from "@/lib/api/apiClient";
+import { login } from "@/lib/api/services/auth";
+import { ApiError, mapAuthToProfile } from "@/lib/api/types/auth.types";
+import { useAuth } from "@/lib/context/AuthContext";
+import { useToast } from "@/lib/context/ToastContext";
+import { loginSchema, LoginFormValues } from "@/lib/schemas/auth";
 import {
   resolvePostAuthDestination,
   setPendingVerifyCookie,
 } from "@/lib/utils/authRouting";
-import { useAuth } from "@/lib/context/AuthContext";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { loginSchema, LoginFormValues } from "@/lib/schemas/auth";
-import { useToast } from "@/lib/context/ToastContext";
-import { AuthPageContainer } from "@/components/auth/AuthPageContainer";
+
+
 
 export default function LoginPage() {
   const router = useRouter();
@@ -170,28 +173,6 @@ export default function LoginPage() {
         <Button type="submit" loading={loading} fullWidth className="py-5">
           Login
         </Button>
-
-        {/* <div className="flex items-center gap-4 py-4">
-					<div className="flex-1 h-px bg-gray-100" />
-					<span className="text-xs font-bold text-gray-400">or</span>
-					<div className="flex-1 h-px bg-gray-100" />
-				</div>
-
-				<Button
-					type="button"
-					variant="outline"
-					fullWidth
-					className="gap-3 transition-all"
-				>
-					<Image
-						src="/assets/icons/google.svg"
-						alt="Google"
-						width={16}
-						height={16}
-						className="shrink-0"
-					/>
-					Sign in with Google
-				</Button> */}
       </form>
     </AuthPageContainer>
   );
