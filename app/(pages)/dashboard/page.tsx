@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import {
   AlertCircle,
   BarChart3,
@@ -12,28 +13,28 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/Button";
-import { Skeleton } from "@/components/ui/Skeleton";
-import { FullPageLoader } from "@/components/common/FullPageLoader";
+
 import { EmptyState } from "@/components/common/EmptyState";
-import { getNotifications } from "@/lib/api/services/notifications";
-import { getVendorOrders } from "@/lib/api/services/orders";
+import { FullPageLoader } from "@/components/common/FullPageLoader";
+import { InventoryHealth } from "@/components/dashboard/InventoryHealth";
+import { RevenueChart } from "@/components/dashboard/RevenueChart";
+import { StatCard } from "@/components/dashboard/StatCard";
+import { TopSellerCard } from "@/components/dashboard/TopSellerCard";
+import { Button } from "@/components/ui/Button";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Skeleton } from "@/components/ui/Skeleton";
 import {
   getVendorDashboardStats,
   getVendorPerformanceAnalytics,
   getVendorTopSellers,
 } from "@/lib/api/services/analytics";
+import { getNotifications } from "@/lib/api/services/notifications";
+import { getVendorOrders } from "@/lib/api/services/orders";
+import { useAuth } from "@/lib/context/AuthContext";
+import { useCurrency } from "@/lib/hooks/useCurrency";
+import { formatCurrency } from "@/lib/utils/currency";
 import { getRelativeTime, formatDate } from "@/lib/utils/date";
 import { getOrderStatusColor } from "@/lib/utils/orderStatus";
-import { StatCard } from "@/components/dashboard/StatCard";
-import { TopSellerCard } from "@/components/dashboard/TopSellerCard";
-import { RevenueChart } from "@/components/dashboard/RevenueChart";
-import { InventoryHealth } from "@/components/dashboard/InventoryHealth";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { formatCurrency } from "@/lib/utils/currency";
-import { useCurrency } from "@/lib/hooks/useCurrency";
-import { useAuth } from "@/lib/context/AuthContext";
 
 export default function DashboardOverview() {
   const { isAuthenticated } = useAuth();
@@ -399,7 +400,16 @@ export default function DashboardOverview() {
                   </div>
                 ))
               ) : topSellersError || topSellerItems.length === 0 ? (
-                <EmptyState icon={Package} title="No data available" className="py-10" />
+                <EmptyState
+                  icon={Package}
+                  title="No data available"
+                  className="py-10"
+                  action={
+                    <Button asChild variant="outline" rounded="full" size="sm">
+                      <Link href="/products">View Products</Link>
+                    </Button>
+                  }
+                />
               ) : (
                 topSellerItems.slice(0, 4).map((product) => {
                   const share = dashboardStats?.revenue

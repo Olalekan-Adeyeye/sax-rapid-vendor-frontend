@@ -1,10 +1,5 @@
 "use client";
-import React, { useState, useMemo, Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { FullPageLoader } from "@/components/common/FullPageLoader";
-import { EmptyState } from "@/components/common/EmptyState";
 import {
   MessageSquare,
   Star,
@@ -13,11 +8,17 @@ import {
   ShoppingBag,
   Loader2,
 } from "lucide-react";
+import { useSearchParams, useRouter } from "next/navigation";
+import React, { useState, useMemo, Suspense } from "react";
+
+import { EmptyState } from "@/components/common/EmptyState";
+import { FullPageLoader } from "@/components/common/FullPageLoader";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Pagination } from "@/components/ui/Pagination";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { Select } from "@/components/ui/Select";
-import { Pagination } from "@/components/ui/Pagination";
-import * as reviewsService from "@/lib/api/services/reviews";
 import * as productsService from "@/lib/api/services/products";
+import * as reviewsService from "@/lib/api/services/reviews";
 import { useAuth } from "@/lib/context/AuthContext";
 import { formatDate } from "@/lib/utils/date";
 
@@ -330,6 +331,7 @@ function ReviewsContent() {
               onPageChange={setCurrentPage}
               totalCount={sortedReviews.length}
               pageSize={PAGE_SIZE}
+              itemLabel="reviews"
             />
           </div>
         )}

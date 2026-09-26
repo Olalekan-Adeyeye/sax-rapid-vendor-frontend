@@ -1,7 +1,10 @@
-import Link from "next/link";
+"use client";
 import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function NotFound() {
+	const router = useRouter();
 	return (
 		<div className="min-h-screen bg-white flex flex-col">
 			{/* Center content */}
@@ -26,18 +29,19 @@ export default function NotFound() {
 				{/* CTAs */}
 				<div className="flex flex-col sm:flex-row items-center gap-3">
 					<Link
-						href="/"
+						href="/dashboard"
 						className="px-10 py-4 rounded bg-gold text-[10px] font-black uppercase tracking-widest text-black hover:bg-black hover:text-white transition-all shadow-sm hover:shadow-none"
 					>
 						Go to Dashboard
 					</Link>
-					<Link
-						href=""
+					<button
+						type="button"
+						onClick={() => router.back()}
 						className="px-10 py-4 rounded border border-gray-100 text-[10px] font-black uppercase tracking-widest text-black hover:bg-gray-50 transition-all flex items-center gap-2"
 					>
 						<ArrowLeft size={14} />
 						Go Back
-					</Link>
+					</button>
 				</div>
 			</div>
 

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Plus,
   MoreVertical,
@@ -10,33 +10,34 @@ import {
   AlertCircle,
   RefreshCw,
 } from "lucide-react";
-import { Button } from "@/components/ui/Button";
-import Link from "next/link";
 import Image from "next/image";
-import * as productsService from "@/lib/api/services/products";
-import * as categoriesService from "@/lib/api/services/categories";
-import { useAuth } from "@/lib/context/AuthContext";
-import { useCurrency } from "@/lib/hooks/useCurrency";
-import { formatCurrency } from "@/lib/utils/currency";
-import { ProductListItemDto } from "@/lib/api/types/products.types";
-import { CategoryResponseDTO } from "@/lib/api/types/categories.types";
-import { useToast } from "@/lib/context/ToastContext";
-import { getErrorMessage } from "@/lib/utils/errors";
-
-import { SearchInput } from "@/components/ui/SearchInput";
-import { FullPageLoader } from "@/components/common/FullPageLoader";
-import { EmptyState } from "@/components/common/EmptyState";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { Pagination } from "@/components/ui/Pagination";
-import { Select } from "@/components/ui/Select";
+import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
+import React, { useState, useMemo } from "react";
+
+import { EmptyState } from "@/components/common/EmptyState";
+import { FullPageLoader } from "@/components/common/FullPageLoader";
+import { Button } from "@/components/ui/Button";
+import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
 import {
   Dropdown,
   DropdownItem,
   DropdownDivider,
 } from "@/components/ui/Dropdown";
-import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Pagination } from "@/components/ui/Pagination";
+import { SearchInput } from "@/components/ui/SearchInput";
+import { Select } from "@/components/ui/Select";
+import * as categoriesService from "@/lib/api/services/categories";
+import * as productsService from "@/lib/api/services/products";
+import { CategoryResponseDTO } from "@/lib/api/types/categories.types";
+import { ProductListItemDto } from "@/lib/api/types/products.types";
+import { useAuth } from "@/lib/context/AuthContext";
+import { useToast } from "@/lib/context/ToastContext";
+import { useCurrency } from "@/lib/hooks/useCurrency";
+import { formatCurrency } from "@/lib/utils/currency";
+import { getErrorMessage } from "@/lib/utils/errors";
+
 
 const PAGE_SIZE = 20;
 
@@ -330,7 +331,15 @@ export default function ProductsPage() {
               ) : displayedProducts.length === 0 ? (
                 <tr>
                   <td colSpan={7}>
-                    <EmptyState icon={ShoppingBag} title="No products found" />
+                    <EmptyState
+                      icon={ShoppingBag}
+                      title="No products found"
+                      action={
+                        <Button asChild rounded="full" size="sm">
+                          <Link href="/products/add">Add Product</Link>
+                        </Button>
+                      }
+                    />
                   </td>
                 </tr>
               ) : (

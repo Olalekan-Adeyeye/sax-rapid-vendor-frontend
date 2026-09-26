@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   ShoppingBag,
   MoreVertical,
@@ -10,35 +10,37 @@ import {
   XCircle,
   AlertCircle,
 } from "lucide-react";
+import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useState, useMemo } from "react";
+
+import { EmptyState } from "@/components/common/EmptyState";
+import { FullPageLoader } from "@/components/common/FullPageLoader";
+import { Button } from "@/components/ui/Button";
 import {
   Dropdown,
   DropdownItem,
   DropdownDivider,
 } from "@/components/ui/Dropdown";
-import { useQuery } from "@tanstack/react-query";
+import { ErrorComponent } from "@/components/ui/ErrorComponent";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Pagination } from "@/components/ui/Pagination";
+import { SearchInput } from "@/components/ui/SearchInput";
+import { Select } from "@/components/ui/Select";
 import * as ordersService from "@/lib/api/services/orders";
 import {
   OrderStatus,
   type OrderResponseDTO,
 } from "@/lib/api/types/orders.types";
+import { useAuth } from "@/lib/context/AuthContext";
+import { useToast } from "@/lib/context/ToastContext";
+import { useCurrency } from "@/lib/hooks/useCurrency";
 import { formatCurrency } from "@/lib/utils/currency";
 import { formatDate } from "@/lib/utils/date";
+import { getErrorMessage } from "@/lib/utils/errors";
 import { downloadInvoicePdf } from "@/lib/utils/invoice";
 import { getOrderStatusColor } from "@/lib/utils/orderStatus";
-import { useToast } from "@/lib/context/ToastContext";
-import { useAuth } from "@/lib/context/AuthContext";
-import { ErrorComponent } from "@/components/ui/ErrorComponent";
-import { getErrorMessage } from "@/lib/utils/errors";
-import { FullPageLoader } from "@/components/common/FullPageLoader";
-import { EmptyState } from "@/components/common/EmptyState";
-import { SearchInput } from "@/components/ui/SearchInput";
-import { useCurrency } from "@/lib/hooks/useCurrency";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { Pagination } from "@/components/ui/Pagination";
-import { Select } from "@/components/ui/Select";
-import Link from "next/link";
-import { Button } from "@/components/ui/Button";
-import { useSearchParams, useRouter } from "next/navigation";
+
 
 const PAGE_SIZE = 20;
 
@@ -456,6 +458,7 @@ export default function OrdersPage() {
                 onPageChange={setCurrentPage}
                 totalCount={filteredOrders.length}
                 pageSize={PAGE_SIZE}
+                itemLabel="orders"
               />
             </div>
           </div>

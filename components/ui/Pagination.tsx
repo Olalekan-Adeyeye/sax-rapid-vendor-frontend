@@ -1,5 +1,6 @@
-import React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import React from "react";
+
 import { Button } from "./Button";
 
 interface PaginationProps {
@@ -10,6 +11,8 @@ interface PaginationProps {
 	totalCount?: number;
 	/** Items per page — required when totalCount is provided */
 	pageSize?: number;
+	/** Noun used in the "Showing X–Y of Z ..." label */
+	itemLabel?: string;
 	className?: string;
 }
 
@@ -54,6 +57,7 @@ export function Pagination({
 	onPageChange,
 	totalCount,
 	pageSize,
+	itemLabel = "products",
 	className = "",
 }: PaginationProps) {
 	const safeTotalPages = Math.max(1, totalPages);
@@ -93,7 +97,7 @@ export function Pagination({
 					<span className="text-black font-black">
 						{totalCount!.toLocaleString()}
 					</span>{" "}
-					products
+					{itemLabel}
 				</p>
 			) : (
 				<span />

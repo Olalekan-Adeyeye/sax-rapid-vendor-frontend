@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Zap,
   Plus,
@@ -8,31 +8,32 @@ import {
   CheckCircle,
   ShoppingBag,
 } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import React, { useState } from "react";
+
+import { EmptyState } from "@/components/common/EmptyState";
+import { FullPageLoader } from "@/components/common/FullPageLoader";
+import { Button } from "@/components/ui/Button";
+import { ErrorComponent } from "@/components/ui/ErrorComponent";
+import { Modal } from "@/components/ui/Modal";
+import { OptionPickerModal } from "@/components/ui/OptionPickerModal";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Pagination } from "@/components/ui/Pagination";
+import { Select } from "@/components/ui/Select";
 import {
   getBoostPricing,
   getMyBoosts,
   boostProduct,
 } from "@/lib/api/services/boost";
-import * as walletService from "@/lib/api/services/wallet";
-import { getMyVendorProfile } from "@/lib/api/services/vendor";
 import { getProducts } from "@/lib/api/services/products";
+import { getMyVendorProfile } from "@/lib/api/services/vendor";
+import * as walletService from "@/lib/api/services/wallet";
 import type { BoostPricingResponseDTO } from "@/lib/api/types/boost.types";
-import { formatCurrency } from "@/lib/utils/currency";
+import { useAuth } from "@/lib/context/AuthContext";
 import { useToast } from "@/lib/context/ToastContext";
 import { useCurrency } from "@/lib/hooks/useCurrency";
-import { ErrorComponent } from "@/components/ui/ErrorComponent";
-import { Modal } from "@/components/ui/Modal";
-import { Select } from "@/components/ui/Select";
-import { Button } from "@/components/ui/Button";
-import { FullPageLoader } from "@/components/common/FullPageLoader";
-import { EmptyState } from "@/components/common/EmptyState";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { OptionPickerModal } from "@/components/ui/OptionPickerModal";
-import { Pagination } from "@/components/ui/Pagination";
-import { getErrorMessage } from "@/lib/utils/errors";
-import { useAuth } from "@/lib/context/AuthContext";
 import { getCountryByPhoneCode } from "@/lib/utils/countries";
+import { formatCurrency } from "@/lib/utils/currency";
+import { getErrorMessage } from "@/lib/utils/errors";
 
 export default function BoostAdsPage() {
   const { toast } = useToast();
@@ -326,6 +327,7 @@ export default function BoostAdsPage() {
             onPageChange={setBoostsPage}
             totalCount={activeBoosts.length}
             pageSize={BOOSTS_PER_PAGE}
+            itemLabel="promotions"
           />
         </div>
       </div>

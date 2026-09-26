@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   ChevronLeft,
   ArrowUpRight,
@@ -8,17 +8,18 @@ import {
   Coins,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { Pagination } from "@/components/ui/Pagination";
-import { ErrorComponent } from "@/components/ui/ErrorComponent";
+import React, { useState } from "react";
+
 import { EmptyState } from "@/components/common/EmptyState";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
-import { formatCurrency } from "@/lib/utils/currency";
-import { useCurrency } from "@/lib/hooks/useCurrency";
-import { formatDateTime } from "@/lib/utils/date";
-import { getErrorMessage } from "@/lib/utils/errors";
+import { ErrorComponent } from "@/components/ui/ErrorComponent";
+import { Pagination } from "@/components/ui/Pagination";
 import * as walletService from "@/lib/api/services/wallet";
 import { useAuth } from "@/lib/context/AuthContext";
+import { useCurrency } from "@/lib/hooks/useCurrency";
+import { formatCurrency } from "@/lib/utils/currency";
+import { formatDateTime } from "@/lib/utils/date";
+import { getErrorMessage } from "@/lib/utils/errors";
 
 export default function TransactionLogPage() {
   const router = useRouter();
@@ -187,6 +188,7 @@ export default function TransactionLogPage() {
                 onPageChange={setPage}
                 totalCount={data.totalCount}
                 pageSize={data.pageSize}
+                itemLabel="transactions"
               />
             </div>
           )}

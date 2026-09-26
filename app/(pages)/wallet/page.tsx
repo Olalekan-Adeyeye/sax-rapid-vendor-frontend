@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Plus,
   CreditCard,
@@ -10,21 +10,21 @@ import {
   Loader2,
   AlertTriangle,
 } from "lucide-react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
+import React, { useState } from "react";
+
+import { EmptyState } from "@/components/common/EmptyState";
+import { FullPageLoader } from "@/components/common/FullPageLoader";
 import { Button } from "@/components/ui/Button";
+import { ErrorComponent } from "@/components/ui/ErrorComponent";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { FundWalletModal } from "@/components/wallet/FundWalletModal";
 import * as walletService from "@/lib/api/services/wallet";
+import { useAuth } from "@/lib/context/AuthContext";
+import { useCurrency } from "@/lib/hooks/useCurrency";
 import { formatCurrency } from "@/lib/utils/currency";
 import { getRelativeTime } from "@/lib/utils/date";
-import { ErrorComponent } from "@/components/ui/ErrorComponent";
 import { getErrorMessage } from "@/lib/utils/errors";
-import { useAuth } from "@/lib/context/AuthContext";
-import { FullPageLoader } from "@/components/common/FullPageLoader";
-import { EmptyState } from "@/components/common/EmptyState";
-import { PageHeader } from "@/components/ui/PageHeader";
-
-import Link from "next/link";
-import { FundWalletModal } from "@/components/wallet/FundWalletModal";
-import { useCurrency } from "@/lib/hooks/useCurrency";
 
 export default function WalletPage() {
   const queryClient = useQueryClient();
@@ -201,7 +201,7 @@ export default function WalletPage() {
                             <Button
                               onClick={() =>
                                 queryClient.invalidateQueries({
-                                  queryKey: ["wallet-transactions"],
+                                  queryKey: ["vendor-wallet"],
                                 })
                               }
                               variant="black"

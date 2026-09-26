@@ -1,28 +1,30 @@
 "use client";
-import React, { useState } from "react";
-import { PageHeader } from "@/components/ui/PageHeader";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
 import { Plus, Tag, BarChart3, Pencil, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/Button";
-import { SearchInput } from "@/components/ui/SearchInput";
+import React, { useState } from "react";
+
+import { EmptyState } from "@/components/common/EmptyState";
+import { FullPageLoader } from "@/components/common/FullPageLoader";
 import { CreateCouponModal } from "@/components/promotions/CreateCouponModal";
 import { EditCouponModal } from "@/components/promotions/EditCouponModal";
+import { Button } from "@/components/ui/Button";
 import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
 import { OptionPickerModal } from "@/components/ui/OptionPickerModal";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { SearchInput } from "@/components/ui/SearchInput";
 import {
   getVendorCoupons,
   deleteVendorCoupon,
 } from "@/lib/api/services/coupons";
+import type { ApiError } from "@/lib/api/types/auth.types";
 import type { Coupon } from "@/lib/api/types/coupons.types";
-import { formatDate } from "@/lib/utils/date";
-import { FullPageLoader } from "@/components/common/FullPageLoader";
-import { EmptyState } from "@/components/common/EmptyState";
+import { useAuth } from "@/lib/context/AuthContext";
+import { useToast } from "@/lib/context/ToastContext";
 import { useCurrency } from "@/lib/hooks/useCurrency";
 import { formatCurrency } from "@/lib/utils/currency";
-import { useToast } from "@/lib/context/ToastContext";
-import { useAuth } from "@/lib/context/AuthContext";
-import axios from "axios";
-import type { ApiError } from "@/lib/api/types/auth.types";
+import { formatDate } from "@/lib/utils/date";
+
 
 export default function PromotionsPage() {
   const { currency: activeCurrency } = useCurrency();
@@ -198,7 +200,21 @@ export default function PromotionsPage() {
               ) : (
                 <tr>
                   <td colSpan={7}>
-                    <EmptyState icon={Tag} title="No promotion history found" />
+                    <EmptyState
+                      icon={Tag}
+                      title="No promotion history found"
+                      action={
+                        <Button
+                          onClick={() => setIsPromoTypePickerOpen(true)}
+                          rounded="full"
+                          variant="black"
+                          size="sm"
+                          className="px-8"
+                        >
+                          Create Promotion
+                        </Button>
+                      }
+                    />
                   </td>
                 </tr>
               )}
