@@ -8,15 +8,15 @@ import {
   CheckCircle,
   Check,
   Plus,
- Loader2 } from "lucide-react";
+} from "lucide-react";
 import React from "react";
 
 import { EmptyState } from "@/components/common/EmptyState";
+import { FullPageLoader } from "@/components/common/FullPageLoader";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { SearchInput } from "@/components/ui/SearchInput";
 import { AddBankAccountModal } from "@/components/wallet/AddBankAccountModal";
 import { WithdrawModal } from "@/components/wallet/WithdrawModal";
 import * as bankAccountService from "@/lib/api/services/bank-accounts";
@@ -25,15 +25,12 @@ import { useAuth } from "@/lib/context/AuthContext";
 import { useToast } from "@/lib/context/ToastContext";
 import { useCurrency } from "@/lib/hooks/useCurrency";
 import { formatCurrency, resolveCurrency } from "@/lib/utils/currency";
-import { formatDate } from "@/lib/utils/date";
 import { getErrorMessage } from "@/lib/utils/errors";
 
 export default function PayoutsPage() {
   const queryClient = useQueryClient();
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = React.useState(false);
   const [isAddBankModalOpen, setIsAddBankModalOpen] = React.useState(false);
-  const [searchInput, setSearchInput] = React.useState("");
-  const [searchQuery, setSearchQuery] = React.useState("");
   const [deleteTarget, setDeleteTarget] = React.useState<string | null>(null);
 
   const { toast } = useToast();
@@ -48,7 +45,7 @@ export default function PayoutsPage() {
 
   const activeCurrency = resolveCurrency(wallet?.currency, regionCurrency);
 
-  const { data: bankAccounts = [] } = useQuery({
+  const { data: bankAccounts = [], isLoading: loadingBankAccounts } = useQuery({
     queryKey: ["bank-accounts"],
     queryFn: bankAccountService.getBankAccounts,
     enabled: isAuthenticated,
@@ -81,22 +78,13 @@ export default function PayoutsPage() {
     },
   });
 
-  const loadingTransactions = loadingWallet;
-  const transactions = wallet?.recentTransactions || [];
+  const isInitialLoading =
+    (loadingWallet && !wallet) ||
+    (loadingBankAccounts && bankAccounts.length === 0);
 
-  const withdrawals = transactions.filter(
-    (t) =>
-      t.transactionType?.toLowerCase() === "withdrawal" ||
-      t.transactionType?.toLowerCase() === "payout",
-  );
-
-  const filteredWithdrawals = withdrawals.filter(
-    (w) =>
-      w.transactionReference
-        ?.toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      (w.id && w.id.toLowerCase().includes(searchQuery.toLowerCase())),
-  );
+  if (isInitialLoading) {
+    return <FullPageLoader label="Loading payouts..." icon={ArrowDownCircle} />;
+  }
 
   return (
     <div className="space-y-10">
@@ -134,14 +122,12 @@ export default function PayoutsPage() {
           title="Available Balance"
           value={formatCurrency(wallet?.balance || 0, activeCurrency)}
           detail="Ready for payout"
-          isLoading={loadingWallet}
         />
         <StatCard
           icon={Clock}
           title="Pending Balance"
           value={formatCurrency(wallet?.pendingBalance || 0, activeCurrency)}
           detail="Awaiting settlement"
-          isLoading={loadingWallet}
           variant="dark"
         />
         <StatCard
@@ -152,7 +138,6 @@ export default function PayoutsPage() {
             activeCurrency,
           )}
           detail="Combined value"
-          isLoading={loadingWallet}
         />
       </div>
 
@@ -216,98 +201,6 @@ export default function PayoutsPage() {
               />
             </div>
           )}
-        </div>
-      </div>
-
-      <div className="bg-white border border-gray-100 rounded overflow-hidden">
-        <div className="p-8 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <h4 className="text-sm font-bold text-black uppercase tracking-widest">
-            Payout History
-          </h4>
-          <div className="flex flex-wrap items-center gap-3">
-            <SearchInput
-              placeholder="Search payouts..."
-              variant="muted"
-              focusColor="gold"
-              value={searchInput}
-              onChange={setSearchInput}
-              onSearch={setSearchQuery}
-              disabled={loadingTransactions}
-            />
-          </div>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left min-w-250">
-            <thead className="bg-gray-50 border-b border-gray-100">
-              <tr>
-                {["Payout ID", "Amount", "Reference", "Status", "Date"].map(
-                  (th) => (
-                    <th
-                      key={th}
-                      className="px-8 py-5 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400"
-                    >
-                      {th}
-                    </th>
-                  ),
-                )}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {loadingTransactions ? (
-                <tr>
-                  <td colSpan={5} className="px-8 py-20 text-center">
-                    <Loader2
-                      className="animate-spin text-gold mx-auto mb-4"
-                      size={40}
-                    />
-                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-                      Loading History...
-                    </p>
-                  </td>
-                </tr>
-              ) : filteredWithdrawals.length > 0 ? (
-                filteredWithdrawals.map((p, index) => (
-                  <tr
-                    key={p.id || `payout-${index}`}
-                    className="hover:bg-gray-50/50 transition-colors group"
-                  >
-                    <td className="px-8 py-5 text-xs font-black text-black">
-                      #{p.id ? p.id.slice(0, 8) : "N/A"}
-                    </td>
-                    <td className="px-8 py-5 text-xs font-black text-black">
-                      {formatCurrency(p.amount, activeCurrency)}
-                    </td>
-                    <td className="px-8 py-5 text-xs font-bold text-gray-400">
-                      {p.transactionReference || "SYSTEM-PAY"}
-                    </td>
-                    <td className="px-8 py-5">
-                      <span
-                        className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded ${
-                          p.status === "Completed"
-                            ? "bg-green-50 text-green-600"
-                            : "bg-blue-50 text-blue-600"
-                        }`}
-                      >
-                        {p.status}
-                      </span>
-                    </td>
-                    <td className="px-8 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                      {formatDate(p.transactionDate)}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={5}>
-                    <EmptyState
-                      icon={Banknote}
-                      title="No payout records found"
-                    />
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
         </div>
       </div>
 
