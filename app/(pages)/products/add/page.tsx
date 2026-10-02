@@ -43,6 +43,7 @@ import {
 import { getCategoryBrands } from "@/lib/utils/categories";
 import { getErrorMessage } from "@/lib/utils/errors";
 import { generateSku } from "@/lib/utils/product";
+import { invalidateProductQueries } from "@/lib/utils/queryKeys";
 
 export default function AddProductPage() {
   const router = useRouter();
@@ -402,7 +403,7 @@ export default function AddProductPage() {
     },
     onSuccess: () => {
       toast("Success", "Product published successfully", "success");
-      queryClient.invalidateQueries({ queryKey: ["products"] });
+      invalidateProductQueries(queryClient);
       router.push("/products");
     },
     onError: (error) => {

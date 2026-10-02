@@ -1,6 +1,6 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Plus,
   Upload,
@@ -50,8 +50,10 @@ import {
 } from "@/lib/types/product-form.types";
 import { getCategoryBrands } from "@/lib/utils/categories";
 import { getErrorMessage } from "@/lib/utils/errors";
+import { invalidateProductQueries } from "@/lib/utils/queryKeys";
 export default function EditProductPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { isAuthenticated } = useAuth();
   const params = useParams();
   const productId = params.id as string;
@@ -608,6 +610,7 @@ export default function EditProductPage() {
 
       await productsService.updateProduct(productId, payload);
       toast("Success", "Product updated successfully", "success");
+      invalidateProductQueries(queryClient);
       router.push("/products");
     } catch (error) {
       toast("Error", getErrorMessage(error), "error");
