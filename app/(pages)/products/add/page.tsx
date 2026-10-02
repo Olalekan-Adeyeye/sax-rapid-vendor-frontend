@@ -40,6 +40,7 @@ import {
   Attribute,
   Variation,
 } from "@/lib/types/product-form.types";
+import { getCategoryBrands } from "@/lib/utils/categories";
 import { getErrorMessage } from "@/lib/utils/errors";
 import { generateSku } from "@/lib/utils/product";
 
@@ -144,19 +145,10 @@ export default function AddProductPage() {
 	const [localImages, setLocalImages] = useState<GalleryItem[]>([]);
 	const [isUploading, setIsUploading] = useState(false);
 
-  const categoryIdNumber = Number(categoryId);
-  const selectedCategory = useMemo(() => {
-    if (!categoryId || Number.isNaN(categoryIdNumber)) return undefined;
-    const stack = [...categories];
-    while (stack.length > 0) {
-      const cat = stack.pop();
-      if (!cat) continue;
-      if (cat.id?.toString() === categoryId) return cat;
-      if (cat.subCategories) stack.push(...cat.subCategories);
-    }
-    return undefined;
-  }, [categories, categoryId, categoryIdNumber]);
-  const categoryBrands = selectedCategory?.brands ?? [];
+  const categoryBrands = useMemo(
+    () => getCategoryBrands(categories, categoryId),
+    [categories, categoryId],
+  );
   const loadingCategoryBrands = loadingCategories;
 
 	// Bulk variation pricing state
@@ -438,7 +430,13 @@ export default function AddProductPage() {
             const val = e.target.value;
             setSelectedMainCategoryId(val);
             setValue("categoryId", val);
-            setFieldValue("brandId", "");
+            if (
+              !getCategoryBrands(categories, val).some(
+                (b) => b.id.toString() === formValues.brandId,
+              )
+            ) {
+              setFieldValue("brandId", "");
+            }
           }}
           disabled={loadingCategories}
           options={mainCategories}
@@ -476,8 +474,15 @@ export default function AddProductPage() {
             value={categoryId === selectedMainCategoryId ? "" : categoryId}
             onChange={(e) => {
               const val = e.target.value;
-              setValue("categoryId", val || selectedMainCategoryId);
-              setFieldValue("brandId", "");
+              const nextCategoryId = val || selectedMainCategoryId;
+              setValue("categoryId", nextCategoryId);
+              if (
+                !getCategoryBrands(categories, nextCategoryId).some(
+                  (b) => b.id.toString() === formValues.brandId,
+                )
+              ) {
+                setFieldValue("brandId", "");
+              }
             }}
             options={subCategories}
             className="animate-in fade-in slide-in-from-top-1 duration-200"
