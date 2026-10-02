@@ -1,5 +1,5 @@
 "use client";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Menu,
   ChevronDown,
@@ -9,12 +9,16 @@ import {
   PanelLeftClose,
   PanelLeft,
   Loader2,
+  Bell,
+  MessageCircle,
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useState, useRef, useEffect } from "react";
 
 import { logout } from "@/lib/api/services/auth";
+import { getUnreadCount } from "@/lib/api/services/chat";
+import { getNotificationCount } from "@/lib/api/services/notifications";
 import { useAuth } from "@/lib/context/AuthContext";
 
 
@@ -31,10 +35,27 @@ export function Header({
 }: HeaderProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { user, setUser, setTwoFactorVerified } = useAuth();
+  const { user, setUser, setTwoFactorVerified, isAuthenticated } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const { data: notificationCount } = useQuery({
+    queryKey: ["notification-count"],
+    queryFn: getNotificationCount,
+    enabled: isAuthenticated,
+    refetchInterval: 60 * 1000,
+  });
+
+  const { data: chatUnread } = useQuery({
+    queryKey: ["chat-unread-count"],
+    queryFn: getUnreadCount,
+    enabled: isAuthenticated,
+    refetchInterval: 60 * 1000,
+  });
+
+  const unreadNotifications = notificationCount?.unreadCount || 0;
+  const unreadMessages = chatUnread?.totalUnreadCount || 0;
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -101,6 +122,34 @@ export function Header({
         className="flex items-center gap-2 lg:gap-4 ml-2 lg:ml-4 relative shrink-0"
         ref={dropdownRef}
       >
+        {/* Messages */}
+        <button
+          onClick={() => router.push("/messages")}
+          aria-label="Messages"
+          className="relative w-10 h-10 rounded bg-gray-50 flex items-center justify-center text-black hover:bg-gray-100 transition-colors shrink-0"
+        >
+          <MessageCircle size={18} />
+          {unreadMessages > 0 && (
+            <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-[9px] font-black bg-gold text-black rounded-full min-w-5">
+              {unreadMessages > 99 ? "99+" : unreadMessages}
+            </span>
+          )}
+        </button>
+
+        {/* Notifications */}
+        <button
+          onClick={() => router.push("/notifications")}
+          aria-label="Notifications"
+          className="relative w-10 h-10 rounded bg-gray-50 flex items-center justify-center text-black hover:bg-gray-100 transition-colors shrink-0"
+        >
+          <Bell size={18} />
+          {unreadNotifications > 0 && (
+            <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-[9px] font-black bg-gold text-black rounded-full min-w-5">
+              {unreadNotifications > 99 ? "99+" : unreadNotifications}
+            </span>
+          )}
+        </button>
+
         {/* User Avatar Dropdown Toggle */}
         <button
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}

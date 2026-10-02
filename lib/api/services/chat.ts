@@ -3,6 +3,8 @@
  * Strictly following swagger.json and project's functional service pattern.
  */
 
+import { pickNumber, unwrapEnvelope } from "@/lib/utils/response";
+
 import apiClient from "../apiClient";
 import type { ApiResponse } from "../types/auth.types";
 import type {
@@ -93,10 +95,28 @@ export async function markAsRead(conversationId: string): Promise<void> {
  * Get total unread message count
  */
 export async function getUnreadCount(): Promise<UnreadCountResponse> {
-  const response = await apiClient.get<ApiResponse<UnreadCountResponse>>(
-    `${BASE}/unread-count`,
-  );
-  return response.data.data;
+  const response = await apiClient.get<unknown>(`${BASE}/unread-count`);
+  const raw = unwrapEnvelope(response.data);
+  if (typeof raw === "number" && Number.isFinite(raw)) {
+    return { totalUnreadCount: raw };
+  }
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+    const record = raw as Record<string, unknown>;
+    const count = pickNumber(record, [
+      "totalUnreadCount",
+      "TotalUnreadCount",
+      "unreadCount",
+      "UnreadCount",
+      "unread",
+      "Unread",
+      "count",
+      "Count",
+      "total",
+      "Total",
+    ]);
+    return { totalUnreadCount: count ?? 0 };
+  }
+  return { totalUnreadCount: 0 };
 }
 
 /**

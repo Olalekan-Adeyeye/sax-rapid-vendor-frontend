@@ -3,6 +3,8 @@
  * All endpoints under the "Notifications" tag — /api/Notifications/*
  */
 
+import { pickNumber, unwrapEnvelope } from "@/lib/utils/response";
+
 import apiClient from "../apiClient";
 import type { ApiResponse } from "../types/auth.types";
 import type {
@@ -32,12 +34,31 @@ export async function getNotifications(
  * Returns the total and unread notification counts.
  */
 export async function getNotificationCount(): Promise<NotificationCountResponse> {
-  const response = await apiClient.get<ApiResponse<NotificationCountResponse>>(`${BASE}/count`);
-  const raw = response.data as unknown;
-  if (raw && typeof raw === "object" && "data" in (raw as Record<string, unknown>)) {
-    return (raw as ApiResponse<NotificationCountResponse>).data;
+  const response = await apiClient.get<unknown>(`${BASE}/count`);
+  const raw = unwrapEnvelope(response.data);
+  if (typeof raw === "number" && Number.isFinite(raw)) {
+    return { totalCount: raw, unreadCount: raw };
   }
-  return raw as NotificationCountResponse;
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+    const record = raw as Record<string, unknown>;
+    const total = pickNumber(record, [
+      "totalCount",
+      "TotalCount",
+      "total",
+      "Total",
+      "totalNotifications",
+    ]);
+    const unread = pickNumber(record, [
+      "unreadCount",
+      "UnreadCount",
+      "unread",
+      "Unread",
+      "totalUnreadCount",
+      "unreadNotifications",
+    ]);
+    return { totalCount: total ?? 0, unreadCount: unread ?? 0 };
+  }
+  return { totalCount: 0, unreadCount: 0 };
 }
 
 /**

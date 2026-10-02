@@ -22,6 +22,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import {
   getNotifications,
   markAsRead,
+  markAllAsRead,
   deleteNotification,
   getNotificationCount,
 } from "@/lib/api/services/notifications";
@@ -84,6 +85,8 @@ export default function NotificationsPage() {
     total: countData?.totalCount || 0,
     unread: countData?.unreadCount || 0,
   };
+  const hasUnread =
+    counts.unread > 0 || notifications.some((n) => !n.isRead);
   const error = queryError ? getErrorMessage(queryError) : null;
 
   // Mutations
@@ -92,6 +95,18 @@ export default function NotificationsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
       queryClient.invalidateQueries({ queryKey: ["notification-count"] });
+    },
+  });
+
+  const markAllReadMutation = useMutation({
+    mutationFn: markAllAsRead,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["notification-count"] });
+      toast("Done", "All notifications marked as read", "success");
+    },
+    onError: (error) => {
+      toast("Error", getErrorMessage(error), "error");
     },
   });
 
@@ -168,6 +183,20 @@ export default function NotificationsPage() {
             description="Stay updated with your store activities"
             actions={
               <>
+                {hasUnread && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => markAllReadMutation.mutate()}
+                    disabled={markAllReadMutation.isPending}
+                    className="px-6 rounded-full text-xs font-bold gap-2"
+                  >
+                    <Check size={14} />
+                    {markAllReadMutation.isPending
+                      ? "Marking..."
+                      : "Mark all as read"}
+                  </Button>
+                )}
                 <Button   
                   variant="outline"
                   size="sm"
