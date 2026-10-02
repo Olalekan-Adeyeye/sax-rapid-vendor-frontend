@@ -33,12 +33,13 @@ export function formatCurrency(
   amount: number,
   currency = "NGN",
 ): string {
-  return new Intl.NumberFormat(getLocaleForCurrency(currency), {
-    style: "currency",
-    currency,
+  const code = currency?.trim() || "NGN";
+  const digits = new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
-  }).format(amount);
+  }).format(Math.abs(amount));
+  const sign = amount < 0 ? "-" : "";
+  return `${sign}${getCurrencySymbol(code)}${digits}`;
 }
 
 export function resolveCurrency(

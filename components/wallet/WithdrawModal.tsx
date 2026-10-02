@@ -126,7 +126,7 @@ export function WithdrawModal({
               />
             </div>
             <p className="text-[9px] font-black uppercase text-gray-800">
-              Available: {currency} {availableBalance.toLocaleString()}
+              Available: {currency} {availableBalance.toLocaleString("en-US")}
             </p>
           </div>
           <div className="space-y-3">

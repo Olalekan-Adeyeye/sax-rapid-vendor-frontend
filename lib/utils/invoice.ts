@@ -233,8 +233,8 @@ export async function downloadInvoicePdf(
       item.productName || "Product",
       item.productSKU || "\u2014",
       item.quantity.toString(),
-      `${currency} ${item.unitPrice.toLocaleString()}`,
-      `${currency} ${item.totalPrice.toLocaleString()}`,
+      `${currency} ${item.unitPrice.toLocaleString("en-US")}`,
+      `${currency} ${item.totalPrice.toLocaleString("en-US")}`,
     ];
     vals.forEach((v, i) =>
       page.drawText(v, {
@@ -280,7 +280,7 @@ export async function downloadInvoicePdf(
       font: isTot ? bold : reg,
       color,
     });
-    const valStr = `${currency} ${Math.abs(value).toLocaleString()}`;
+    const valStr = `${currency} ${Math.abs(value).toLocaleString("en-US")}`;
     const valW = (isTot ? bold : reg).widthOfTextAtSize(
       valStr,
       isTot ? 13 : 10,
