@@ -11,6 +11,8 @@ import type {
   UploadDocumentsRequest,
   UpgradeToBusinessRequest,
   VendorProfileResponse,
+  VendorReviewItem,
+  VendorReviewSummaryResponse,
 } from "../types/vendor.types";
 
 const BASE = "/Vendor";
@@ -76,4 +78,30 @@ export async function upgradeToBusiness(
 ): Promise<VendorProfileResponse> {
   const response = await apiClient.post<ApiResponse<VendorProfileResponse>>(`${BASE}/upgrade-to-business`, data);
   return response.data.data;
+}
+
+/**
+ * GET /api/Vendor/{vendorId}/reviews/summary
+ * Average rating, total count and 1–5 star breakdown for a vendor.
+ */
+export async function getVendorReviewSummary(
+  vendorId: string
+): Promise<VendorReviewSummaryResponse> {
+  const response = await apiClient.get<ApiResponse<VendorReviewSummaryResponse>>(`${BASE}/${vendorId}/reviews/summary`);
+  return response.data.data;
+}
+
+/**
+ * GET /api/Vendor/{vendorId}/reviews
+ * Paginated reviewer comments and ratings for a vendor's storefront.
+ */
+export async function getVendorReviews(
+  vendorId: string,
+  pageNumber = 1,
+  pageSize = 5
+): Promise<VendorReviewItem[]> {
+  const response = await apiClient.get<ApiResponse<{ items?: VendorReviewItem[] | null }>>(`${BASE}/${vendorId}/reviews`, {
+    params: { PageNumber: pageNumber, PageSize: pageSize },
+  });
+  return response.data.data.items ?? [];
 }

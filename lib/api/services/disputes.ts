@@ -1,3 +1,5 @@
+import { unwrapEnvelope } from "@/lib/utils/response";
+
 import apiClient from "../apiClient";
 import type { ApiResponse } from "../types/auth.types";
 import type {
@@ -7,13 +9,26 @@ import type {
 
 const BASE = "/Disputes";
 
+function toDisputeArray(value: unknown): DisputeResponseDTO[] {
+  const raw = unwrapEnvelope(value);
+  if (Array.isArray(raw)) return raw as DisputeResponseDTO[];
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+    const record = raw as Record<string, unknown>;
+    for (const key of ["items", "data", "results", "disputes"]) {
+      if (Array.isArray(record[key]))
+        return record[key] as DisputeResponseDTO[];
+    }
+  }
+  return [];
+}
+
 /**
  * GET /api/Disputes/{id}
  * Get dispute by ID
  */
 export async function getDisputeById(id: string): Promise<DisputeResponseDTO> {
-  const response = await apiClient.get<ApiResponse<DisputeResponseDTO>>(`${BASE}/${id}`);
-  return response.data.data;
+  const response = await apiClient.get<unknown>(`${BASE}/${id}`);
+  return unwrapEnvelope(response.data) as DisputeResponseDTO;
 }
 
 /**
@@ -21,8 +36,8 @@ export async function getDisputeById(id: string): Promise<DisputeResponseDTO> {
  * Get current user's disputes (Buyer)
  */
 export async function getMyDisputes(): Promise<DisputeResponseDTO[]> {
-  const response = await apiClient.get<ApiResponse<DisputeResponseDTO[]>>(`${BASE}/my`);
-  return response.data.data;
+  const response = await apiClient.get<unknown>(`${BASE}/my`);
+  return toDisputeArray(response.data);
 }
 
 /**
@@ -30,8 +45,8 @@ export async function getMyDisputes(): Promise<DisputeResponseDTO[]> {
  * Get vendor disputes
  */
 export async function getVendorDisputes(): Promise<DisputeResponseDTO[]> {
-  const response = await apiClient.get<ApiResponse<DisputeResponseDTO[]>>(`${BASE}/vendor`);
-  return response.data.data;
+  const response = await apiClient.get<unknown>(`${BASE}/vendor`);
+  return toDisputeArray(response.data);
 }
 
 /**

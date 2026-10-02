@@ -27,7 +27,6 @@ import {
   getVendorTopSellers,
 } from "@/lib/api/services/analytics";
 import { getMyBoosts } from "@/lib/api/services/boost";
-import { getCategories } from "@/lib/api/services/categories";
 import { getVendorOrders } from "@/lib/api/services/orders";
 import { getProductStats } from "@/lib/api/services/products";
 import { useAuth } from "@/lib/context/AuthContext";
@@ -133,16 +132,6 @@ export default function AnalyticsPage() {
   } = useQuery({
     queryKey: ["vendor-active-boosts"],
     queryFn: () => getMyBoosts("Active"),
-    enabled: isAuthenticated,
-  });
-
-  const {
-    data: categories,
-    error: categoriesError,
-    refetch: refetchCategories,
-  } = useQuery({
-    queryKey: ["categories"],
-    queryFn: () => getCategories(),
     enabled: isAuthenticated,
   });
 
@@ -1001,59 +990,6 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        {/* Category Performance */}
-        <div className="bg-white border border-gray-100 rounded p-8 space-y-10">
-          <div className="flex items-center gap-3">
-            <PieChartIcon size={18} className="text-gold" />
-            <h4 className="text-sm font-black text-black uppercase tracking-widest">
-              Category Performance
-            </h4>
-          </div>
-
-          <div className="space-y-6">
-            {categoriesError ? (
-              <div className="py-10 text-center flex flex-col items-center gap-3 bg-red-50/10 rounded">
-                <AlertCircle size={20} className="text-red-500" />
-                <p className="text-xs font-bold text-red-500">
-                  Failed to load categories
-                </p>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => refetchCategories()}
-                  className="text-red-600 hover:bg-red-100 text-[10px] font-black uppercase tracking-widest"
-                >
-                  <RefreshCw size={12} className="mr-2" />
-                  Retry
-                </Button>
-              </div>
-            ) : categories ? (
-              categories.slice(0, 4).map((cat, i) => {
-                // Mocked distribution based on real category names
-                const distribution = [45, 25, 20, 10];
-                return (
-                  <div key={cat.id} className="space-y-2">
-                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
-                      <span className="text-gray-500">{cat.name}</span>
-                      <span className="text-black">{distribution[i]}%</span>
-                    </div>
-                    <div className="h-1.5 bg-gray-50 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-black rounded-full"
-                        style={{ width: `${distribution[i]}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="h-40 bg-gray-50 rounded animate-pulse" />
-            )}
-            <p className="text-[9px] font-bold text-gray-300 uppercase text-center pt-4">
-              * Category distribution calculated from active listings
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );

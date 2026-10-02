@@ -6,14 +6,16 @@ import {
 	TrendingDown,
 	PackageOpen,
 	ArrowUpRight,
- Loader2 } from "lucide-react";
+} from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
 import { EmptyState } from "@/components/common/EmptyState";
+import { FullPageLoader } from "@/components/common/FullPageLoader";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SearchInput } from "@/components/ui/SearchInput";
+import { getInventoryStatus } from "@/lib/api/services/inventory";
 import { getProductStats, getProducts } from "@/lib/api/services/products";
 import { getMyVendorProfile } from "@/lib/api/services/vendor";
 import { useAuth } from "@/lib/context/AuthContext";
@@ -42,7 +44,25 @@ export default function InventoryManagementPage() {
 		enabled: !!vendor?.userId && isAuthenticated,
 	});
 
+	const { data: stockFlags } = useQuery({
+		queryKey: ["inventory-status"],
+		queryFn: () => getInventoryStatus(),
+		enabled: isAuthenticated,
+		retry: false,
+	});
+
+	const stockAlerts = (stockFlags || []).filter((item) =>
+		/low|out|critical|empty|deplet/i.test(item.stockStatus || ""),
+	);
+
 	const products = productsData?.items || [];
+
+	const isInitialLoading =
+		(!stats && loadingStats) || (products.length === 0 && loadingProducts);
+
+	if (isInitialLoading) {
+		return <FullPageLoader label="Loading inventory..." icon={Database} />;
+	}
 
 	const filteredProducts = products.filter((p) =>
 		p.name?.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -79,7 +99,7 @@ export default function InventoryManagementPage() {
 						Total Items in Stock
 					</p>
 					<h3 className="text-3xl font-black text-black tracking-tighter mb-2">
-						{loadingStats ? "..." : (stats?.totalProducts || 0).toLocaleString()}
+						{(stats?.totalProducts || 0).toLocaleString()}
 					</h3>
 					<div className="flex items-center gap-2">
 						<div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
@@ -91,7 +111,7 @@ export default function InventoryManagementPage() {
 						Low Stock Items
 					</p>
 					<h3 className="text-3xl font-black text-gold tracking-tighter mb-2">
-						{loadingStats ? "..." : (stats?.pendingApproval || 0).toLocaleString()}
+						{(stats?.pendingApproval || 0).toLocaleString()}
 					</h3>
 					<p className="text-[9px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-2">
 						<AlertCircle size={12} className="text-gold" />
@@ -103,7 +123,7 @@ export default function InventoryManagementPage() {
 						Out of Stock
 					</p>
 					<h3 className="text-3xl font-black text-red-500 tracking-tighter mb-2">
-						{loadingStats ? "..." : (stats?.outOfStock || 0).toLocaleString()}
+						{(stats?.outOfStock || 0).toLocaleString()}
 					</h3>
 					<p className="text-[9px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-2">
 						<TrendingDown size={12} className="text-red-500" />
@@ -127,15 +147,21 @@ export default function InventoryManagementPage() {
 					/>
 				</div>
 
-				<div className="divide-y divide-gray-50">
-					{loadingProducts ? (
-						<div className="p-20 text-center">
-							<Loader2 className="animate-spin text-gold mx-auto mb-4" size={40} />
-							<p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-								Loading Inventory...
+				{stockAlerts.length > 0 && (
+					<div className="px-6 lg:px-8 py-5 bg-amber-50/60 border-b border-amber-100 flex flex-col sm:flex-row sm:items-center gap-4">
+						<div className="flex items-center gap-3 flex-1 min-w-0">
+							<AlertCircle size={18} className="text-amber-600 shrink-0" />
+							<p className="text-xs font-bold text-amber-800 leading-relaxed">
+								{stockAlerts.length} product{stockAlerts.length === 1 ? "" : "s"} flagged:{" "}
+								{stockAlerts.slice(0, 3).map((a) => a.productName || a.sku || "Item").join(", ")}
+								{stockAlerts.length > 3 ? ` +${stockAlerts.length - 3} more` : ""} — restock soon.
 							</p>
 						</div>
-					) : filteredProducts.length > 0 ? (
+					</div>
+				)}
+
+				<div className="divide-y divide-gray-50">
+					{filteredProducts.length > 0 ? (
 						filteredProducts.map((item) => (
 							<div
 								key={item.id}

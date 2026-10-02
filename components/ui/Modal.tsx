@@ -25,6 +25,11 @@ export function Modal({
   const [mounted, setMounted] = useState(false);
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
 	useEffect(() => {
 		// Handle hydration properly to avoid cascading render warnings
@@ -45,15 +50,15 @@ export function Modal({
 		};
 	}, [isOpen]);
 
-	useEffect(() => {
-		if (!isOpen || !mounted) return;
-		const handleKeyDown = (e: KeyboardEvent) => {
-			if (e.key === "Escape") onClose();
-		};
-		document.addEventListener("keydown", handleKeyDown);
-		dialogRef.current?.focus();
-		return () => document.removeEventListener("keydown", handleKeyDown);
-	}, [isOpen, mounted, onClose]);
+  useEffect(() => {
+    if (!isOpen || !mounted) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onCloseRef.current();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    dialogRef.current?.focus();
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, mounted]);
 
 	if (!isOpen || !mounted) return null;
 

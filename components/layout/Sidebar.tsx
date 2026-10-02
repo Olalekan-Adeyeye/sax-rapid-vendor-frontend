@@ -19,6 +19,9 @@ import {
   MessageSquare,
   ArrowUpRight,
   Headphones,
+  ShieldAlert,
+  Boxes,
+  Database,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -39,6 +42,7 @@ const navGroups = [
     title: "Inventory",
     items: [
       { name: "All Products", href: "/products", icon: Package },
+      { name: "Stock Management", href: "/inventory", icon: Database },
       { name: "Add Product", href: "/products/add", icon: Plus },
       { name: "Categories", href: "/products/categories", icon: Tags },
     ],
@@ -48,6 +52,7 @@ const navGroups = [
     items: [
       { name: "Orders", href: "/orders", icon: ShoppingBag },
       { name: "Reviews", href: "/reviews", icon: Star },
+      { name: "Disputes", href: "/disputes", icon: ShieldAlert },
     ],
   },
   {
@@ -63,6 +68,7 @@ const navGroups = [
     items: [
       { name: "Promotions", href: "/promotions", icon: Gift },
       { name: "Boost My Ads", href: "/ads", icon: Rocket },
+      { name: "Bundles", href: "/bundles", icon: Boxes },
     ],
   },
   {

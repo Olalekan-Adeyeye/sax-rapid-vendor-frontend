@@ -13,6 +13,8 @@ import {
   Building2,
   Upload,
   BadgeCheck,
+  Star,
+  RefreshCw,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -27,6 +29,8 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { uploadFile } from "@/lib/api/services/files";
 import {
   getMyVendorProfile,
+  getVendorReviewSummary,
+  getVendorReviews,
   upgradeToBusiness,
 } from "@/lib/api/services/vendor";
 import { useAuth } from "@/lib/context/AuthContext";
@@ -53,6 +57,31 @@ export default function StoreProfile() {
     queryKey: ["vendor-profile"],
     queryFn: getMyVendorProfile,
     enabled: isAuthenticated,
+  });
+
+  const vendorId = vendor?.id || "";
+  const {
+    data: reviewSummary,
+    isLoading: loadingSummary,
+    error: summaryError,
+    refetch: refetchSummary,
+  } = useQuery({
+    queryKey: ["vendor-review-summary", vendorId],
+    queryFn: () => getVendorReviewSummary(vendorId),
+    enabled: isAuthenticated && !!vendorId,
+    retry: false,
+  });
+
+  const {
+    data: vendorReviews,
+    isLoading: loadingReviews,
+    error: reviewsError,
+    refetch: refetchReviews,
+  } = useQuery({
+    queryKey: ["vendor-reviews", vendorId],
+    queryFn: () => getVendorReviews(vendorId, 1, 3),
+    enabled: isAuthenticated && !!vendorId,
+    retry: false,
   });
 
   const upgradeMutation = useMutation({
@@ -342,6 +371,138 @@ export default function StoreProfile() {
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Store Ratings Card */}
+          <div className="bg-white border border-gray-100 rounded p-10 space-y-8">
+            <h4 className="text-xs font-bold text-gold pb-6 border-b border-gray-50 flex items-center gap-3 uppercase">
+              <Star size={14} />
+              Store Ratings
+            </h4>
+            {loadingSummary || loadingReviews ? (
+              <div className="space-y-4 animate-pulse">
+                <div className="h-10 bg-gray-50 rounded" />
+                <div className="h-4 bg-gray-50 rounded w-2/3" />
+                <div className="h-4 bg-gray-50 rounded w-1/2" />
+              </div>
+            ) : summaryError || reviewsError ? (
+              <div className="py-6 text-center flex flex-col items-center gap-3 bg-red-50/10 rounded">
+                <AlertCircle size={20} className="text-red-500" />
+                <p className="text-xs font-bold text-red-500">
+                  Failed to load store ratings
+                </p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    refetchSummary();
+                    refetchReviews();
+                  }}
+                  className="text-red-600 hover:bg-red-100 text-[10px] font-black uppercase tracking-widest"
+                >
+                  <RefreshCw size={12} className="mr-2" />
+                  Retry
+                </Button>
+              </div>
+            ) : reviewSummary && (reviewSummary.totalReviews || 0) > 0 ? (
+              <div className="space-y-8">
+                <div className="flex items-center gap-5">
+                  <span className="text-4xl font-black text-black tracking-tighter">
+                    {(reviewSummary.averageRating || 0).toFixed(1)}
+                  </span>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-1 text-gold">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star
+                          key={s}
+                          size={14}
+                          fill={
+                            s <= Math.round(reviewSummary.averageRating || 0)
+                              ? "currentColor"
+                              : "none"
+                          }
+                        />
+                      ))}
+                    </div>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                      {reviewSummary.totalReviews} review
+                      {reviewSummary.totalReviews === 1 ? "" : "s"}
+                    </p>
+                  </div>
+                </div>
+                {reviewSummary.starRatingBreakdown && (
+                  <div className="space-y-2.5">
+                    {[5, 4, 3, 2, 1].map((star) => {
+                      const count =
+                        reviewSummary.starRatingBreakdown?.[String(star)] || 0;
+                      const pct =
+                        reviewSummary.totalReviews > 0
+                          ? Math.round(
+                              (count / reviewSummary.totalReviews) * 100,
+                            )
+                          : 0;
+                      return (
+                        <div key={star} className="flex items-center gap-3">
+                          <span className="text-[10px] font-black text-gray-400 w-3">
+                            {star}
+                          </span>
+                          <div className="flex-1 h-1.5 bg-gray-50 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-gold rounded-full"
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                          <span className="text-[10px] font-bold text-gray-400 w-8 text-right">
+                            {count}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                {vendorReviews && vendorReviews.length > 0 && (
+                  <div className="pt-6 border-t border-gray-50 space-y-6">
+                    {vendorReviews.map((review, i) => (
+                      <div key={i} className="space-y-2">
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-xs font-black text-black truncate">
+                            {review.reviewerName || "Anonymous buyer"}
+                          </p>
+                          <div className="flex items-center gap-0.5 text-gold shrink-0">
+                            {[1, 2, 3, 4, 5].map((s) => (
+                              <Star
+                                key={s}
+                                size={10}
+                                fill={
+                                  s <= Math.round(review.rating || 0)
+                                    ? "currentColor"
+                                    : "none"
+                                }
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        {review.comment && (
+                          <p className="text-xs font-medium text-gray-500 leading-relaxed line-clamp-3">
+                            {review.comment}
+                          </p>
+                        )}
+                        {review.itemDetails && (
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                            {review.itemDetails}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-xs font-bold text-gray-400 py-2">
+                No buyer reviews yet. Reviews from your customers will appear
+                here.
+              </p>
+            )}
           </div>
         </div>
       </div>

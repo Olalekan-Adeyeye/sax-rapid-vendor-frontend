@@ -88,3 +88,20 @@ export interface VendorProfileResponse {
   createdAt: string; // ISO 8601
   updatedAt?: string | null;
 }
+
+/** GET /api/Vendor/{vendorId}/reviews/summary */
+export interface VendorReviewSummaryResponse {
+  averageRating: number;
+  totalReviews: number;
+  starRatingBreakdown?: Record<string, number> | null;
+}
+
+/** GET /api/Vendor/{vendorId}/reviews */
+export interface VendorReviewItem {
+  reviewerName?: string | null;
+  reviewerAvatarUrl?: string | null;
+  rating: number;
+  createdAt: string;
+  itemDetails?: string | null;
+  comment?: string | null;
+}
