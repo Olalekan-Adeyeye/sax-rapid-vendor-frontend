@@ -75,6 +75,8 @@ export default function AnalyticsPage() {
   const {
     data: performance,
     isLoading: loadingPerformance,
+    error: performanceError,
+    refetch: refetchPerformance,
   } = useQuery({
     queryKey: ["vendor-analytics-performance", queryParams, timeRange],
     queryFn: () =>
@@ -89,6 +91,8 @@ export default function AnalyticsPage() {
   const {
     data: topSellers,
     isLoading: loadingTopSellers,
+    error: topSellersError,
+    refetch: refetchTopSellers,
   } = useQuery({
     queryKey: ["vendor-analytics-top-sellers", queryParams],
     queryFn: () =>
@@ -99,25 +103,44 @@ export default function AnalyticsPage() {
     enabled: isAuthenticated,
   });
 
-  const { data: productStats, isLoading: loadingProductStats } = useQuery({
+  const {
+    data: productStats,
+    isLoading: loadingProductStats,
+    error: productStatsError,
+    refetch: refetchProductStats,
+  } = useQuery({
     queryKey: ["vendor-product-stats"],
     queryFn: () => getProductStats(),
     enabled: isAuthenticated,
   });
 
-  const { data: recentOrders, isLoading: loadingOrders } = useQuery({
+  const {
+    data: recentOrders,
+    isLoading: loadingOrders,
+    error: ordersError,
+    refetch: refetchOrders,
+  } = useQuery({
     queryKey: ["vendor-recent-orders"],
     queryFn: () => getVendorOrders(1, 10),
     enabled: isAuthenticated,
   });
 
-  const { data: activeBoosts, isLoading: loadingBoosts } = useQuery({
+  const {
+    data: activeBoosts,
+    isLoading: loadingBoosts,
+    error: boostsError,
+    refetch: refetchBoosts,
+  } = useQuery({
     queryKey: ["vendor-active-boosts"],
     queryFn: () => getMyBoosts("Active"),
     enabled: isAuthenticated,
   });
 
-  const { data: categories } = useQuery({
+  const {
+    data: categories,
+    error: categoriesError,
+    refetch: refetchCategories,
+  } = useQuery({
     queryKey: ["categories"],
     queryFn: () => getCategories(),
     enabled: isAuthenticated,
@@ -133,30 +156,48 @@ export default function AnalyticsPage() {
   const statCards = [
     {
       label: "Total Revenue",
-      value: loadingStats ? "..." : formatCurrency(stats?.revenue || 0, activeCurrency),
+      value: statsError
+        ? "N/A"
+        : loadingStats
+          ? "..."
+          : formatCurrency(stats?.revenue || 0, activeCurrency),
       detail: `in ${activeCurrency}`,
       icon: DollarSign,
       dark: true,
+      hasError: !!statsError,
     },
     {
       label: "Total Orders",
-      value: loadingStats ? "..." : (stats?.totalOrders || 0).toLocaleString(),
+      value: statsError
+        ? "N/A"
+        : loadingStats
+          ? "..."
+          : (stats?.totalOrders || 0).toLocaleString(),
       detail: "Completed sales",
       icon: ShoppingBag,
+      hasError: !!statsError,
     },
     {
       label: "Pending Orders",
-      value: loadingOrders ? "..." : pendingOrdersCount.toLocaleString(),
+      value: ordersError
+        ? "N/A"
+        : loadingOrders
+          ? "..."
+          : pendingOrdersCount.toLocaleString(),
       detail: "Awaiting processing",
       icon: RefreshCw,
+      hasError: !!ordersError,
     },
     {
       label: "Unique Customers",
-      value: loadingStats
-        ? "..."
-        : (stats?.uniqueCustomers || 0).toLocaleString(),
+      value: statsError
+        ? "N/A"
+        : loadingStats
+          ? "..."
+          : (stats?.uniqueCustomers || 0).toLocaleString(),
       detail: "Total reach",
       icon: Users,
+      hasError: !!statsError,
     },
   ];
 
@@ -194,32 +235,6 @@ export default function AnalyticsPage() {
           </div>
         }
       />
-
-      {/* Error State */}
-      {statsError && (
-        <div className="bg-red-50 border border-red-100 rounded p-6 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <AlertCircle className="text-red-500" />
-            <div>
-              <p className="text-sm font-bold text-red-900">
-                Analytics Sync Failed
-              </p>
-              <p className="text-xs text-red-600">
-                Unable to fetch latest intelligence data
-              </p>
-            </div>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => refetchStats()}
-            className="text-red-600 hover:bg-red-100"
-          >
-            <RefreshCw size={14} className="mr-2" />
-            Retry Sync
-          </Button>
-        </div>
-      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -263,9 +278,12 @@ export default function AnalyticsPage() {
             <h3
               className={`text-2xl lg:text-3xl font-black tracking-tighter mb-2 transition-colors duration-300 flex items-center gap-2 ${
                 stat.dark ? "text-white" : "group-hover:text-black"
-              }`}
+              } ${stat.hasError ? "text-red-500" : ""}`}
             >
               {stat.value}
+              {stat.hasError && (
+                <AlertCircle size={16} className="text-red-500 animate-pulse" />
+              )}
             </h3>
             <p
               className={`text-[10px] font-bold transition-colors duration-300 ${
@@ -315,6 +333,22 @@ export default function AnalyticsPage() {
           <div className="h-80 relative w-full pt-4">
             {loadingPerformance ? (
               <div className="w-full h-full bg-gray-50 rounded animate-pulse" />
+            ) : performanceError ? (
+              <div className="w-full h-full flex flex-col items-center justify-center gap-3 bg-red-50/10 rounded">
+                <AlertCircle size={20} className="text-red-500" />
+                <p className="text-xs font-bold text-red-500">
+                  Failed to load performance data
+                </p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => refetchPerformance()}
+                  className="text-red-600 hover:bg-red-100 text-[10px] font-black uppercase tracking-widest"
+                >
+                  <RefreshCw size={12} className="mr-2" />
+                  Retry
+                </Button>
+              </div>
             ) : performance && performance.length > 0 ? (
               <div className="h-full flex flex-col">
                 <div className="flex-1 relative group">
@@ -451,7 +485,26 @@ export default function AnalyticsPage() {
           </div>
 
           <div className="space-y-8 pt-4">
-            {(() => {
+            {loadingStats && !stats ? (
+              <div className="h-40 bg-gray-50 rounded animate-pulse" />
+            ) : statsError ? (
+              <div className="py-10 text-center flex flex-col items-center gap-3 bg-red-50/10 rounded">
+                <AlertCircle size={20} className="text-red-500" />
+                <p className="text-xs font-bold text-red-500">
+                  Failed to load inventory stats
+                </p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => refetchStats()}
+                  className="text-red-600 hover:bg-red-100 text-[10px] font-black uppercase tracking-widest"
+                >
+                  <RefreshCw size={12} className="mr-2" />
+                  Retry
+                </Button>
+              </div>
+            ) : (
+              (() => {
               const active = stats?.activeProducts || 0;
               const outOfStock = stats?.outOfStockProducts || 0;
               const total = stats?.totalProducts || active + outOfStock || 1;
@@ -558,7 +611,7 @@ export default function AnalyticsPage() {
                   </div>
                 </>
               );
-            })()}
+            })())}
           </div>
         </div>
       </div>
@@ -611,6 +664,26 @@ export default function AnalyticsPage() {
                       </td>
                     </tr>
                   ))
+                ) : topSellersError ? (
+                  <tr>
+                    <td colSpan={5}>
+                      <div className="py-10 text-center flex flex-col items-center gap-3 bg-red-50/10">
+                        <AlertCircle size={20} className="text-red-500" />
+                        <p className="text-xs font-bold text-red-500">
+                          Failed to load top sellers
+                        </p>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => refetchTopSellers()}
+                          className="text-red-600 hover:bg-red-100 text-[10px] font-black uppercase tracking-widest"
+                        >
+                          <RefreshCw size={12} className="mr-2" />
+                          Retry
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
                 ) : topSellers?.items && topSellers.items.length > 0 ? (
                   topSellers.items.map((product) => {
                     const share = stats?.revenue
@@ -727,6 +800,22 @@ export default function AnalyticsPage() {
                   </div>
                 </div>
               ))
+            ) : ordersError ? (
+              <div className="py-10 text-center flex flex-col items-center gap-3 bg-red-50/10 rounded">
+                <AlertCircle size={20} className="text-red-500" />
+                <p className="text-xs font-bold text-red-500">
+                  Failed to load recent orders
+                </p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => refetchOrders()}
+                  className="text-red-600 hover:bg-red-100 text-[10px] font-black uppercase tracking-widest"
+                >
+                  <RefreshCw size={12} className="mr-2" />
+                  Retry
+                </Button>
+              </div>
             ) : recentOrders && recentOrders.length > 0 ? (
               recentOrders.slice(0, 5).map((order) => (
                 <div key={order.id} className="flex gap-4 group">
@@ -780,11 +869,23 @@ export default function AnalyticsPage() {
                 <div className="flex items-end justify-between">
                   <div>
                     <h3 className="text-3xl font-black tracking-tighter">
-                      {loadingBoosts ? "..." : activeBoosts?.length || 0}
+                      {loadingBoosts
+                        ? "..."
+                        : boostsError
+                          ? "N/A"
+                          : activeBoosts?.length || 0}
                     </h3>
                     <p className="text-[9px] font-bold text-gray-400 uppercase mt-1">
                       Live Campaigns
                     </p>
+                    {boostsError && (
+                      <button
+                        onClick={() => refetchBoosts()}
+                        className="mt-2 flex items-center gap-1 text-[9px] font-black text-red-400 uppercase tracking-widest hover:text-red-300 transition-colors"
+                      >
+                        <RefreshCw size={10} /> Retry
+                      </button>
+                    )}
                   </div>
                   <Link
                     href="/ads"
@@ -810,7 +911,28 @@ export default function AnalyticsPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-            <div className="space-y-6">
+            {statsError || productStatsError ? (
+              <div className="md:col-span-2 py-10 text-center flex flex-col items-center gap-3 bg-red-50/10 rounded">
+                <AlertCircle size={20} className="text-red-500" />
+                <p className="text-xs font-bold text-red-500">
+                  Failed to load conversion data
+                </p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    refetchStats();
+                    refetchProductStats();
+                  }}
+                  className="text-red-600 hover:bg-red-100 text-[10px] font-black uppercase tracking-widest"
+                >
+                  <RefreshCw size={12} className="mr-2" />
+                  Retry
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-6">
               <div className="p-6 rounded-2xl bg-gray-50/50 border border-gray-100 group hover:border-gold transition-all duration-500">
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
                   Avg. Conversion Rate
@@ -874,6 +996,8 @@ export default function AnalyticsPage() {
                 </div>
               </div>
             </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -887,7 +1011,23 @@ export default function AnalyticsPage() {
           </div>
 
           <div className="space-y-6">
-            {categories ? (
+            {categoriesError ? (
+              <div className="py-10 text-center flex flex-col items-center gap-3 bg-red-50/10 rounded">
+                <AlertCircle size={20} className="text-red-500" />
+                <p className="text-xs font-bold text-red-500">
+                  Failed to load categories
+                </p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => refetchCategories()}
+                  className="text-red-600 hover:bg-red-100 text-[10px] font-black uppercase tracking-widest"
+                >
+                  <RefreshCw size={12} className="mr-2" />
+                  Retry
+                </Button>
+              </div>
+            ) : categories ? (
               categories.slice(0, 4).map((cat, i) => {
                 // Mocked distribution based on real category names
                 const distribution = [45, 25, 20, 10];
