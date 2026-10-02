@@ -150,7 +150,7 @@ export default function OnboardingPage() {
       description: "",
       agreedToTerms: false,
     },
-    mode: "onBlur",
+    mode: "onChange",
   });
 
   // Subscriptions

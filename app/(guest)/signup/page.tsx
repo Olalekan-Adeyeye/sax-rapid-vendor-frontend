@@ -73,7 +73,7 @@ export default function SignupPage() {
       confirmPassword: "",
       phoneNumber: "",
     },
-    mode: "onBlur",
+    mode: "onChange",
   });
 
   const countryCode = useWatch({ control, name: "countryCode" });
