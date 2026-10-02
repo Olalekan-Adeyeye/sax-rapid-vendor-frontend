@@ -13,17 +13,20 @@ import {
 	X,
 	AlertTriangle,
 	ChevronDown,
+	Navigation,
+	RefreshCw,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import React, { useState } from "react";
 
 import { FullPageLoader } from "@/components/common/FullPageLoader";
 import { Button } from "@/components/ui/Button";
+import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
 import { Dropdown, DropdownItem, DropdownDivider } from "@/components/ui/Dropdown";
 import { ErrorComponent } from "@/components/ui/ErrorComponent";
 import * as deliveryService from "@/lib/api/services/delivery";
 import * as ordersService from "@/lib/api/services/orders";
-import { DeliveryProvider } from "@/lib/api/types/delivery.types";
+import { DeliveryProvider, DeliveryStatus } from "@/lib/api/types/delivery.types";
 import { OrderStatus } from "@/lib/api/types/orders.types";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useToast } from "@/lib/context/ToastContext";
@@ -51,6 +54,33 @@ function getStatusIcon(status: OrderStatus) {
 	}
 }
 
+const TERMINAL_DELIVERY_STATUSES = ["Delivered", "Failed", "Cancelled"];
+
+const ADVANCE_DELIVERY_STATUSES: DeliveryStatus[] = [
+	"Requested",
+	"RiderAssigned",
+	"PickedUp",
+	"InTransit",
+	"Delivered",
+];
+
+function toDeliveryProvider(name: string): DeliveryProvider {
+	const normalized = name.toLowerCase();
+	if (normalized.includes("uber")) return "Uber";
+	if (normalized.includes("bolt")) return "Bolt";
+	if (normalized.includes("sendbox")) return "Sendbox";
+	if (normalized.includes("courier")) return "TheCourierGuy";
+	return "Manual";
+}
+
+function getDeliveryStatusColor(status: string): string {
+	if (status === "Delivered") return "bg-green-50 text-green-600";
+	if (status === "Failed" || status === "Cancelled") return "bg-red-50 text-red-500";
+	if (["InTransit", "PickedUp", "RiderAssigned"].includes(status))
+		return "bg-gold/10 text-gold";
+	return "bg-gray-100 text-gray-500";
+}
+
 const VALID_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
 	[OrderStatus.Pending]: [OrderStatus.Confirmed, OrderStatus.Cancelled],
 	[OrderStatus.Confirmed]: [OrderStatus.Processing, OrderStatus.Cancelled],
@@ -75,6 +105,8 @@ export default function OrderDetailsPage() {
 	const { currency: activeCurrency } = useCurrency();
 
 	const [updating, setUpdating] = useState(false);
+	const [deliveryBusy, setDeliveryBusy] = useState(false);
+	const [isCancelDeliveryOpen, setIsCancelDeliveryOpen] = useState(false);
 	const queryClient = useQueryClient();
 
 	const {
@@ -85,6 +117,53 @@ export default function OrderDetailsPage() {
 		queryKey: ["order", orderId],
 		queryFn: () => ordersService.getOrderById(orderId),
 		enabled: !!orderId && isAuthenticated,
+	});
+
+	const {
+		data: deliveryStatus,
+		error: deliveryStatusError,
+		isLoading: loadingDeliveryStatus,
+		refetch: refetchDeliveryStatus,
+	} = useQuery({
+		queryKey: ["delivery-status", orderId],
+		queryFn: () => deliveryService.getDeliveryStatus(orderId),
+		enabled: !!orderId && isAuthenticated,
+		retry: false,
+	});
+
+	const deliveryMissing =
+		deliveryStatusError != null &&
+		(deliveryStatusError as { response?: { status?: number } })?.response
+			?.status === 404;
+	const deliveryId = deliveryService.normalizeDeliveryId(deliveryStatus);
+	const deliveryTerminal = TERMINAL_DELIVERY_STATUSES.includes(
+		deliveryStatus?.status || "",
+	);
+	const canDispatch = order?.status === OrderStatus.Shipped;
+
+	const {
+		data: quotes,
+		isLoading: loadingQuotes,
+		error: quotesError,
+		refetch: refetchQuotes,
+	} = useQuery({
+		queryKey: ["delivery-quotes", orderId],
+		queryFn: () => deliveryService.getDeliveryQuotes(orderId),
+		enabled: !!orderId && isAuthenticated && !!canDispatch && !deliveryId,
+		retry: false,
+	});
+
+	const trackingCode =
+		deliveryStatus?.trackingCode || deliveryStatus?.trackingNumber || null;
+	const providerCode =
+		deliveryStatus?.providerCode || deliveryStatus?.provider || null;
+
+	const { data: tracking, isLoading: loadingTracking } = useQuery({
+		queryKey: ["delivery-tracking", providerCode, trackingCode],
+		queryFn: () =>
+			deliveryService.trackShipment(providerCode as string, trackingCode as string),
+		enabled: !!providerCode && !!trackingCode && isAuthenticated,
+		retry: false,
 	});
 
 	const handleUpdateStatus = async (newStatus: OrderStatus) => {
@@ -107,10 +186,41 @@ export default function OrderDetailsPage() {
 			setUpdating(true);
 			await deliveryService.requestDelivery(orderId, provider);
 			toast("Delivery Requested", `Delivery has been requested via ${provider}`, "success");
-		} catch {
-			toast("Error", "Failed to request delivery", "error");
+			refetchDeliveryStatus();
+			queryClient.invalidateQueries({ queryKey: ["delivery-quotes", orderId] });
+		} catch (err) {
+			toast("Error", getErrorMessage(err), "error");
 		} finally {
 			setUpdating(false);
+		}
+	};
+
+	const handleUpdateDeliveryStatus = async (status: DeliveryStatus) => {
+		if (!deliveryId) return;
+		try {
+			setDeliveryBusy(true);
+			await deliveryService.updateDeliveryStatus(deliveryId, status);
+			toast("Success", `Delivery status updated to ${status}`, "success");
+			refetchDeliveryStatus();
+		} catch (err) {
+			toast("Error", getErrorMessage(err), "error");
+		} finally {
+			setDeliveryBusy(false);
+		}
+	};
+
+	const handleCancelDelivery = async () => {
+		if (!deliveryId) return;
+		try {
+			setDeliveryBusy(true);
+			await deliveryService.cancelDelivery(deliveryId);
+			toast("Success", "Delivery request cancelled", "success");
+			setIsCancelDeliveryOpen(false);
+			refetchDeliveryStatus();
+		} catch (err) {
+			toast("Error", getErrorMessage(err), "error");
+		} finally {
+			setDeliveryBusy(false);
 		}
 	};
 
@@ -167,6 +277,17 @@ export default function OrderDetailsPage() {
 					</p>
 				</div>
 				<div className="flex flex-wrap items-center gap-3">
+					{[OrderStatus.Disputed, OrderStatus.Dispute].includes(order.status) && (
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={() => router.push("/disputes")}
+							className="rounded-full px-6 text-xs font-bold"
+						>
+							<AlertTriangle size={14} className="mr-1 text-red-500" />
+							View Disputes
+						</Button>
+					)}
 					<Button
 					variant="outline"
 					size="sm"
@@ -512,8 +633,229 @@ export default function OrderDetailsPage() {
 							)}
 						</div>
 					</div>
+
+					{/* Delivery & Tracking */}
+					<div className="bg-white border border-gray-100 rounded p-6 space-y-6">
+						<div className="flex items-center gap-3 text-gold">
+							<Truck size={16} />
+							<h4 className="text-sm font-bold text-black">Delivery & Tracking</h4>
+						</div>
+						{loadingDeliveryStatus ? (
+							<div className="space-y-3 animate-pulse">
+								<div className="h-4 bg-gray-50 rounded" />
+								<div className="h-4 bg-gray-50 rounded w-2/3" />
+								<div className="h-4 bg-gray-50 rounded w-1/2" />
+							</div>
+						) : deliveryStatusError && !deliveryMissing ? (
+							<div className="py-6 text-center flex flex-col items-center gap-3 bg-red-50/10 rounded">
+								<AlertTriangle size={20} className="text-red-500" />
+								<p className="text-xs font-bold text-red-500">
+									Failed to load delivery info
+								</p>
+								<Button
+									variant="ghost"
+									size="sm"
+									onClick={() => refetchDeliveryStatus()}
+									className="text-red-600 hover:bg-red-100 text-[10px] font-black uppercase tracking-widest"
+								>
+									<RefreshCw size={12} className="mr-2" />
+									Retry
+								</Button>
+							</div>
+						) : deliveryStatus ? (
+							<div className="space-y-4">
+								<div className="flex items-center justify-between">
+									<span className="text-[12px] font-bold text-gray-400">
+										Status
+									</span>
+									<span
+										className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${getDeliveryStatusColor(deliveryStatus.status || "")}`}
+									>
+										{deliveryStatus.status || "Unknown"}
+									</span>
+								</div>
+								{(deliveryStatus.provider || deliveryStatus.providerCode) && (
+									<div className="flex items-center justify-between">
+										<span className="text-[12px] font-bold text-gray-400">
+											Provider
+										</span>
+										<span className="text-[12px] font-bold text-black">
+											{deliveryStatus.provider || deliveryStatus.providerCode}
+										</span>
+									</div>
+								)}
+								{trackingCode && (
+									<div className="flex items-center justify-between">
+										<span className="text-[12px] font-bold text-gray-400">
+											Tracking Code
+										</span>
+										<span className="text-[12px] font-black text-black tracking-tight">
+											{trackingCode}
+										</span>
+									</div>
+								)}
+								{!deliveryTerminal && deliveryId && (
+									<div className="flex flex-wrap items-center gap-2 pt-2">
+										<Dropdown
+											trigger={
+												<Button variant="black" size="sm" className="rounded-full px-5 text-xs font-bold" disabled={deliveryBusy}>
+													Update Status <ChevronDown size={14} />
+												</Button>
+											}
+										>
+											<div className="px-4 py-2 text-[9px] font-black uppercase tracking-widest text-gray-400">
+												Set Delivery Status
+											</div>
+											<DropdownDivider />
+											{ADVANCE_DELIVERY_STATUSES.filter(
+												(s) => s !== deliveryStatus.status,
+											).map((s) => (
+												<DropdownItem
+													key={s}
+													onClick={() => handleUpdateDeliveryStatus(s)}
+													disabled={deliveryBusy}
+													icon={<Truck size={14} />}
+												>
+													{s}
+												</DropdownItem>
+											))}
+										</Dropdown>
+										<Button
+											variant="ghost"
+											size="sm"
+											onClick={() => setIsCancelDeliveryOpen(true)}
+											disabled={deliveryBusy}
+											className="text-gray-400 hover:text-red-500 text-[10px] font-black uppercase tracking-widest"
+										>
+											<X size={14} className="mr-1" />
+											Cancel Delivery
+										</Button>
+									</div>
+								)}
+								{trackingCode && providerCode && (
+									<div className="pt-4 border-t border-gray-50 space-y-2">
+										<span className="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
+											<Navigation size={10} className="text-gold" />
+											Live Tracking
+										</span>
+										{loadingTracking ? (
+											<div className="h-4 bg-gray-50 rounded animate-pulse" />
+										) : tracking ? (
+											<div className="space-y-2">
+												{tracking.status && (
+													<p className="text-[11px] font-black text-black tracking-tight">
+														{tracking.status}
+													</p>
+												)}
+												{(tracking.location || tracking.currentLocation) && (
+													<p className="text-[11px] font-bold text-gray-500">
+														{tracking.location || tracking.currentLocation}
+													</p>
+												)}
+												{(tracking.updatedAt || tracking.lastUpdate) && (
+													<p className="text-[10px] font-bold text-gray-400">
+														{tracking.updatedAt || tracking.lastUpdate}
+													</p>
+												)}
+											</div>
+										) : (
+											<p className="text-[11px] font-bold text-gray-400">
+												Tracking details unavailable
+											</p>
+										)}
+									</div>
+								)}
+							</div>
+						) : canDispatch ? (
+							<div className="space-y-2">
+								<span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
+									Delivery Quotes
+								</span>
+								{loadingQuotes ? (
+									<div className="space-y-3 animate-pulse">
+										<div className="h-10 bg-gray-50 rounded" />
+										<div className="h-10 bg-gray-50 rounded" />
+									</div>
+								) : quotesError ? (
+									<div className="py-6 text-center flex flex-col items-center gap-3 bg-red-50/10 rounded">
+										<AlertTriangle size={20} className="text-red-500" />
+										<p className="text-xs font-bold text-red-500">
+											Failed to load quotes
+										</p>
+										<Button
+											variant="ghost"
+											size="sm"
+											onClick={() => refetchQuotes()}
+											className="text-red-600 hover:bg-red-100 text-[10px] font-black uppercase tracking-widest"
+										>
+											<RefreshCw size={12} className="mr-2" />
+											Retry
+										</Button>
+									</div>
+								) : quotes && quotes.length > 0 ? (
+									<div className="divide-y divide-gray-50">
+										{quotes.map((quote, i) => {
+											const providerName = deliveryService.normalizeQuoteProvider(quote);
+											return (
+												<div
+													key={`${providerName}-${i}`}
+													className="flex items-center justify-between py-3 gap-3"
+												>
+													<div className="min-w-0">
+														<p className="text-xs font-black text-black truncate">
+															{providerName}
+														</p>
+														<p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+															{quote.eta || quote.estimatedDeliveryTime || "Standard delivery"}
+														</p>
+													</div>
+													<div className="flex items-center gap-3 shrink-0">
+														<span className="text-sm font-black text-black">
+															{formatCurrency(
+																deliveryService.normalizeQuoteAmount(quote),
+																deliveryService.normalizeQuoteCurrency(quote, activeCurrency),
+															)}
+														</span>
+														<Button
+															variant="black"
+															size="sm"
+															disabled={updating}
+															onClick={() => handleRequestDelivery(toDeliveryProvider(providerName))}
+															className="rounded-full px-4 text-[10px] font-black uppercase tracking-widest"
+														>
+															Request
+														</Button>
+													</div>
+												</div>
+											);
+										})}
+									</div>
+								) : (
+									<p className="text-[11px] font-bold text-gray-400 py-2">
+										No delivery quotes available for this order
+									</p>
+								)}
+							</div>
+						) : (
+							<p className="text-[11px] font-bold text-gray-400">
+								No delivery requested yet
+							</p>
+						)}
+					</div>
 				</div>
 			</div>
+
+			<ConfirmDeleteModal
+				isOpen={isCancelDeliveryOpen}
+				onClose={() => setIsCancelDeliveryOpen(false)}
+				onConfirm={handleCancelDelivery}
+				loading={deliveryBusy}
+				title="Cancel Delivery"
+				itemName={deliveryStatus?.provider ?? undefined}
+				itemFallback="this delivery request"
+				keepLabel="Keep Delivery"
+				description="The delivery request will be cancelled. This action cannot be undone."
+			/>
 		</div>
 	);
 }
