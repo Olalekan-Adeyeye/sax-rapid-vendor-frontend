@@ -12,6 +12,9 @@ import {
   Calendar,
   Truck,
   Store,
+  Zap,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
@@ -22,10 +25,13 @@ import { Button } from "@/components/ui/Button";
 import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
 import { ErrorComponent } from "@/components/ui/ErrorComponent";
 import { PageHeader } from "@/components/ui/PageHeader";
+import * as boostService from "@/lib/api/services/boost";
 import * as productsService from "@/lib/api/services/products";
+import type { BoostRecordResponseDTO } from "@/lib/api/types/boost.types";
 import { ProductResponseDTO } from "@/lib/api/types/products.types";
 import { useToast } from "@/lib/context/ToastContext";
 import { useCurrency } from "@/lib/hooks/useCurrency";
+import { formatCurrency } from "@/lib/utils/currency";
 import { getErrorMessage } from "@/lib/utils/errors";
 
 export default function SingleProductPage() {
@@ -40,6 +46,12 @@ export default function SingleProductPage() {
   const [activeImage, setActiveImage] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [boosts, setBoosts] = useState<BoostRecordResponseDTO[]>([]);
+  const [loadingBoosts, setLoadingBoosts] = useState(true);
+  const [boostsError, setBoostsError] = useState<string | null>(null);
+  const [cancelTarget, setCancelTarget] =
+    useState<BoostRecordResponseDTO | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   const fetchProduct = useCallback(async () => {
     try {
@@ -63,6 +75,38 @@ export default function SingleProductPage() {
     setTimeout(() => fetchProduct(), 0);
   }, [fetchProduct]);
 
+  const fetchBoosts = useCallback(async () => {
+    try {
+      setLoadingBoosts(true);
+      setBoostsError(null);
+      const data = await boostService.getBoostsByProduct(productId);
+      setBoosts(data || []);
+    } catch (err) {
+      setBoostsError(getErrorMessage(err));
+    } finally {
+      setLoadingBoosts(false);
+    }
+  }, [productId]);
+
+  useEffect(() => {
+    setTimeout(() => fetchBoosts(), 0);
+  }, [fetchBoosts]);
+
+  const handleCancelBoost = async () => {
+    if (!cancelTarget) return;
+    try {
+      setIsCancelling(true);
+      await boostService.cancelBoost(cancelTarget.id);
+      toast("Success", "Boost cancelled successfully", "success");
+      setCancelTarget(null);
+      fetchBoosts();
+    } catch (err) {
+      toast("Error", getErrorMessage(err), "error");
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
@@ -77,7 +121,8 @@ export default function SingleProductPage() {
     }
   };
 
-  const { currencySymbol } = useCurrency();
+  const { currency: activeCurrency } = useCurrency();
+  const productCurrency = product?.currency || activeCurrency;
 
   const isVariable = product?.productType === "Variable";
 
@@ -233,13 +278,16 @@ export default function SingleProductPage() {
                   </span>
                   <div className="flex flex-col">
                     <p className="text-xl font-black text-gold">
-                      {currencySymbol}
-                      {product.effectivePrice.toLocaleString()}
+                      {product.effectivePrice != null
+                        ? formatCurrency(
+                            product.effectivePrice,
+                            productCurrency,
+                          )
+                        : "—"}
                     </p>
                     {product.effectivePrice < product.basePrice && (
                       <span className="text-xs text-gray-400 line-through font-bold">
-                        {currencySymbol}
-                        {product.basePrice.toLocaleString()}
+                        {formatCurrency(product.basePrice, productCurrency)}
                       </span>
                     )}
                   </div>
@@ -476,8 +524,7 @@ export default function SingleProductPage() {
                         </td>
                         <td className="px-10 py-8">
                           <span className="text-sm font-black text-black">
-                            {currencySymbol}
-                            {v.price.toLocaleString()}
+                            {formatCurrency(v.price, productCurrency)}
                           </span>
                         </td>
                         <td className="px-10 py-8">
@@ -538,6 +585,123 @@ export default function SingleProductPage() {
               </div>
             </div>
           )}
+
+          {/* Boost History */}
+          <div className="bg-white border border-gray-100 rounded p-10 py-4 space-y-8">
+            <div className="flex items-center justify-between border-b border-gray-50 pb-4">
+              <h4 className="text-sm font-black text-black uppercase tracking-widest flex items-center gap-2">
+                <Zap size={14} className="text-gold" />
+                Boost History
+              </h4>
+              <span className="text-[10px] font-black text-gold bg-gold/5 px-4 py-2 rounded uppercase tracking-widest">
+                {boosts.length} Total
+              </span>
+            </div>
+            {loadingBoosts ? (
+              <div className="space-y-4">
+                {[1, 2].map((i) => (
+                  <div key={i} className="flex items-center gap-4 animate-pulse">
+                    <div className="w-12 h-12 bg-gray-50 rounded" />
+                    <div className="flex-1 h-4 bg-gray-50 rounded" />
+                    <div className="w-24 h-4 bg-gray-50 rounded" />
+                  </div>
+                ))}
+              </div>
+            ) : boostsError ? (
+              <div className="py-8 text-center flex flex-col items-center gap-3 bg-red-50/10 rounded">
+                <AlertCircle size={20} className="text-red-500" />
+                <p className="text-xs font-bold text-red-500">
+                  Failed to load boost history
+                </p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => fetchBoosts()}
+                  className="text-red-600 hover:bg-red-100 text-[10px] font-black uppercase tracking-widest"
+                >
+                  <RefreshCw size={12} className="mr-2" />
+                  Retry
+                </Button>
+              </div>
+            ) : boosts.length > 0 ? (
+              <div className="divide-y divide-gray-50">
+                {boosts.map((boost) => {
+                  const cancellable =
+                    boost.status === "Active" || boost.status === "Pending";
+                  return (
+                    <div
+                      key={boost.id}
+                      className="py-5 flex flex-col sm:flex-row sm:items-center gap-4 group"
+                    >
+                      <div className="w-12 h-12 rounded bg-gold/5 flex items-center justify-center text-gold shrink-0">
+                        <Zap size={20} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <p className="text-sm font-black text-black">
+                            {boost.boostType}
+                          </p>
+                          <span
+                            className={`text-[8px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${
+                              boost.status === "Active"
+                                ? "bg-green-50 text-green-600"
+                                : boost.status === "Pending"
+                                  ? "bg-amber-50 text-amber-600"
+                                  : "bg-gray-100 text-gray-400"
+                            }`}
+                          >
+                            {boost.status}
+                          </span>
+                        </div>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                          {boost.durationDays} Days •{" "}
+                          {formatCurrency(
+                            boost.totalAmount ?? boost.amount ?? 0,
+                            productCurrency,
+                          )}{" "}
+                          •{" "}
+                          {boost.startDate
+                            ? new Date(boost.startDate).toLocaleDateString()
+                            : "—"}{" "}
+                          —{" "}
+                          {boost.endDate
+                            ? new Date(boost.endDate).toLocaleDateString()
+                            : "—"}
+                        </p>
+                      </div>
+                      {cancellable && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setCancelTarget(boost)}
+                          className="text-gray-300 hover:text-red-500 text-[10px] font-black uppercase tracking-widest shrink-0"
+                        >
+                          <Trash2 size={14} className="mr-2" />
+                          Cancel
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="py-6 text-center text-xs font-bold text-gray-400">
+                This product has never been boosted
+              </p>
+            )}
+          </div>
+
+          <ConfirmDeleteModal
+            isOpen={!!cancelTarget}
+            onClose={() => setCancelTarget(null)}
+            onConfirm={handleCancelBoost}
+            loading={isCancelling}
+            title="Cancel Boost"
+            itemName={cancelTarget?.boostType ?? undefined}
+            itemFallback="this boost"
+            keepLabel="Keep Boost"
+            description="The boost will stop running immediately. This action cannot be undone."
+          />
 
           {/* Performance Preview */}
           <div className="bg-black text-white rounded p-10 space-y-8 flex flex-col justify-between">

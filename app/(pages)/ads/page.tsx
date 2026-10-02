@@ -7,12 +7,14 @@ import {
   AlertCircle,
   CheckCircle,
   ShoppingBag,
+  Trash2,
 } from "lucide-react";
 import React, { useState } from "react";
 
 import { EmptyState } from "@/components/common/EmptyState";
 import { FullPageLoader } from "@/components/common/FullPageLoader";
 import { Button } from "@/components/ui/Button";
+import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
 import { ErrorComponent } from "@/components/ui/ErrorComponent";
 import { Modal } from "@/components/ui/Modal";
 import { OptionPickerModal } from "@/components/ui/OptionPickerModal";
@@ -23,6 +25,7 @@ import {
   getBoostPricing,
   getMyBoosts,
   boostProduct,
+  cancelBoost,
 } from "@/lib/api/services/boost";
 import { getProducts } from "@/lib/api/services/products";
 import { getMyVendorProfile } from "@/lib/api/services/vendor";
@@ -48,6 +51,10 @@ export default function BoostAdsPage() {
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [boostsPage, setBoostsPage] = useState(1);
   const BOOSTS_PER_PAGE = 10;
+  const [cancelTarget, setCancelTarget] = useState<{
+    id: string;
+    productName: string | null;
+  } | null>(null);
 
   const countryName =
     getCountryByPhoneCode(user?.countryCode ?? "")?.name || null;
@@ -138,6 +145,18 @@ export default function BoostAdsPage() {
       setIsModalOpen(false);
       queryClient.invalidateQueries({ queryKey: ["my-boosts"] });
       queryClient.invalidateQueries({ queryKey: ["vendor-wallet"] });
+    },
+    onError: (error) => {
+      toast("Error", getErrorMessage(error), "error");
+    },
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: cancelBoost,
+    onSuccess: () => {
+      toast("Success", "Boost cancelled successfully", "success");
+      setCancelTarget(null);
+      queryClient.invalidateQueries({ queryKey: ["my-boosts"] });
     },
     onError: (error) => {
       toast("Error", getErrorMessage(error), "error");
@@ -273,6 +292,9 @@ export default function BoostAdsPage() {
                 <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">
                   Status
                 </th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 text-right">
+                  Action
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -304,11 +326,29 @@ export default function BoostAdsPage() {
                         {p.status}
                       </span>
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      {(p.status === "Active" || p.status === "Pending") && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            setCancelTarget({
+                              id: p.id,
+                              productName: p.productName,
+                            })
+                          }
+                          className="text-gray-300 hover:text-red-500 text-[10px] font-black uppercase tracking-widest"
+                        >
+                          <Trash2 size={14} />
+                          Cancel
+                        </Button>
+                      )}
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5}>
+                  <td colSpan={6}>
                     <EmptyState
                       icon={AlertCircle}
                       title="No active promotions found"
@@ -443,6 +483,17 @@ export default function BoostAdsPage() {
           </p>
         </div>
       </Modal>
+      <ConfirmDeleteModal
+        isOpen={!!cancelTarget}
+        onClose={() => setCancelTarget(null)}
+        onConfirm={() => cancelTarget && cancelMutation.mutate(cancelTarget.id)}
+        loading={cancelMutation.isPending}
+        title="Cancel Boost"
+        itemName={cancelTarget?.productName ?? undefined}
+        itemFallback="this promotion"
+        keepLabel="Keep Promotion"
+        description="The promotion will stop running immediately. This action cannot be undone."
+      />
     </div>
   );
 }
