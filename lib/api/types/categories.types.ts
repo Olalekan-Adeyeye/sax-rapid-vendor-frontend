@@ -1,3 +1,5 @@
+import type { BrandResponseDTO } from "./brands.types";
+
 export interface CategoryResponseDTO {
 	id: number;
 	name: string | null;
@@ -8,6 +10,7 @@ export interface CategoryResponseDTO {
 	displayOrder: number;
 	isActive: boolean;
 	createdAt: string;
+	brands?: BrandResponseDTO[] | null;
 	subCategories: CategoryResponseDTO[] | null;
 }
 
@@ -16,8 +19,8 @@ export interface CreateCategoryRequestDTO {
 	description?: string | null;
 	parentId?: number | null;
 	iconUrl?: string | null;
-	isActive: boolean;
-	displayOrder: number;
+	isActive?: boolean;
+	displayOrder?: number;
 }
 
 export interface UpdateCategoryRequestDTO {

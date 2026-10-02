@@ -19,10 +19,10 @@ export interface CreateAddressRequestDTO {
   addressLine: string;
   label: string;
   tag?: AddressTag;
-  city?: string | null;
-  state?: string | null;
-  country?: string | null;
-  postalCode?: string | null;
+  city: string;
+  state: string;
+  country: string;
+  postalCode: string;
   latitude?: number | null;
   longitude?: number | null;
   isDefault?: boolean;

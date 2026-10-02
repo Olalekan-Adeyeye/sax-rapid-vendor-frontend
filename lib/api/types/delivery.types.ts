@@ -1,4 +1,9 @@
-export type DeliveryProvider = "Uber" | "Bolt" | "Manual";
+export type DeliveryProvider =
+  | "Uber"
+  | "Bolt"
+  | "Manual"
+  | "Sendbox"
+  | "TheCourierGuy";
 
 export type DeliveryStatus =
   | "Pending"

@@ -32,12 +32,13 @@ import { getNotifications } from "@/lib/api/services/notifications";
 import { getVendorOrders } from "@/lib/api/services/orders";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useCurrency } from "@/lib/hooks/useCurrency";
-import { formatCurrency } from "@/lib/utils/currency";
+import { formatCurrency, resolveCurrency } from "@/lib/utils/currency";
 import { getRelativeTime, formatDate } from "@/lib/utils/date";
 import { getOrderStatusColor } from "@/lib/utils/orderStatus";
 
 export default function DashboardOverview() {
   const { isAuthenticated } = useAuth();
+  const { currency: regionCurrency } = useCurrency();
   const {
     data: orders,
     isLoading: loadingOrders,
@@ -63,8 +64,8 @@ export default function DashboardOverview() {
     isLoading: loadingDashboardStats,
     error: dashboardStatsError,
   } = useQuery({
-    queryKey: ["vendor-analytics-dashboard"],
-    queryFn: () => getVendorDashboardStats(),
+    queryKey: ["vendor-analytics-dashboard", regionCurrency],
+    queryFn: () => getVendorDashboardStats({ currency: regionCurrency }),
     enabled: isAuthenticated,
   });
 
@@ -73,10 +74,11 @@ export default function DashboardOverview() {
     isLoading: loadingPerformance,
     error: performanceError,
   } = useQuery({
-    queryKey: ["vendor-analytics-performance"],
+    queryKey: ["vendor-analytics-performance", regionCurrency],
     queryFn: () =>
       getVendorPerformanceAnalytics({
         groupBy: "Month",
+        currency: regionCurrency,
       }),
     enabled: isAuthenticated,
   });
@@ -86,11 +88,12 @@ export default function DashboardOverview() {
     isLoading: loadingTopSellers,
     error: topSellersError,
   } = useQuery({
-    queryKey: ["vendor-analytics-top-sellers"],
+    queryKey: ["vendor-analytics-top-sellers", regionCurrency],
     queryFn: () =>
       getVendorTopSellers({
         pageNumber: 1,
         pageSize: 3,
+        currency: regionCurrency,
       }),
     enabled: isAuthenticated,
   });
@@ -106,7 +109,10 @@ export default function DashboardOverview() {
   const latestOrders = orders || [];
   const topSellerItems = topSellers?.items || [];
 
-  const { currency: activeCurrency } = useCurrency();
+  const activeCurrency = resolveCurrency(
+    dashboardStats?.currency,
+    regionCurrency,
+  );
 
   const isInitialLoading = loadingDashboardStats && !dashboardStats;
   if (isInitialLoading) {
@@ -143,11 +149,7 @@ export default function DashboardOverview() {
               : formatCurrency(dashboardStats?.revenue || 0, activeCurrency)
           }
           isError={!!dashboardStatsError}
-          detail={
-            dashboardStats?.currency
-              ? `in ${dashboardStats.currency}`
-              : "Available earnings"
-          }
+          detail={`in ${activeCurrency}`}
           isLoading={loadingDashboardStats}
           variant="dark"
         />

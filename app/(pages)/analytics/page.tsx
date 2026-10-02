@@ -32,7 +32,7 @@ import { getVendorOrders } from "@/lib/api/services/orders";
 import { getProductStats } from "@/lib/api/services/products";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useCurrency } from "@/lib/hooks/useCurrency";
-import { formatCurrency } from "@/lib/utils/currency";
+import { formatCurrency, resolveCurrency } from "@/lib/utils/currency";
 import { formatDate } from "@/lib/utils/date";
 
 type TimeRange = "7D" | "30D" | "1Y" | "ALL";
@@ -44,19 +44,22 @@ export default function AnalyticsPage() {
     "revenue",
   );
 
+  const { currency: regionCurrency } = useCurrency();
+
   const queryParams = useMemo(() => {
     const now = new Date();
     const from = new Date();
     if (timeRange === "7D") from.setDate(now.getDate() - 7);
     else if (timeRange === "30D") from.setDate(now.getDate() - 30);
     else if (timeRange === "1Y") from.setFullYear(now.getFullYear() - 1);
-    else return {};
+    else return { currency: regionCurrency };
 
     return {
       dateFrom: from.toISOString(),
       dateTo: now.toISOString(),
+      currency: regionCurrency,
     };
-  }, [timeRange]);
+  }, [timeRange, regionCurrency]);
 
   const {
     data: stats,
@@ -125,13 +128,13 @@ export default function AnalyticsPage() {
     return recentOrders.filter((o) => o.status === "Pending").length;
   }, [recentOrders]);
 
-  const { currency: activeCurrency } = useCurrency();
+  const activeCurrency = resolveCurrency(stats?.currency, regionCurrency);
 
   const statCards = [
     {
       label: "Total Revenue",
       value: loadingStats ? "..." : formatCurrency(stats?.revenue || 0, activeCurrency),
-      detail: stats?.currency ? `in ${stats.currency}` : "Total earnings",
+      detail: `in ${activeCurrency}`,
       icon: DollarSign,
       dark: true,
     },

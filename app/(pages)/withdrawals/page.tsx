@@ -24,7 +24,7 @@ import * as walletService from "@/lib/api/services/wallet";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useToast } from "@/lib/context/ToastContext";
 import { useCurrency } from "@/lib/hooks/useCurrency";
-import { formatCurrency } from "@/lib/utils/currency";
+import { formatCurrency, resolveCurrency } from "@/lib/utils/currency";
 import { formatDate } from "@/lib/utils/date";
 import { getErrorMessage } from "@/lib/utils/errors";
 
@@ -38,13 +38,15 @@ export default function PayoutsPage() {
 
   const { toast } = useToast();
   const { isAuthenticated } = useAuth();
-  const { currency: activeCurrency } = useCurrency();
+  const { currency: regionCurrency } = useCurrency();
 
   const { data: wallet, isLoading: loadingWallet } = useQuery({
     queryKey: ["vendor-wallet"],
     queryFn: walletService.getWalletDetails,
     enabled: isAuthenticated,
   });
+
+  const activeCurrency = resolveCurrency(wallet?.currency, regionCurrency);
 
   const { data: bankAccounts = [] } = useQuery({
     queryKey: ["bank-accounts"],

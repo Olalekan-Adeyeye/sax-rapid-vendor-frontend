@@ -15,11 +15,10 @@ export type PaymentStatus =
   | "Cancelled";
 
 export interface InitializePaymentRequestDTO {
-  amount: number;
-  email: string;
+  orderId: string;
   gateway: PaymentGateway;
+  email: string;
   callbackUrl?: string | null;
-  metadata?: Record<string, unknown> | null;
 }
 
 export interface InitializePaymentResponseDTO {

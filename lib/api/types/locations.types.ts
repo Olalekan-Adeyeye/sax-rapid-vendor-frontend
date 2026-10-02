@@ -16,3 +16,13 @@ export interface StateResponseDTO {
   countryName: string | null;
   isActive: boolean;
 }
+
+export interface CityResponseDTO {
+  id: number;
+  name: string | null;
+  stateId: number;
+  stateName: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  isActive: boolean;
+}

@@ -5,12 +5,12 @@
 export interface ConversationResponseDTO {
   id: string; // uuid
   buyerId: string;
-  buyerName: string;
+  buyerName: string | null;
   vendorId: string;
-  vendorName: string;
+  vendorName: string | null;
   orderId: string | null;
   lastMessage: MessageResponseDTO | null;
-  lastMessageAt: string;
+  lastMessageAt: string | null;
   unreadCount: number;
   createdAt: string;
 }

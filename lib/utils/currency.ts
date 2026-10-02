@@ -1,4 +1,6 @@
-import { getCountryByPhoneCode } from "./countries";
+import { getCountryByPhoneCode, getCurrencySymbol } from "./countries";
+
+export { getCurrencySymbol };
 
 export function deriveCurrencyFromPhoneCode(phoneCode?: string | null): {
   currency: string;
@@ -37,4 +39,13 @@ export function formatCurrency(
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(amount);
+}
+
+export function resolveCurrency(
+  ...candidates: Array<string | null | undefined>
+): string {
+  for (const candidate of candidates) {
+    if (candidate && candidate.trim()) return candidate.trim();
+  }
+  return "NGN";
 }

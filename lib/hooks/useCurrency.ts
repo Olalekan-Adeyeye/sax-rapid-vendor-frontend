@@ -5,16 +5,29 @@ import { useAuth } from "@/lib/context/AuthContext";
 import {
   deriveCurrencyFromPhoneCode,
   formatCurrency,
+  getCurrencySymbol,
   getLocaleForCurrency,
 } from "@/lib/utils/currency";
 
 export function useCurrency() {
-  const { user } = useAuth();
+  const { user, vendorProfile } = useAuth();
 
-  const info = useMemo(
+  const region = useMemo(
     () => deriveCurrencyFromPhoneCode(user?.countryCode),
     [user?.countryCode],
   );
+
+  const vendorCurrency = vendorProfile?.currency?.trim() || undefined;
+
+  const info = useMemo(() => {
+    const currency = vendorCurrency || region.currency;
+    return {
+      currency,
+      currencySymbol: vendorCurrency
+        ? getCurrencySymbol(vendorCurrency)
+        : region.currencySymbol,
+    };
+  }, [vendorCurrency, region.currency, region.currencySymbol]);
 
   const locale = useMemo(
     () => getLocaleForCurrency(info.currency),

@@ -1,6 +1,7 @@
 import apiClient from "../apiClient";
 import type { ApiResponse } from "../types/auth.types";
 import type {
+  CityResponseDTO,
   CountryResponseDTO,
   StateResponseDTO,
 } from "../types/locations.types";
@@ -56,8 +57,8 @@ export async function getStateById(id: number): Promise<StateResponseDTO> {
  * GET /api/Location/states/{stateId}/cities
  * Get cities by state ID
  */
-export async function getCitiesByState(stateId: number): Promise<string[]> {
-  const response = await apiClient.get<ApiResponse<string[]>>(`${BASE}/states/${stateId}/cities`);
+export async function getCitiesByState(stateId: number): Promise<CityResponseDTO[]> {
+  const response = await apiClient.get<ApiResponse<CityResponseDTO[]>>(`${BASE}/states/${stateId}/cities`);
   return response.data.data;
 }
 
@@ -65,7 +66,7 @@ export async function getCitiesByState(stateId: number): Promise<string[]> {
  * GET /api/Location/cities/{id}
  * Get city by ID
  */
-export async function getCityById(id: number): Promise<string> {
-  const response = await apiClient.get<ApiResponse<string>>(`${BASE}/cities/${id}`);
+export async function getCityById(id: number): Promise<CityResponseDTO> {
+  const response = await apiClient.get<ApiResponse<CityResponseDTO>>(`${BASE}/cities/${id}`);
   return response.data.data;
 }

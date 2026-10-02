@@ -109,6 +109,9 @@ export default function SubscriptionPlansPage() {
   const history = historyData || [];
   const loading = loadingPlans || loadingSub;
 
+  const hasActiveSub = mySub?.isActive ?? mySub?.status === "Active";
+  const mySubPlanName = mySub?.planName ?? mySub?.plan?.name ?? "";
+
   const handleSubscribe = async () => {
     if (!confirmPlan) return;
     subscribeMutation.mutate({
@@ -286,7 +289,7 @@ export default function SubscriptionPlansPage() {
                 </div>
               </div> */}
 
-            {mySub?.isActive ? (
+            {hasActiveSub ? (
               <div className="bg-black text-white rounded p-6 lg:p-8 relative overflow-hidden group">
                 <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/5 rounded group-hover:bg-gold/10 transition-colors" />
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gold/5 blur-3xl rounded" />
@@ -309,12 +312,15 @@ export default function SubscriptionPlansPage() {
                           </span>
                         </div>
                         <h3 className="text-xl font-black text-white uppercase tracking-tighter truncate">
-                          {mySub.planName}
+                          {mySubPlanName}
                           <span className="text-gold mx-2">•</span>
-                          {mySub.billingCycle}
+                          {mySub?.billingCycle}
                         </h3>
                         <p className="text-[10px] font-bold text-gray-500 mt-1 uppercase tracking-widest">
-                          Expires {new Date(mySub.endDate).toLocaleDateString()}
+                          Expires{" "}
+                          {mySub?.endDate
+                            ? new Date(mySub.endDate).toLocaleDateString()
+                            : "—"}
                         </p>
                       </div>
                     </div>
@@ -393,14 +399,14 @@ export default function SubscriptionPlansPage() {
                         <td className="px-8 py-6 flex items-center gap-3">
                           <Shield size={14} className="text-gold" />
                           <span className="text-sm font-black text-black uppercase">
-                            {item.planName}
+                            {item.planName ?? item.plan?.name ?? "—"}
                           </span>
                         </td>
                         <td className="px-8 py-6 text-xs font-medium text-gray-500">
                           {item.billingCycle}
                         </td>
                         <td className="px-8 py-6 text-right font-black text-black">
-                          {formatCurrency(item.amount, activeCurrency)}
+                          {formatCurrency(item.amount ?? item.amountPaid ?? 0, activeCurrency)}
                         </td>
                         <td className="px-8 py-6 text-xs font-medium text-gray-400">
                           {new Date(item.startDate).toLocaleDateString()} -{" "}
@@ -470,9 +476,9 @@ export default function SubscriptionPlansPage() {
           {plans.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {plans.map((plan) => {
-                const Icon = getPlanIcon(plan.name);
-                const tier = getPlanTier(plan.name);
-                const isCurrentPlan = mySub?.isActive && mySub?.planId === plan.id && mySub?.billingCycle === (isYearly ? "Yearly" : "Monthly");
+                const Icon = getPlanIcon(plan.name ?? "");
+                const tier = getPlanTier(plan.name ?? "");
+                const isCurrentPlan = hasActiveSub && mySub?.planId === plan.id && mySub?.billingCycle === (isYearly ? "Yearly" : "Monthly");
                 const isPremium = tier === "premium";
                 const price = isYearly ? plan.yearlyPrice : plan.monthlyPrice;
 

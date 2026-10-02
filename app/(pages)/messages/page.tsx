@@ -74,8 +74,8 @@ export default function MessagesPage() {
       conversations.filter((c) => {
         const q = searchQuery.toLowerCase();
         return (
-          c.buyerName.toLowerCase().includes(q) ||
-          c.vendorName.toLowerCase().includes(q)
+          (c.buyerName ?? "").toLowerCase().includes(q) ||
+          (c.vendorName ?? "").toLowerCase().includes(q)
         );
       }),
     [conversations, searchQuery],
@@ -279,7 +279,9 @@ export default function MessagesPage() {
                                   {otherParticipant.name}
                                 </h4>
                                 <span className="text-xs font-bold text-gray-400">
-                                  {getRelativeTime(chat.lastMessageAt)}
+                                  {getRelativeTime(
+                                    chat.lastMessageAt ?? chat.createdAt,
+                                  )}
                                 </span>
                               </div>
                               <p

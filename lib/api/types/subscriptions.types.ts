@@ -57,6 +57,9 @@ export interface VendorSubscriptionResponse {
   endDate: string; // ISO 8601
   isActive: boolean;
   isCancelled: boolean;
+  status?: string | null;
+  amountPaid?: number | null;
+  plan?: SubscriptionPlanResponse | null;
 }
 
 /** Returned by GET /api/Subscription/my/history */
@@ -68,4 +71,6 @@ export interface SubscriptionHistoryItem {
   status: string;
   startDate: string; // ISO 8601
   endDate: string; // ISO 8601
+  amountPaid?: number | null;
+  plan?: SubscriptionPlanResponse | null;
 }

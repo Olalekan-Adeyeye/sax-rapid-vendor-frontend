@@ -22,7 +22,7 @@ import { FundWalletModal } from "@/components/wallet/FundWalletModal";
 import * as walletService from "@/lib/api/services/wallet";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useCurrency } from "@/lib/hooks/useCurrency";
-import { formatCurrency } from "@/lib/utils/currency";
+import { formatCurrency, resolveCurrency } from "@/lib/utils/currency";
 import { getRelativeTime } from "@/lib/utils/date";
 import { getErrorMessage } from "@/lib/utils/errors";
 
@@ -45,7 +45,7 @@ export default function WalletPage() {
     enabled: isAuthenticated,
   });
 
-  const activeCurrency = wallet?.currency || regionCurrency;
+  const activeCurrency = resolveCurrency(wallet?.currency, regionCurrency);
   const transactions = wallet?.recentTransactions || [];
   const error = walletError ? getErrorMessage(walletError) : null;
   const loadingTransactions = loadingWallet;

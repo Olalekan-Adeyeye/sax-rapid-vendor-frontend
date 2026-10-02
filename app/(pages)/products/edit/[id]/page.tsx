@@ -32,7 +32,6 @@ import { Input } from "@/components/ui/Input";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Select } from "@/components/ui/Select";
 import { TextArea } from "@/components/ui/TextArea";
-import * as brandsService from "@/lib/api/services/brands";
 import * as categoriesService from "@/lib/api/services/categories";
 import * as filesService from "@/lib/api/services/files";
 import * as productsService from "@/lib/api/services/products";
@@ -56,7 +55,7 @@ export default function EditProductPage() {
   const params = useParams();
   const productId = params.id as string;
   const { toast } = useToast();
-  const { currencySymbol } = useCurrency();
+  const { currencySymbol, currency: activeCurrency } = useCurrency();
 
   const [categories, setCategories] = useState<CategoryResponseDTO[]>([]);
   const [selectedMainCategoryId, setSelectedMainCategoryId] = useState("");
@@ -98,13 +97,6 @@ export default function EditProductPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
-
-  const { data: brands = [] } = useQuery({
-    queryKey: ["brands"],
-    queryFn: brandsService.getBrands,
-    staleTime: 10 * 60 * 1000,
-    enabled: isAuthenticated,
-  });
 
   const { data: dispatchOptions = [] } = useQuery({
     queryKey: ["dispatchOptions"],
@@ -181,6 +173,21 @@ export default function EditProductPage() {
 
 	const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
 	const [isUploading, setIsUploading] = useState(false);
+
+  const categoryIdNumber = Number(categoryId);
+  const selectedCategory = useMemo(() => {
+    if (!categoryId || Number.isNaN(categoryIdNumber)) return undefined;
+    const stack = [...categories];
+    while (stack.length > 0) {
+      const cat = stack.pop();
+      if (!cat) continue;
+      if (cat.id?.toString() === categoryId) return cat;
+      if (cat.subCategories) stack.push(...cat.subCategories);
+    }
+    return undefined;
+  }, [categories, categoryId, categoryIdNumber]);
+  const categoryBrands = selectedCategory?.brands ?? [];
+  const loadingCategoryBrands = loadingCategories;
 
 	// Bulk variation pricing state
 	const [bulkPrice, setBulkPrice] = useState("");
@@ -539,8 +546,8 @@ export default function EditProductPage() {
       // 2. Upload variation images (batch)
       const variationImageUrls: Record<string, string> = { ...varUrls };
       const variationsToUpload = Object.entries(varImages)
-        .filter(([, imgs]) => imgs.length > 0)
-        .map(([id, imgs]) => ({ id, file: imgs[0].file }));
+        .filter(([, imgs]) => imgs.length > 0 && !!imgs[0].file)
+        .map(([id, imgs]) => ({ id, file: imgs[0].file as File }));
       if (variationsToUpload.length > 0 && varDirty) {
         setIsUploading(true);
         try {
@@ -576,6 +583,7 @@ export default function EditProductPage() {
         brandId: rawForm.brandId ? Number(rawForm.brandId) : null,
         dispatchOptionId: rawForm.dispatchOptionId ? Number(rawForm.dispatchOptionId) : null,
         basePrice: Number(data.regularPrice || 0),
+        currency: activeCurrency,
         salePrice: data.salePrice ? Number(data.salePrice) : null,
         salePriceStartDate: data.saleStartDate || null,
         salePriceEndDate: data.saleEndDate || null,
@@ -632,6 +640,7 @@ export default function EditProductPage() {
             const val = e.target.value;
             setSelectedMainCategoryId(val);
             setValue("categoryId", val);
+            setFieldValue("brandId", "");
           }}
           disabled={loadingCategories}
           options={mainCategories}
@@ -670,6 +679,7 @@ export default function EditProductPage() {
             onChange={(e) => {
               const val = e.target.value;
               setValue("categoryId", val || selectedMainCategoryId);
+              setFieldValue("brandId", "");
             }}
             options={subCategories}
             className="animate-in fade-in slide-in-from-top-1 duration-200"
@@ -682,12 +692,13 @@ export default function EditProductPage() {
         <Select
           id="brand"
           label="Brand"
-          options={brands.map((b: { name: string | null; id: number }) => ({
+          options={categoryBrands.map((b) => ({
             label: b.name || "",
             value: b.id.toString(),
           }))}
           value={formValues.brandId || ""}
           onChange={(e) => setFieldValue("brandId", e.target.value)}
+          disabled={loadingCategoryBrands || !categoryId}
           searchable
         />
         <Input

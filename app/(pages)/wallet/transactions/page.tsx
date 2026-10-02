@@ -17,7 +17,7 @@ import { Pagination } from "@/components/ui/Pagination";
 import * as walletService from "@/lib/api/services/wallet";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useCurrency } from "@/lib/hooks/useCurrency";
-import { formatCurrency } from "@/lib/utils/currency";
+import { formatCurrency, resolveCurrency } from "@/lib/utils/currency";
 import { formatDateTime } from "@/lib/utils/date";
 import { getErrorMessage } from "@/lib/utils/errors";
 
@@ -168,7 +168,7 @@ export default function TransactionLogPage() {
                           {credit ? "+" : "-"}
                           {formatCurrency(
                             t.amount,
-                            t.currency || regionCurrency,
+                            resolveCurrency(t.currency, regionCurrency),
                           )}
                         </span>
                       </td>

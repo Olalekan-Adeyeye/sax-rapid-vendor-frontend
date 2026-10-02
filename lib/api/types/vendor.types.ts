@@ -20,10 +20,11 @@ export interface CreateVendorProfileRequest {
   storeAddress?: string | null;
   storeCity?: string | null;
   storeState?: string | null;
-  storeCountry?: string | null;
   storeLatitude?: number | null;
   storeLongitude?: number | null;
+  storeCountry?: string | null;
   description?: string | null;
+  governmentIdUrl?: string | null;
   category?: string | null;
 }
 
@@ -40,8 +41,11 @@ export interface UpdateVendorProfileRequest {
   storeLongitude?: number | null;
   logoUrl?: string | null;
   bannerUrl?: string | null;
+  storeCountry?: string | null;
   /** Max 2000 chars */
   description?: string | null;
+  selfiePhotoUrl?: string | null;
+  governmentIdUrl?: string | null;
 }
 
 /** POST /api/Vendor/profile/documents – Upload KYC documents */
@@ -70,6 +74,7 @@ export interface VendorProfileResponse {
   storeAddress?: string | null;
   storeCity?: string | null;
   storeState?: string | null;
+  currency?: string | null;
   storeLatitude?: number | null;
   storeLongitude?: number | null;
   logoUrl?: string | null;

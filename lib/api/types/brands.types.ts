@@ -4,6 +4,8 @@ export interface BrandResponseDTO {
   description: string | null;
   logoUrl: string | null;
   isActive: boolean;
+  categoryId: number | null;
+  categoryName: string | null;
   createdAt: string;
 }
 
