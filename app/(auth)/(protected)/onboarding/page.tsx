@@ -66,7 +66,7 @@ const STEPS = [
   {
     title: "Address",
     heading: "Your location.",
-    subheading: "Where will our riders pick up orders?",
+    subheading: "Where are you located?",
     icon: MapPin,
   },
   {
