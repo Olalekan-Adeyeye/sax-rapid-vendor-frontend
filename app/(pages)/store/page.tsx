@@ -260,118 +260,6 @@ export default function StoreProfile() {
               </div>
             </div>
           </div>
-        </div>
-
-        <div className="space-y-10">
-          {/* Status Card */}
-          <div className="bg-black text-white rounded p-10 space-y-10 relative overflow-hidden group">
-            <div className="absolute -top-10 -right-10 w-40 h-40 bg-gold/10 rounded group-hover:bg-gold/20 transition-all duration-700" />
-            <div className="absolute top-0 right-0 p-4 opacity-10">
-              <Check size={80} />
-            </div>
-
-            <h4 className="text-xs font-bold text-gold pb-6 border-b border-white/5 relative z-10">
-              Security & Status
-            </h4>
-
-            <div className="space-y-8 relative z-10">
-              <div className="flex items-center gap-5">
-                <div
-                  className={`w-12 h-12 rounded flex items-center justify-center border transition-colors ${vendor.verificationStatus === "Verified" ? "bg-green-500/10 border-green-500/20 text-green-500" : "bg-yellow-500/10 border-yellow-500/20 text-yellow-500"}`}
-                >
-                  {vendor.verificationStatus === "Verified" ? (
-                    <Check size={24} />
-                  ) : (
-                    <AlertCircle size={24} />
-                  )}
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-white">
-                    {vendor.verificationStatus === "Verified"
-                      ? "Merchant Verified"
-                      : "Pending Verification"}
-                  </p>
-                  <p className="text-[10px] font-bold text-gray-500 mt-1.5 flex items-center gap-1.5">
-                    <Check size={8} /> Since{" "}
-                    {new Date(vendor.createdAt).toLocaleDateString("en-US", {
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </p>
-                </div>
-              </div>
-
-              <div className="pt-6 border-t border-white/5 space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-gray-500">
-                    Inventory Cap
-                  </span>
-                  <span className="text-xs font-black text-gold">
-                    {vendor.productLimit} SKU Limit
-                  </span>
-                </div>
-                <div className="h-1 bg-white/5 rounded overflow-hidden">
-                  <div className="h-full bg-gold/40 w-1/3 rounded" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Business Info Card */}
-          <div className="bg-white border border-gray-100 rounded p-10 space-y-10">
-            <h4 className="text-xs font-bold text-gold pb-6 border-b border-gray-50 flex items-center gap-3 uppercase">
-              <Briefcase size={14} />
-              Legal Identity
-            </h4>
-            <div className="space-y-8">
-              <div className="space-y-2">
-                <p className="text-xs font-bold text-gray-400">
-                  RC Number / CAC
-                </p>
-                <p className="text-xs font-black text-black">
-                  {vendor.businessRegistrationNumber || "N/A"}
-                </p>
-              </div>
-              <div className={`space-y-2 ${!vendor.companyName && "hidden"}`}>
-                <p className="text-xs font-bold text-gray-400">
-                  Registered Business Name
-                </p>
-                <p className="text-xs font-black text-black leading-relaxed">
-                  {vendor.companyName}
-                </p>
-              </div>
-              {vendor.accountType === "Individual" && (
-                <div className="pt-6 border-t border-gray-50 space-y-4">
-                  <div className="bg-amber-50 border border-amber-100 rounded p-4 space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Building2
-                        size={14}
-                        className="text-amber-600 shrink-0"
-                      />
-                      <span className="text-xs font-bold text-amber-800">
-                        Individual Account
-                      </span>
-                    </div>
-                    <p className="text-[10px] font-medium text-amber-700/80 leading-relaxed">
-                      Switch to a Business account to unlock higher product
-                      limits and priority support.
-                    </p>
-                  </div>
-                  <Button
-                    variant="black"
-                    fullWidth
-                    size="sm"
-                    rounded="full"
-                    onClick={() => setShowUpgradeModal(true)}
-                    className="py-3!"
-                  >
-                    <ArrowUpRight size={14} />
-                    Upgrade to Business
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
 
           {/* Store Ratings Card */}
           <div className="bg-white border border-gray-100 rounded p-10 space-y-8">
@@ -504,6 +392,119 @@ export default function StoreProfile() {
               </p>
             )}
           </div>
+        </div>
+
+        <div className="space-y-10">
+          {/* Status Card */}
+          <div className="bg-black text-white rounded p-10 space-y-10 relative overflow-hidden group">
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-gold/10 rounded group-hover:bg-gold/20 transition-all duration-700" />
+            <div className="absolute top-0 right-0 p-4 opacity-10">
+              <Check size={80} />
+            </div>
+
+            <h4 className="text-xs font-bold text-gold pb-6 border-b border-white/5 relative z-10">
+              Security & Status
+            </h4>
+
+            <div className="space-y-8 relative z-10">
+              <div className="flex items-center gap-5">
+                <div
+                  className={`w-12 h-12 rounded flex items-center justify-center border transition-colors ${vendor.verificationStatus === "Verified" ? "bg-green-500/10 border-green-500/20 text-green-500" : "bg-yellow-500/10 border-yellow-500/20 text-yellow-500"}`}
+                >
+                  {vendor.verificationStatus === "Verified" ? (
+                    <Check size={24} />
+                  ) : (
+                    <AlertCircle size={24} />
+                  )}
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-white">
+                    {vendor.verificationStatus === "Verified"
+                      ? "Merchant Verified"
+                      : "Pending Verification"}
+                  </p>
+                  <p className="text-[10px] font-bold text-gray-500 mt-1.5 flex items-center gap-1.5">
+                    <Check size={8} /> Since{" "}
+                    {new Date(vendor.createdAt).toLocaleDateString("en-US", {
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-6 border-t border-white/5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-gray-500">
+                    Inventory Cap
+                  </span>
+                  <span className="text-xs font-black text-gold">
+                    {vendor.productLimit} SKU Limit
+                  </span>
+                </div>
+                <div className="h-1 bg-white/5 rounded overflow-hidden">
+                  <div className="h-full bg-gold/40 w-1/3 rounded" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Business Info Card */}
+          <div className="bg-white border border-gray-100 rounded p-10 space-y-10">
+            <h4 className="text-xs font-bold text-gold pb-6 border-b border-gray-50 flex items-center gap-3 uppercase">
+              <Briefcase size={14} />
+              Legal Identity
+            </h4>
+            <div className="space-y-8">
+              <div className="space-y-2">
+                <p className="text-xs font-bold text-gray-400">
+                  RC Number / CAC
+                </p>
+                <p className="text-xs font-black text-black">
+                  {vendor.businessRegistrationNumber || "N/A"}
+                </p>
+              </div>
+              <div className={`space-y-2 ${!vendor.companyName && "hidden"}`}>
+                <p className="text-xs font-bold text-gray-400">
+                  Registered Business Name
+                </p>
+                <p className="text-xs font-black text-black leading-relaxed">
+                  {vendor.companyName}
+                </p>
+              </div>
+              {vendor.accountType === "Individual" && (
+                <div className="pt-6 border-t border-gray-50 space-y-4">
+                  <div className="bg-amber-50 border border-amber-100 rounded p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Building2
+                        size={14}
+                        className="text-amber-600 shrink-0"
+                      />
+                      <span className="text-xs font-bold text-amber-800">
+                        Individual Account
+                      </span>
+                    </div>
+                    <p className="text-[10px] font-medium text-amber-700/80 leading-relaxed">
+                      Switch to a Business account to unlock higher product
+                      limits and priority support.
+                    </p>
+                  </div>
+                  <Button
+                    variant="black"
+                    fullWidth
+                    size="sm"
+                    rounded="full"
+                    onClick={() => setShowUpgradeModal(true)}
+                    className="py-3!"
+                  >
+                    <ArrowUpRight size={14} />
+                    Upgrade to Business
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+
         </div>
       </div>
 
