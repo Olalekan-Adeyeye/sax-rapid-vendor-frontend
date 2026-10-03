@@ -16,7 +16,7 @@ import {
   User,
   Building2,
 } from "lucide-react";
-import dynamic from "next/dynamic";
+// TEMP-DISABLED with location picker (see below): import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useForm, useWatch, Controller } from "react-hook-form";
@@ -39,10 +39,12 @@ import { onboardingSchema, OnboardingFormValues } from "@/lib/schemas/auth";
 import { getCountryByPhoneCode } from "@/lib/utils/countries";
 import { formatAccuracy, formatCoords } from "@/lib/utils/geo";
 
+/* TEMP-DISABLED: location picker gated off pending geolocation fix — restore to re-enable
 const LocationPicker = dynamic(
   () => import("@/components/ui/LocationPicker").then((m) => m.LocationPicker),
   { ssr: false },
 );
+*/
 
 const STEPS = [
   {
@@ -117,15 +119,17 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [direction, setDirection] = useState<1 | -1>(1);
-  const [locationPickerOpen, setLocationPickerOpen] = useState(false);
+  // TEMP-DISABLED: location picker gated off pending geolocation fix
+  // const [locationPickerOpen, setLocationPickerOpen] = useState(false);
   const [storeLat, setStoreLat] = useState<number | undefined>(undefined);
   const [storeLng, setStoreLng] = useState<number | undefined>(undefined);
   const [storeAccuracy, setStoreAccuracy] = useState<number | null>(null);
-  const [locationError, setLocationError] = useState<string | null>(null);
-  const [requestingLocation, setRequestingLocation] = useState(false);
+  // const [locationError, setLocationError] = useState<string | null>(null);
+  // const [requestingLocation, setRequestingLocation] = useState(false);
 
-  const hasPin = storeLat !== undefined && storeLng !== undefined;
+  // const hasPin = storeLat !== undefined && storeLng !== undefined;
 
+  /* TEMP-DISABLED: location picker gated off pending geolocation fix — restore to re-enable
   // Gate: the map never opens until the device grants location access and a
   // precise GPS fix is captured. Denied/blocked → notify, stay on the card.
   const handleSetOnMap = () => {
@@ -183,6 +187,7 @@ export default function OnboardingPage() {
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
     );
   };
+  */
 
   const {
     register,
@@ -246,7 +251,7 @@ export default function OnboardingPage() {
         setStoreLat(undefined);
         setStoreLng(undefined);
         setStoreAccuracy(null);
-        setLocationError(null);
+        // TEMP-DISABLED with location picker: setLocationError(null);
       }, 0);
     }
   }, [user, reset]);
@@ -267,6 +272,7 @@ export default function OnboardingPage() {
       if (!isValid) return;
     }
 
+    /* TEMP-DISABLED: mandatory pickup pin gated off with location picker
     if (step === 3 && !hasPin) {
       setLocationError(
         "Pickup location pin is required — set it on the map.",
@@ -278,6 +284,7 @@ export default function OnboardingPage() {
       );
       return;
     }
+    */
 
     setDirection(1);
     setStep((s) => Math.min(s + 1, STEPS.length - 1));
@@ -747,6 +754,7 @@ export default function OnboardingPage() {
                       className="h-12 lg:h-14 rounded w-full"
                     />
 
+                    {/* TEMP-DISABLED: pickup-location card gated off with location picker
                     <div
                       className={`rounded border-2 p-5 transition-all ${
                         locationError
@@ -803,6 +811,7 @@ export default function OnboardingPage() {
                         </Button>
                       </div>
                     </div>
+                    */}
                   </div>
                 </div>
               </div>
@@ -1057,6 +1066,7 @@ export default function OnboardingPage() {
         </AnimatePresence>
       </form>
 
+      {/* TEMP-DISABLED: location picker gated off pending geolocation fix — restore to re-enable
       {locationPickerOpen && (
         <LocationPicker
           onClose={() => setLocationPickerOpen(false)}
@@ -1076,6 +1086,7 @@ export default function OnboardingPage() {
           initialAccuracy={storeAccuracy}
         />
       )}
+      */}
     </AuthPageContainer>
   );
 }
