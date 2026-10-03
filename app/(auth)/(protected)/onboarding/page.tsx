@@ -37,6 +37,7 @@ import { useAuth } from "@/lib/context/AuthContext";
 import { useToast } from "@/lib/context/ToastContext";
 import { onboardingSchema, OnboardingFormValues } from "@/lib/schemas/auth";
 import { getCountryByPhoneCode } from "@/lib/utils/countries";
+import { formatAccuracy, formatCoords } from "@/lib/utils/geo";
 
 const LocationPicker = dynamic(
   () => import("@/components/ui/LocationPicker").then((m) => m.LocationPicker),
@@ -119,6 +120,69 @@ export default function OnboardingPage() {
   const [locationPickerOpen, setLocationPickerOpen] = useState(false);
   const [storeLat, setStoreLat] = useState<number | undefined>(undefined);
   const [storeLng, setStoreLng] = useState<number | undefined>(undefined);
+  const [storeAccuracy, setStoreAccuracy] = useState<number | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [requestingLocation, setRequestingLocation] = useState(false);
+
+  const hasPin = storeLat !== undefined && storeLng !== undefined;
+
+  // Gate: the map never opens until the device grants location access and a
+  // precise GPS fix is captured. Denied/blocked → notify, stay on the card.
+  const handleSetOnMap = () => {
+    if (hasPin) {
+      setLocationPickerOpen(true);
+      return;
+    }
+    if (!("geolocation" in navigator)) {
+      const message =
+        "This device cannot share its location. Continue onboarding on a GPS-enabled device.";
+      setLocationError(message);
+      toast("Location Access Required", message, "error");
+      return;
+    }
+    setRequestingLocation(true);
+    setLocationError(null);
+
+    let settled = false;
+    const fail = (message: string) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(watchdog);
+      setRequestingLocation(false);
+      setLocationError(message);
+      toast("Location Access Required", message, "error");
+    };
+    const watchdog = setTimeout(
+      () =>
+        fail(
+          "Location request timed out or is blocked here. Allow location access and try again.",
+        ),
+      20000,
+    );
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(watchdog);
+        const { latitude, longitude, accuracy } = pos.coords;
+        setStoreLat(latitude);
+        setStoreLng(longitude);
+        setStoreAccuracy(Math.round(accuracy));
+        setLocationError(null);
+        setRequestingLocation(false);
+        setLocationPickerOpen(true);
+      },
+      (err) => {
+        fail(
+          err.code === err.PERMISSION_DENIED
+            ? "Location access was not allowed. Allow location access so we can capture your precise pickup coordinates."
+            : "Could not capture your location. Allow location access and try again.",
+        );
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+    );
+  };
 
   const {
     register,
@@ -181,6 +245,8 @@ export default function OnboardingPage() {
       setTimeout(() => {
         setStoreLat(undefined);
         setStoreLng(undefined);
+        setStoreAccuracy(null);
+        setLocationError(null);
       }, 0);
     }
   }, [user, reset]);
@@ -199,6 +265,18 @@ export default function OnboardingPage() {
     if (fieldsToValidate.length > 0) {
       const isValid = await trigger(fieldsToValidate);
       if (!isValid) return;
+    }
+
+    if (step === 3 && !hasPin) {
+      setLocationError(
+        "Pickup location pin is required — set it on the map.",
+      );
+      toast(
+        "Location Required",
+        "Set your exact pickup location on the map before continuing.",
+        "error",
+      );
+      return;
     }
 
     setDirection(1);
@@ -668,6 +746,63 @@ export default function OnboardingPage() {
                       error={errors.suite?.message}
                       className="h-12 lg:h-14 rounded w-full"
                     />
+
+                    <div
+                      className={`rounded border-2 p-5 transition-all ${
+                        locationError
+                          ? "border-red-500 bg-red-50/50"
+                          : hasPin
+                            ? "border-black bg-gray-50/50"
+                            : "border-dashed border-gray-200 bg-white"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div
+                            className={`w-10 h-10 rounded flex items-center justify-center shrink-0 ${
+                              locationError
+                                ? "bg-red-500 text-white"
+                                : hasPin
+                                  ? "bg-black text-gold"
+                                  : "bg-gray-100 text-gray-400"
+                            }`}
+                          >
+                            <MapPin size={18} />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-bold text-black truncate">
+                              {hasPin
+                                ? formatCoords(storeLat, storeLng)
+                                : "No pickup pin set"}
+                            </p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                              {locationError
+                                ? locationError
+                                : hasPin
+                                  ? storeAccuracy !== null
+                                    ? `GPS ${formatAccuracy(storeAccuracy)}`
+                                    : "Pin placed manually"
+                                  : "Required — we use this to find your store"}
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={hasPin ? "outline" : "primary"}
+                          onClick={handleSetOnMap}
+                          loading={requestingLocation}
+                          disabled={requestingLocation}
+                          className="px-6 text-[10px] uppercase font-black tracking-widest shrink-0"
+                        >
+                          {requestingLocation
+                            ? "Locating…"
+                            : hasPin
+                              ? "Edit Pin"
+                              : "Set on Map"}
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -839,7 +974,9 @@ export default function OnboardingPage() {
                         </p>
                         {storeLat !== undefined && storeLng !== undefined && (
                           <p className="text-[10px] font-bold text-gold mt-2">
-                            {storeLat.toFixed(6)}°N, {storeLng.toFixed(6)}°E
+                            {formatCoords(storeLat, storeLng)}
+                            {storeAccuracy !== null &&
+                              ` · ${formatAccuracy(storeAccuracy)} GPS`}
                           </p>
                         )}
                       </div>
@@ -923,16 +1060,20 @@ export default function OnboardingPage() {
       {locationPickerOpen && (
         <LocationPicker
           onClose={() => setLocationPickerOpen(false)}
-          onConfirm={(lat, lng) => {
+          onConfirm={(lat, lng, accuracy) => {
             setStoreLat(lat);
             setStoreLng(lng);
+            setStoreAccuracy(accuracy ?? null);
+            setLocationError(null);
           }}
           onClear={() => {
             setStoreLat(undefined);
             setStoreLng(undefined);
+            setStoreAccuracy(null);
           }}
           initialLat={storeLat}
           initialLng={storeLng}
+          initialAccuracy={storeAccuracy}
         />
       )}
     </AuthPageContainer>

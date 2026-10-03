@@ -6,6 +6,8 @@ import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 
+import { formatAccuracy, formatCoords } from "@/lib/utils/geo";
+
 import { Button } from "./Button";
 import "leaflet/dist/leaflet.css";
 
@@ -18,10 +20,11 @@ const DefaultIcon = L.divIcon({
 
 interface LocationPickerProps {
 	onClose: () => void;
-	onConfirm: (lat: number, lng: number) => void;
+	onConfirm: (lat: number, lng: number, accuracyMeters?: number | null) => void;
 	onClear: () => void;
 	initialLat?: number;
 	initialLng?: number;
+	initialAccuracy?: number | null;
 }
 
 function ClickHandler({
@@ -43,10 +46,14 @@ export function LocationPicker({
 	onClear,
 	initialLat,
 	initialLng,
+	initialAccuracy,
 }: LocationPickerProps) {
 	const [mounted, setMounted] = useState(false);
 	const [lat, setLat] = useState<number | null>(initialLat ?? null);
 	const [lng, setLng] = useState<number | null>(initialLng ?? null);
+	const [accuracy, setAccuracy] = useState<number | null>(
+		initialAccuracy ?? null,
+	);
 	const markerRef = useRef<L.Marker | null>(null);
 
 	useEffect(() => {
@@ -64,18 +71,20 @@ export function LocationPicker({
 	const handleMapClick = useCallback((clickedLat: number, clickedLng: number) => {
 		setLat(clickedLat);
 		setLng(clickedLng);
+		setAccuracy(null);
 	}, []);
 
 	const handleConfirm = useCallback(() => {
 		if (lat !== null && lng !== null) {
-			onConfirm(lat, lng);
+			onConfirm(lat, lng, accuracy);
 		}
 		onClose();
-	}, [lat, lng, onConfirm, onClose]);
+	}, [lat, lng, accuracy, onConfirm, onClose]);
 
 	const handleClear = useCallback(() => {
 		setLat(null);
 		setLng(null);
+		setAccuracy(null);
 		onClear();
 	}, [onClear]);
 
@@ -84,11 +93,14 @@ export function LocationPicker({
 		return [9.082, 8.6753]; // Nigeria center as default
 	}, [initialLat, initialLng]);
 
+	const initialZoom = initialLat != null && initialLng != null ? 15 : 6;
+
 	const handleDragEnd = useCallback((e: L.LeafletEvent) => {
 		const marker = e.target as L.Marker;
 		const pos = marker.getLatLng();
 		setLat(pos.lat);
 		setLng(pos.lng);
+		setAccuracy(null);
 	}, []);
 
 	if (!mounted) return null;
@@ -112,7 +124,7 @@ export function LocationPicker({
 									Set Pickup Location
 								</h3>
 								<p className="text-[9px] font-black uppercase tracking-widest text-gray-400 mt-0.5">
-									Click on the map to place a pin
+									Drag the pin or click to fine-tune
 								</p>
 							</div>
 						</div>
@@ -128,7 +140,7 @@ export function LocationPicker({
 					<div className="h-[50vh] min-h-[320px] relative">
 						<MapContainer
 							center={center}
-							zoom={6}
+							zoom={initialZoom}
 							className="h-full w-full"
 							zoomControl={true}
 						>
@@ -153,7 +165,12 @@ export function LocationPicker({
 					{lat !== null && lng !== null && (
 						<div className="px-6 py-3 bg-gray-50 border-t border-gray-100">
 							<p className="text-xs font-bold text-black text-center">
-								{lat.toFixed(6)}°N, {lng.toFixed(6)}°E
+								{formatCoords(lat, lng)}
+								{accuracy !== null && (
+									<span className="text-gray-400">
+										{" "}· {formatAccuracy(accuracy)} GPS
+									</span>
+								)}
 							</p>
 						</div>
 					)}
