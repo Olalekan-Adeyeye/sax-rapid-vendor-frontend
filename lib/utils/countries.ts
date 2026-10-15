@@ -232,3 +232,34 @@ export function getCountryByPhoneCode(phoneCode: string): CountryData | undefine
     (c) => c.phoneCode === phoneCode || c.phoneCode.startsWith(phoneCode + "-"),
   );
 }
+
+/**
+ * Resolve any backend country representation to an ISO code.
+ * Handles phone dial codes ("+234"), ISO codes ("NG"/"ng"), and
+ * names ("Nigeria") — with whitespace/case tolerance.
+ */
+export function resolveCountryIso(
+  raw: string | null | undefined,
+): string | null {
+  if (!raw) return null;
+  const value = raw.trim();
+  if (!value) return null;
+  if (value.startsWith("+")) {
+    return getCountryByPhoneCode(value)?.code ?? null;
+  }
+  if (/^[A-Za-z]{2}$/.test(value)) {
+    return getCountryByCode(value.toUpperCase())?.code ?? null;
+  }
+  return (
+    countries.find((c) => c.name.toLowerCase() === value.toLowerCase())?.code ??
+    null
+  );
+}
+
+/** Resolve any backend country representation to its CountryData. */
+export function resolveCountry(
+  raw: string | null | undefined,
+): CountryData | undefined {
+  const iso = resolveCountryIso(raw);
+  return iso ? getCountryByCode(iso) : undefined;
+}

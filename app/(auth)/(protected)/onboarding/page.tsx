@@ -22,6 +22,7 @@ import { useState, useEffect } from "react";
 import { useForm, useWatch, Controller } from "react-hook-form";
 
 import { AuthPageContainer } from "@/components/auth/AuthPageContainer";
+import { GoogleAddressAutocomplete } from "@/components/onboarding/GoogleAddressAutocomplete";
 import { Button } from "@/components/ui/Button";
 import { FileUpload } from "@/components/ui/FileUpload";
 import { Input } from "@/components/ui/Input";
@@ -36,7 +37,7 @@ import type { AccountType } from "@/lib/api/types/vendor.types";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useToast } from "@/lib/context/ToastContext";
 import { onboardingSchema, OnboardingFormValues } from "@/lib/schemas/auth";
-import { getCountryByPhoneCode } from "@/lib/utils/countries";
+import { getCountryByPhoneCode, resolveCountry } from "@/lib/utils/countries";
 import { formatAccuracy, formatCoords } from "@/lib/utils/geo";
 
 /* TEMP-DISABLED: location picker gated off pending geolocation fix — restore to re-enable
@@ -124,7 +125,7 @@ export default function OnboardingPage() {
   const [storeLat, setStoreLat] = useState<number | undefined>(undefined);
   const [storeLng, setStoreLng] = useState<number | undefined>(undefined);
   const [storeAccuracy, setStoreAccuracy] = useState<number | null>(null);
-  // const [locationError, setLocationError] = useState<string | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
   // const [requestingLocation, setRequestingLocation] = useState(false);
 
   // const hasPin = storeLat !== undefined && storeLng !== undefined;
@@ -251,7 +252,7 @@ export default function OnboardingPage() {
         setStoreLat(undefined);
         setStoreLng(undefined);
         setStoreAccuracy(null);
-        // TEMP-DISABLED with location picker: setLocationError(null);
+        setLocationError(null);
       }, 0);
     }
   }, [user, reset]);
@@ -272,19 +273,17 @@ export default function OnboardingPage() {
       if (!isValid) return;
     }
 
-    /* TEMP-DISABLED: mandatory pickup pin gated off with location picker
-    if (step === 3 && !hasPin) {
+    if (step === 3 && (storeLat === undefined || storeLng === undefined)) {
       setLocationError(
-        "Pickup location pin is required — set it on the map.",
+        "Store location is required — select your address from the suggestions so we can capture its coordinates.",
       );
       toast(
         "Location Required",
-        "Set your exact pickup location on the map before continuing.",
+        "Select your address from the suggestions so we can capture its coordinates.",
         "error",
       );
       return;
     }
-    */
 
     setDirection(1);
     setStep((s) => Math.min(s + 1, STEPS.length - 1));
@@ -306,6 +305,19 @@ export default function OnboardingPage() {
     if (step < STEPS.length - 1) {
       await next();
     } else {
+      if (storeLat === undefined || storeLng === undefined) {
+        setLocationError(
+          "Store location is required — select your address from the suggestions so we can capture its coordinates.",
+        );
+        toast(
+          "Location Required",
+          "Go back to the Address step and select your address from the suggestions.",
+          "error",
+        );
+        setDirection(-1);
+        setStep(3);
+        return;
+      }
       setLoading(true);
       try {
         // 1. Create the Vendor Profile
@@ -391,7 +403,8 @@ export default function OnboardingPage() {
 
   const currentStepData = STEPS[step];
 
-  const country = getCountryByPhoneCode(user?.countryCode ?? "");
+  const country = resolveCountry(user?.countryCode);
+  const countryIso = country?.code ?? null;
   const idTypes = country?.code === "ZA" ? ZA_ID_TYPES : NG_ID_TYPES;
   const { statePlaceholder, cityPlaceholder } =
     country?.code === "ZA"
@@ -714,16 +727,56 @@ export default function OnboardingPage() {
                     Please provide your detailed street address.
                   </p>
                   <div className="space-y-5 lg:space-y-6">
-                    <Input
-                      label="Address"
-                      id="address"
-                      placeholder="Start typing your address..."
-                      {...register("address")}
-                      error={errors.address?.message}
-                      required
-                      className="h-12 lg:h-14 rounded"
-                    />
-
+                    <div>
+                      <GoogleAddressAutocomplete
+                        country={countryIso}
+                        value={formValues.address ?? ""}
+                        onChange={(v) =>
+                          setValue("address", v, { shouldValidate: true })
+                        }
+                        onPlaceSelected={(place) => {
+                          setValue("address", place.address, {
+                            shouldValidate: true,
+                          });
+                          setValue("city", place.city, {
+                            shouldValidate: true,
+                          });
+                          setValue("state", place.state, {
+                            shouldValidate: true,
+                          });
+                          setStoreLat(place.lat);
+                          setStoreLng(place.lng);
+                          setStoreAccuracy(null);
+                          setLocationError(null);
+                        }}
+                        onDirty={() => {
+                          setStoreLat(undefined);
+                          setStoreLng(undefined);
+                          setStoreAccuracy(null);
+                          setLocationError(null);
+                        }}
+                        onGeocodeFailed={() => {
+                          setLocationError(
+                            "Couldn't locate this address — choose a suggestion from the list or check the spelling.",
+                          );
+                        }}
+                        placeholder="Start typing your address..."
+                        required
+                        error={errors.address?.message}
+                      />
+                      {storeLat !== undefined && storeLng !== undefined ? (
+                        <p className="text-[10px] font-bold text-gold mt-2">
+                          Auto-located · {formatCoords(storeLat, storeLng)}
+                        </p>
+                      ) : (
+                        <p
+                          className={`text-[10px] font-bold mt-2 ${locationError ? "text-red-500" : "text-gray-400"}`}
+                        >
+                          {locationError ??
+                            "Location required — select your address from the suggestions."}
+                        </p>
+                      )}
+                    </div>
                     <div className="grid grid-cols-2 gap-4 lg:gap-5">
                       <Input
                         label="City"
