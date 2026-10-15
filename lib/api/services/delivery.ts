@@ -1,31 +1,24 @@
 import apiClient from "../apiClient";
 import type { ApiResponse } from "../types/auth.types";
-import type { DeliveryProvider, DeliveryStatus } from "../types/delivery.types";
+import {
+  pickActiveShipment,
+  type DeliveryProvider,
+  type DeliveryStatus,
+  type DeliveryStatusResponse,
+  type ShipmentInfo,
+} from "../types/delivery.types";
 
 const BASE = "/Delivery";
 
-export interface DeliveryQuote {
-  provider?: string | null;
-  providerCode?: string | null;
-  deliveryFee?: number | null;
-  price?: number | null;
-  amount?: number | null;
-  fee?: number | null;
-  currency?: string | null;
-  eta?: string | null;
-  estimatedDeliveryTime?: string | null;
-}
-
-export interface DeliveryStatusInfo {
-  id?: string | null;
+/**
+ * Normalized view of GET /api/Delivery/{orderId}/status:
+ * the active shipment flattened to the top level, plus the full model.
+ */
+export interface DeliveryStatusInfo extends ShipmentInfo {
   deliveryId?: string | null;
-  status?: string | null;
-  provider?: string | null;
-  providerCode?: string | null;
-  trackingCode?: string | null;
-  trackingNumber?: string | null;
-  createdAt?: string | null;
-  updatedAt?: string | null;
+  orderId?: string | null;
+  shipments?: ShipmentInfo[];
+  legacyDelivery?: ShipmentInfo | null;
 }
 
 export interface DeliveryTrackingInfo {
@@ -37,55 +30,11 @@ export interface DeliveryTrackingInfo {
   estimatedDelivery?: string | null;
 }
 
-function toFiniteNumber(value: unknown): number | null {
-  return typeof value === "number" && Number.isFinite(value) ? value : null;
-}
-
-export function normalizeQuoteProvider(quote: DeliveryQuote): string {
-  return quote.provider || quote.providerCode || "Unknown provider";
-}
-
-export function normalizeQuoteAmount(quote: DeliveryQuote): number {
-  const record = quote as Record<string, unknown>;
-  for (const key of ["deliveryFee", "price", "amount", "fee", "total", "cost"]) {
-    const value = toFiniteNumber(record[key]);
-    if (value !== null) return value;
-  }
-  return 0;
-}
-
-export function normalizeQuoteCurrency(
-  quote: DeliveryQuote,
-  fallback: string,
-): string {
-  return quote.currency || fallback;
-}
-
 export function normalizeDeliveryId(
   status: DeliveryStatusInfo | null | undefined,
 ): string | null {
   if (!status) return null;
   return status.id || status.deliveryId || null;
-}
-
-/**
- * GET /api/Delivery/quotes/{orderId}
- * Get delivery quotes for an order from available providers
- */
-export async function getDeliveryQuotes(
-  orderId: string,
-): Promise<DeliveryQuote[]> {
-  const response =
-    await apiClient.get<ApiResponse<unknown>>(`${BASE}/quotes/${orderId}`);
-  const raw = response.data.data;
-  if (Array.isArray(raw)) return raw as DeliveryQuote[];
-  if (raw && typeof raw === "object") {
-    const record = raw as Record<string, unknown>;
-    for (const key of ["quotes", "items", "data", "results"]) {
-      if (Array.isArray(record[key])) return record[key] as DeliveryQuote[];
-    }
-  }
-  return [];
 }
 
 /**
@@ -113,7 +62,30 @@ export async function getDeliveryStatus(
   );
   const raw = response.data.data;
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
-  return raw as DeliveryStatusInfo;
+  const record = raw as Record<string, unknown>;
+
+  const hasModel =
+    Array.isArray(record.shipments) || "legacyDelivery" in record;
+  if (!hasModel) {
+    // Older flat payload: the shipment itself.
+    return raw as DeliveryStatusInfo;
+  }
+
+  const model = raw as DeliveryStatusResponse;
+  const shipments = (model.shipments ?? []).filter(
+    (shipment): shipment is ShipmentInfo => !!shipment,
+  );
+  const legacy = model.legacyDelivery ?? null;
+  const active = pickActiveShipment(shipments, legacy);
+  if (!active) return null;
+
+  return {
+    ...active,
+    deliveryId: active.id ?? null,
+    orderId: model.orderId ?? active.orderId ?? orderId,
+    shipments,
+    legacyDelivery: legacy,
+  };
 }
 
 /**

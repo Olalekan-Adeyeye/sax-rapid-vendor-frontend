@@ -20,18 +20,17 @@ import { useParams, useRouter } from "next/navigation";
 import React, { useState } from "react";
 
 import { FullPageLoader } from "@/components/common/FullPageLoader";
+import { DeliveryModal } from "@/components/delivery/DeliveryModal";
 import { Button } from "@/components/ui/Button";
-import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
 import { Dropdown, DropdownItem, DropdownDivider } from "@/components/ui/Dropdown";
 import { ErrorComponent } from "@/components/ui/ErrorComponent";
 import * as deliveryService from "@/lib/api/services/delivery";
 import * as ordersService from "@/lib/api/services/orders";
-import { DeliveryProvider, DeliveryStatus } from "@/lib/api/types/delivery.types";
 import { OrderStatus } from "@/lib/api/types/orders.types";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useToast } from "@/lib/context/ToastContext";
 import { useCurrency } from "@/lib/hooks/useCurrency";
-import { formatDate } from "@/lib/utils/date";
+import { formatDate, formatDateTime } from "@/lib/utils/date";
 import { getErrorMessage } from "@/lib/utils/errors";
 import { downloadInvoicePdf } from "@/lib/utils/invoice";
 import { formatVariationDetails } from "@/lib/utils/product";
@@ -52,25 +51,6 @@ function getStatusIcon(status: OrderStatus) {
 		case OrderStatus.Dispute: return <AlertTriangle size={14} />;
 		default: return null;
 	}
-}
-
-const TERMINAL_DELIVERY_STATUSES = ["Delivered", "Failed", "Cancelled"];
-
-const ADVANCE_DELIVERY_STATUSES: DeliveryStatus[] = [
-	"Requested",
-	"RiderAssigned",
-	"PickedUp",
-	"InTransit",
-	"Delivered",
-];
-
-function toDeliveryProvider(name: string): DeliveryProvider {
-	const normalized = name.toLowerCase();
-	if (normalized.includes("uber")) return "Uber";
-	if (normalized.includes("bolt")) return "Bolt";
-	if (normalized.includes("sendbox")) return "Sendbox";
-	if (normalized.includes("courier")) return "TheCourierGuy";
-	return "Manual";
 }
 
 function getDeliveryStatusColor(status: string): string {
@@ -105,8 +85,7 @@ export default function OrderDetailsPage() {
 	const { currency: activeCurrency } = useCurrency();
 
 	const [updating, setUpdating] = useState(false);
-	const [deliveryBusy, setDeliveryBusy] = useState(false);
-	const [isCancelDeliveryOpen, setIsCancelDeliveryOpen] = useState(false);
+	const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
 	const queryClient = useQueryClient();
 
 	const {
@@ -136,25 +115,10 @@ export default function OrderDetailsPage() {
 		(deliveryStatusError as { response?: { status?: number } })?.response
 			?.status === 404;
 	const deliveryId = deliveryService.normalizeDeliveryId(deliveryStatus);
-	const deliveryTerminal = TERMINAL_DELIVERY_STATUSES.includes(
-		deliveryStatus?.status || "",
-	);
 	const canDispatch = order?.status === OrderStatus.Shipped;
+	const canManageDelivery = canDispatch || !!deliveryId;
 
-	const {
-		data: quotes,
-		isLoading: loadingQuotes,
-		error: quotesError,
-		refetch: refetchQuotes,
-	} = useQuery({
-		queryKey: ["delivery-quotes", orderId],
-		queryFn: () => deliveryService.getDeliveryQuotes(orderId),
-		enabled: !!orderId && isAuthenticated && !!canDispatch && !deliveryId,
-		retry: false,
-	});
-
-	const trackingCode =
-		deliveryStatus?.trackingCode || deliveryStatus?.trackingNumber || null;
+	const trackingCode = deliveryStatus?.trackingCode || null;
 	const providerCode =
 		deliveryStatus?.providerCode || deliveryStatus?.provider || null;
 
@@ -178,49 +142,6 @@ export default function OrderDetailsPage() {
 			toast("Error", "Failed to update order status", "error");
 		} finally {
 			setUpdating(false);
-		}
-	};
-
-	const handleRequestDelivery = async (provider: DeliveryProvider) => {
-		try {
-			setUpdating(true);
-			await deliveryService.requestDelivery(orderId, provider);
-			toast("Delivery Requested", `Delivery has been requested via ${provider}`, "success");
-			refetchDeliveryStatus();
-			queryClient.invalidateQueries({ queryKey: ["delivery-quotes", orderId] });
-		} catch (err) {
-			toast("Error", getErrorMessage(err), "error");
-		} finally {
-			setUpdating(false);
-		}
-	};
-
-	const handleUpdateDeliveryStatus = async (status: DeliveryStatus) => {
-		if (!deliveryId) return;
-		try {
-			setDeliveryBusy(true);
-			await deliveryService.updateDeliveryStatus(deliveryId, status);
-			toast("Success", `Delivery status updated to ${status}`, "success");
-			refetchDeliveryStatus();
-		} catch (err) {
-			toast("Error", getErrorMessage(err), "error");
-		} finally {
-			setDeliveryBusy(false);
-		}
-	};
-
-	const handleCancelDelivery = async () => {
-		if (!deliveryId) return;
-		try {
-			setDeliveryBusy(true);
-			await deliveryService.cancelDelivery(deliveryId);
-			toast("Success", "Delivery request cancelled", "success");
-			setIsCancelDeliveryOpen(false);
-			refetchDeliveryStatus();
-		} catch (err) {
-			toast("Error", getErrorMessage(err), "error");
-		} finally {
-			setDeliveryBusy(false);
 		}
 	};
 
@@ -301,7 +222,7 @@ export default function OrderDetailsPage() {
 
 			{(() => {
 				const available = VALID_TRANSITIONS[order.status];
-				if (available.length === 0 && order.status !== OrderStatus.Shipped) return null;
+				if (available.length === 0 && !canManageDelivery) return null;
 				return (
 					<div className="flex flex-wrap items-center justify-end gap-3">
 						{available.length > 0 && (
@@ -335,28 +256,16 @@ export default function OrderDetailsPage() {
 								))}
 							</Dropdown>
 						)}
-						{order.status === OrderStatus.Shipped && (
-							<Dropdown
-								trigger={
-									<Button variant="black" size="sm" className="rounded-full px-5 text-xs font-bold">
-										Request Delivery <ChevronDown size={14} />
-									</Button>
-								}
+						{canManageDelivery && (
+							<Button
+								variant="black"
+								size="sm"
+								onClick={() => setIsDeliveryModalOpen(true)}
+								className="rounded-full px-5 text-xs font-bold"
 							>
-								<div className="px-4 py-2 text-[9px] font-black uppercase tracking-widest text-gray-400">
-									Select Provider
-								</div>
-								<DropdownDivider />
-								<DropdownItem onClick={() => handleRequestDelivery("Manual")} icon={<Truck size={14} />}>
-									Manual
-								</DropdownItem>
-								<DropdownItem onClick={() => handleRequestDelivery("Uber")} icon={<Truck size={14} />}>
-									Uber
-								</DropdownItem>
-								<DropdownItem onClick={() => handleRequestDelivery("Bolt")} icon={<Truck size={14} />}>
-									Bolt
-								</DropdownItem>
-							</Dropdown>
+								<Truck size={14} className="mr-1" />
+								{deliveryId ? "Manage Delivery" : "Request Delivery"}
+							</Button>
 						)}
 					</div>
 				);
@@ -563,7 +472,6 @@ export default function OrderDetailsPage() {
               </button> */}
 						</div>
 					</div>
-
 					{/* Shipping Info */}
 					<div className="bg-white border border-gray-100 rounded p-6 space-y-6">
 						<div className="flex items-center gap-3 text-gold">
@@ -664,72 +572,92 @@ export default function OrderDetailsPage() {
 							</div>
 						) : deliveryStatus ? (
 							<div className="space-y-4">
-								<div className="flex items-center justify-between">
-									<span className="text-[12px] font-bold text-gray-400">
-										Status
-									</span>
-									<span
-										className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${getDeliveryStatusColor(deliveryStatus.status || "")}`}
-									>
+								<div className="flex items-center justify-between gap-3">
+									<span className="text-[12px] font-bold text-gray-400 shrink-0">Status</span>
+									<span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${getDeliveryStatusColor(deliveryStatus.status || "")}`}>
 										{deliveryStatus.status || "Unknown"}
 									</span>
 								</div>
-								{(deliveryStatus.provider || deliveryStatus.providerCode) && (
-									<div className="flex items-center justify-between">
-										<span className="text-[12px] font-bold text-gray-400">
-											Provider
+								{(deliveryStatus.providerDisplayName || deliveryStatus.provider || deliveryStatus.providerCode) && (
+									<div className="flex items-center justify-between gap-3">
+										<span className="text-[12px] font-bold text-gray-400 shrink-0">Provider</span>
+										<span className="text-[12px] font-bold text-black text-right min-w-0">
+											{deliveryStatus.providerDisplayName || deliveryStatus.provider || deliveryStatus.providerCode}
 										</span>
-										<span className="text-[12px] font-bold text-black">
-											{deliveryStatus.provider || deliveryStatus.providerCode}
+									</div>
+								)}
+								{(deliveryStatus.serviceName || deliveryStatus.serviceType) && (
+									<div className="flex items-center justify-between gap-3">
+										<span className="text-[12px] font-bold text-gray-400 shrink-0">Service</span>
+										<span className="text-[12px] font-bold text-black text-right min-w-0">
+											{deliveryStatus.serviceName || deliveryStatus.serviceType}
+										</span>
+									</div>
+								)}
+								{deliveryStatus.riderName && (
+									<div className="flex items-center justify-between gap-3">
+										<span className="text-[12px] font-bold text-gray-400 shrink-0">Rider</span>
+										<span className="text-[12px] font-bold text-black text-right min-w-0">
+											{deliveryStatus.riderName}
+											{deliveryStatus.riderPhone && (
+												<a href={`tel:${deliveryStatus.riderPhone}`} className="block text-[11px] font-bold text-gold hover:underline mt-0.5">
+													{deliveryStatus.riderPhone}
+												</a>
+											)}
+										</span>
+									</div>
+								)}
+								{typeof deliveryStatus.estimatedCost === "number" && (
+									<div className="flex items-center justify-between gap-3">
+										<span className="text-[12px] font-bold text-gray-400 shrink-0">Delivery Cost</span>
+										<span className="text-[12px] font-bold text-black text-right min-w-0">
+											{formatCurrency(deliveryStatus.estimatedCost, deliveryStatus.currency || activeCurrency)}
+										</span>
+									</div>
+								)}
+								{deliveryStatus.estimatedDeliveryAt && (
+									<div className="flex items-center justify-between gap-3">
+										<span className="text-[12px] font-bold text-gray-400 shrink-0">Est. Delivery</span>
+										<span className="text-[12px] font-bold text-black text-right min-w-0">
+											{formatDateTime(deliveryStatus.estimatedDeliveryAt)}
+										</span>
+									</div>
+								)}
+								{deliveryStatus.pickedUpAt && (
+									<div className="flex items-center justify-between gap-3">
+										<span className="text-[12px] font-bold text-gray-400 shrink-0">Picked Up</span>
+										<span className="text-[12px] font-bold text-black text-right min-w-0">
+											{formatDateTime(deliveryStatus.pickedUpAt)}
+										</span>
+									</div>
+								)}
+								{deliveryStatus.deliveredAt && (
+									<div className="flex items-center justify-between gap-3">
+										<span className="text-[12px] font-bold text-gray-400 shrink-0">Delivered</span>
+										<span className="text-[12px] font-bold text-black text-right min-w-0">
+											{formatDateTime(deliveryStatus.deliveredAt)}
+										</span>
+									</div>
+								)}
+								{(deliveryStatus.isBooked || deliveryStatus.isQueued) && (
+									<div className="flex items-center justify-between gap-3">
+										<span className="text-[12px] font-bold text-gray-400 shrink-0">Booking</span>
+										<span className="flex flex-wrap gap-1.5 justify-end">
+											{deliveryStatus.isBooked && (
+												<span className="text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-full bg-green-50 text-green-600">Booked</span>
+											)}
+											{deliveryStatus.isQueued && (
+												<span className="text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-full bg-gold/10 text-gold">Queued</span>
+											)}
 										</span>
 									</div>
 								)}
 								{trackingCode && (
-									<div className="flex items-center justify-between">
-										<span className="text-[12px] font-bold text-gray-400">
-											Tracking Code
-										</span>
-										<span className="text-[12px] font-black text-black tracking-tight">
+									<div className="flex items-center justify-between gap-3">
+										<span className="text-[12px] font-bold text-gray-400 shrink-0">Tracking Code</span>
+										<span className="text-[12px] font-black text-black tracking-tight text-right min-w-0 break-all">
 											{trackingCode}
 										</span>
-									</div>
-								)}
-								{!deliveryTerminal && deliveryId && (
-									<div className="flex flex-wrap items-center gap-2 pt-2">
-										<Dropdown
-											trigger={
-												<Button variant="black" size="sm" className="rounded-full px-5 text-xs font-bold" disabled={deliveryBusy}>
-													Update Status <ChevronDown size={14} />
-												</Button>
-											}
-										>
-											<div className="px-4 py-2 text-[9px] font-black uppercase tracking-widest text-gray-400">
-												Set Delivery Status
-											</div>
-											<DropdownDivider />
-											{ADVANCE_DELIVERY_STATUSES.filter(
-												(s) => s !== deliveryStatus.status,
-											).map((s) => (
-												<DropdownItem
-													key={s}
-													onClick={() => handleUpdateDeliveryStatus(s)}
-													disabled={deliveryBusy}
-													icon={<Truck size={14} />}
-												>
-													{s}
-												</DropdownItem>
-											))}
-										</Dropdown>
-										<Button
-											variant="ghost"
-											size="sm"
-											onClick={() => setIsCancelDeliveryOpen(true)}
-											disabled={deliveryBusy}
-											className="text-gray-400 hover:text-red-500 text-[10px] font-black uppercase tracking-widest"
-										>
-											<X size={14} className="mr-1" />
-											Cancel Delivery
-										</Button>
 									</div>
 								)}
 								{trackingCode && providerCode && (
@@ -757,7 +685,25 @@ export default function OrderDetailsPage() {
 														{tracking.updatedAt || tracking.lastUpdate}
 													</p>
 												)}
-											</div>
+								{!!deliveryStatus.shipments && deliveryStatus.shipments.length > 1 && (
+									<div className="flex items-center justify-between gap-3">
+										<span className="text-[12px] font-bold text-gray-400 shrink-0">Shipments</span>
+										<span className="text-[12px] font-bold text-black text-right min-w-0">
+											{deliveryStatus.shipments.length} on this order
+										</span>
+									</div>
+								)}
+								{deliveryStatus.legacyDelivery && deliveryStatus.legacyDelivery.id !== deliveryStatus.id && (
+									<div className="pt-3 border-t border-gray-50 space-y-1">
+										<span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Earlier delivery request</span>
+										<p className="text-[11px] font-bold text-gray-500">
+											{deliveryStatus.legacyDelivery.provider || deliveryStatus.legacyDelivery.providerCode || "Unknown provider"}
+											 — {deliveryStatus.legacyDelivery.status || "Unknown"}
+											{deliveryStatus.legacyDelivery.createdAt && ` · ${formatDate(deliveryStatus.legacyDelivery.createdAt)}`}
+										</p>
+									</div>
+								)}
+							</div>
 										) : (
 											<p className="text-[11px] font-bold text-gray-400">
 												Tracking details unavailable
@@ -766,95 +712,21 @@ export default function OrderDetailsPage() {
 									</div>
 								)}
 							</div>
-						) : canDispatch ? (
-							<div className="space-y-2">
-								<span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
-									Delivery Quotes
-								</span>
-								{loadingQuotes ? (
-									<div className="space-y-3 animate-pulse">
-										<div className="h-10 bg-gray-50 rounded" />
-										<div className="h-10 bg-gray-50 rounded" />
-									</div>
-								) : quotesError ? (
-									<div className="py-6 text-center flex flex-col items-center gap-3 bg-red-50/10 rounded">
-										<AlertTriangle size={20} className="text-red-500" />
-										<p className="text-xs font-bold text-red-500">
-											Failed to load quotes
-										</p>
-										<Button
-											variant="ghost"
-											size="sm"
-											onClick={() => refetchQuotes()}
-											className="text-red-600 hover:bg-red-100 text-[10px] font-black uppercase tracking-widest"
-										>
-											<RefreshCw size={12} className="mr-2" />
-											Retry
-										</Button>
-									</div>
-								) : quotes && quotes.length > 0 ? (
-									<div className="divide-y divide-gray-50">
-										{quotes.map((quote, i) => {
-											const providerName = deliveryService.normalizeQuoteProvider(quote);
-											return (
-												<div
-													key={`${providerName}-${i}`}
-													className="flex items-center justify-between py-3 gap-3"
-												>
-													<div className="min-w-0">
-														<p className="text-xs font-black text-black truncate">
-															{providerName}
-														</p>
-														<p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-															{quote.eta || quote.estimatedDeliveryTime || "Standard delivery"}
-														</p>
-													</div>
-													<div className="flex items-center gap-3 shrink-0">
-														<span className="text-sm font-black text-black">
-															{formatCurrency(
-																deliveryService.normalizeQuoteAmount(quote),
-																deliveryService.normalizeQuoteCurrency(quote, activeCurrency),
-															)}
-														</span>
-														<Button
-															variant="black"
-															size="sm"
-															disabled={updating}
-															onClick={() => handleRequestDelivery(toDeliveryProvider(providerName))}
-															className="rounded-full px-4 text-[10px] font-black uppercase tracking-widest"
-														>
-															Request
-														</Button>
-													</div>
-												</div>
-											);
-										})}
-									</div>
-								) : (
-									<p className="text-[11px] font-bold text-gray-400 py-2">
-										No delivery quotes available for this order
-									</p>
-								)}
-							</div>
 						) : (
 							<p className="text-[11px] font-bold text-gray-400">
-								No delivery requested yet
+								No delivery requested yet — use Manage Delivery above to request one.
 							</p>
 						)}
 					</div>
 				</div>
 			</div>
 
-			<ConfirmDeleteModal
-				isOpen={isCancelDeliveryOpen}
-				onClose={() => setIsCancelDeliveryOpen(false)}
-				onConfirm={handleCancelDelivery}
-				loading={deliveryBusy}
-				title="Cancel Delivery"
-				itemName={deliveryStatus?.provider ?? undefined}
-				itemFallback="this delivery request"
-				keepLabel="Keep Delivery"
-				description="The delivery request will be cancelled. This action cannot be undone."
+			<DeliveryModal
+				isOpen={isDeliveryModalOpen}
+				onClose={() => setIsDeliveryModalOpen(false)}
+				orderId={orderId}
+				delivery={deliveryStatus ?? null}
+				onChanged={() => refetchDeliveryStatus()}
 			/>
 		</div>
 	);
