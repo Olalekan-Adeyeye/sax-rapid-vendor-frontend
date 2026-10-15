@@ -21,14 +21,11 @@ const FOOTER_COLUMNS = [
       { label: "Register", href: "/signup" },
       { label: "Pricing", href: "/#fees" },
       { label: "Logistics", href: "/#solutions" },
-      { label: "Payments", href: "/#fees" },
     ],
   },
   {
     heading: "Learn",
     links: [
-      { label: "Academy", href: "/resources" },
-      { label: "Webinars", href: "/resources" },
       { label: "Guides", href: "/seller-guide" },
       { label: "Blog", href: "/resources" },
     ],
@@ -39,7 +36,6 @@ const FOOTER_COLUMNS = [
       { label: "Help Center", href: "/faq" },
       { label: "FAQ", href: "/faq" },
       { label: "Contact Us", href: "/faq" },
-      { label: "Raise a Claim", href: "/faq" },
     ],
   },
 ];
@@ -117,10 +113,10 @@ export default async function PublicLayout({
               &copy; 2026 SAX-RAPID Vendor Center. All Rights Reserved.
             </p>
             <div className="flex gap-6 text-[10px] font-bold uppercase tracking-widest text-gray-600">
-              <Link href="/" className="hover:text-white transition-colors">
+              <Link href="/privacy-policy" className="hover:text-white transition-colors">
                 Privacy Policy
               </Link>
-              <Link href="/" className="hover:text-white transition-colors">
+              <Link href="/terms-and-conditions" className="hover:text-white transition-colors">
                 Terms of Service
               </Link>
             </div>

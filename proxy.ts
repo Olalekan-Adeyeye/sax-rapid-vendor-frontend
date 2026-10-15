@@ -13,6 +13,8 @@ const PUBLIC_ROUTES = [
   "/faq",
   "/resources",
   "/seller-guide",
+  "/privacy-policy",
+  "/terms-and-conditions",
 ];
 
 function isPublicOrAuthRoute(pathname: string): boolean {

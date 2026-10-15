@@ -22,9 +22,9 @@ import { BenefitCard } from "@/components/vendor/BenefitCard";
 import { StepItem } from "@/components/vendor/StepItem";
 
 const stats = [
-  { value: "5M+", label: "Active Buyers" },
-  { value: "50K+", label: "Active Sellers" },
-  { value: "$12.5B+", label: "Paid to Sellers" },
+  { value: "NG + SA", label: "Supported Markets" },
+  { value: "NGN + ZAR", label: "Market Currencies" },
+  { value: "Bank", label: "Direct Payouts" },
   { value: "24/7", label: "Vendor Support" },
 ];
 
@@ -75,7 +75,6 @@ const testimonials = [
   },
 ];
 
-
 export default function VendorCenter() {
   const [activeStep, setActiveStep] = useState(0);
 
@@ -122,14 +121,12 @@ export default function VendorCenter() {
                 SAX·RAPID Vendor Center
               </p>
               <h1 className="text-5xl lg:text-7xl font-black text-white leading-[1.05] tracking-tighter mb-6">
-                Expand Your
-                <br />
-                <span className="text-gold">Empire.</span>
+                Grow Your Business with SAX RAPID MARKET
               </h1>
               <p className="text-gray-300 text-xl mb-10 max-w-lg leading-relaxed font-medium">
-                Reach millions of premium shoppers across the world with
-                world-class logistics, real-time analytics, and payouts built
-                for serious sellers.
+                Reach more customers, showcase your products, and manage your
+                online sales with SAX-RAPID. We help sellers connect with
+                customers across Nigeria and South Africa.
               </p>
               <div className="flex flex-wrap gap-4">
                 <Button
@@ -137,7 +134,7 @@ export default function VendorCenter() {
                   asChild
                   className="hover:bg-white! hover:text-black! border border-transparent hover:border-white! transition-all"
                 >
-                  <Link href="/signup">Register Free</Link>
+                  <Link href="/signup">Become a Seller</Link>
                 </Button>
                 <Button
                   variant="secondary"
@@ -186,7 +183,7 @@ export default function VendorCenter() {
         <div className="flex animate-ticker whitespace-nowrap gap-12">
           {[...Array(3)].flatMap((_, outerIndex) =>
             [
-              "5 Million Buyers",
+              "Nigeria & South Africa",
               "Payouts",
               "Rapid Nationwide Delivery",
               "24/7 Seller Support",
@@ -211,35 +208,35 @@ export default function VendorCenter() {
           <div className="max-w-2xl mb-16">
             <div className="w-10 h-1.5 bg-gold rounded-full mb-6" />
             <h2 className="text-4xl font-black tracking-tighter mb-4">
-              Why Top Sellers Choose SAX·RAPID
+              Everything You Need to Grow Your Business
             </h2>
             <p className="text-gray-500 text-base leading-relaxed">
-              We give you everything you need to build, grow and manage a
-              successful online business — all in one place.
+              Manage your products, receive customer orders, track sales, and
+              grow your business through one convenient platform.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
             <BenefitCard
               icon={<Globe size={32} strokeWidth={1.5} />}
-              title="Massive Reach"
-              desc="Direct access to over 5 million premium, intent-driven shoppers across the world."
+              title="Reach More Customers"
+              desc="Showcase your products to customers shopping on SAX RAPID MARKET"
               accent
             />
             <BenefitCard
               icon={<Zap size={32} strokeWidth={1.5} />}
-              title="Rapid Logistics"
-              desc="Our nationwide fleet handles pickup, packaging and same-day shipping at scale."
+              title="Flexible Delivery Options"
+              desc="Access available delivery services and fulfilment options in supported locations."
             />
             <BenefitCard
               icon={<BarChart3 size={32} strokeWidth={1.5} />}
-              title="Smart Analytics"
-              desc="Live dashboards with sales trends, traffic insights, and competitor benchmarks."
+              title="Manage Your Sales"
+              desc="Track orders, monitor sales performance, and manage your product listings from your vendor dashboard."
             />
             <BenefitCard
               icon={<Gem size={32} strokeWidth={1.5} />}
-              title="Dedicated Support"
-              desc="A personal account manager and a 24/7 support line — always in your corner."
+              title="Seller Support"
+              desc="Get assistance with registration, product listings, orders, and account management."
             />
           </div>
         </div>
@@ -374,11 +371,13 @@ export default function VendorCenter() {
           <div className="max-w-2xl mb-16">
             <div className="w-10 h-1.5 bg-gold rounded-full mb-6" />
             <h2 className="text-4xl font-black tracking-tighter mb-4">
-              Fees & Commissions
+              Simple, Transparent Seller Fees
             </h2>
             <p className="text-gray-500 text-base leading-relaxed">
-              Zero setup fees. No monthly subscriptions. You only pay when you
-              sell.
+              Get started with a clear understanding of the fees associated with
+              selling on SAX-RAPID. Review our seller fees, commissions,
+              delivery charges, and applicable payment processing costs before
+              listing your products.
             </p>
           </div>
 
@@ -393,10 +392,10 @@ export default function VendorCenter() {
               </p>
               <ul className="space-y-3 mb-8 flex-1">
                 {[
-                  "Unlimited product uploads",
+                  "Product uploads",
                   "High-res images & videos",
                   "Category & attribute setup",
-                  "Bulk import tools",
+                  "Product variations",
                 ].map((f) => (
                   <li
                     key={f}
@@ -459,7 +458,6 @@ export default function VendorCenter() {
                   "Live chat & email",
                   "Comprehensive help centre",
                   "Onboarding assistance",
-                  "Seller community access",
                   "Account management",
                 ].map((f) => (
                   <li
@@ -589,29 +587,34 @@ export default function VendorCenter() {
       {/* ── CTA BANNER ───────────────────────────── */}
       <section className="py-4 bg-gold">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6 py-14">
+          <div className="flex flex-col justify-between gap-6 py-14">
             <div>
               <h2 className="text-4xl md:text-5xl font-black text-black tracking-tighter">
-                Don&apos;t wait for the future.
-                <br />
-                Build it now.
+                Ready to Grow Your Business?
               </h2>
               <p className="text-black/60 font-bold mt-4 text-base">
-                It takes less than 5 minutes to get started.
+                Join SAX-RAPID and take your products online. Create your seller
+                account and get ready to reach more customers in Nigeria and
+                South Africa.
               </p>
             </div>
-            <div className="flex flex-col items-center gap-4 shrink-0">
+            <div className="flex flex-row flex-wrap gap-4 shrink-0">
               <Button
                 variant="primary"
                 size="lg"
                 asChild
                 className="bg-black! text-gold hover:bg-white! hover:text-black shadow-2xl px-14"
               >
-                <Link href="/signup">Create Your Store</Link>
+                <Link href="/signup">Start Selling</Link>
               </Button>
-              <span className="text-[10px] font-black uppercase tracking-widest text-black/40">
-                Zero setup fees. Zero risk.
-              </span>
+              <Button
+                variant="primary"
+                size="lg"
+                asChild
+                className="bg-black! text-gold hover:bg-white! hover:text-black shadow-2xl px-14"
+              >
+                <Link href="/login">Already a Seller? Log In</Link>
+              </Button>
             </div>
           </div>
         </div>
