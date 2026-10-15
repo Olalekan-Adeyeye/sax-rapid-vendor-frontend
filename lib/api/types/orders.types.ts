@@ -2,6 +2,8 @@
  * TypeScript types/DTOs for the Orders tag
  */
 
+import type { DeliveryStatus } from "./delivery.types";
+
 export interface VariationAttributeDTO {
   attributeName?: string | null;
   attributeValue?: string | null;
@@ -17,6 +19,7 @@ export interface VariationDetailsDTO {
   effectivePrice?: number;
   stockQuantity?: number;
   isInStock?: boolean;
+  weight?: number | null;
   attributes?: Record<string, string> | VariationAttributeDTO[] | null;
 }
 
@@ -68,12 +71,18 @@ export interface OrderUserResponseDTO {
 export interface OrderItemResponseDTO {
   id: string; // uuid
   productId: string;
+  bundleId?: string | null;
   productName: string | null;
+  productImageUrl?: string | null;
   productSKU: string | null;
+  currency?: string | null;
   variationDetails: VariationDetails;
   quantity: number;
   unitPrice: number;
   totalPrice: number;
+  trackingNumber?: string | null;
+  shippingPartner?: string | null;
+  deliveryStatus?: DeliveryStatus | null;
 }
 
 export interface OrderResponseDTO {
@@ -82,6 +91,7 @@ export interface OrderResponseDTO {
   status: OrderStatus;
   paymentStatus: PaymentStatus;
   paymentMethod: PaymentMethod;
+  currency?: string | null;
   subTotal: number;
   taxAmount: number;
   shippingFee: number;
@@ -92,8 +102,8 @@ export interface OrderResponseDTO {
   shippingState: string | null;
   shippingCountry: string | null;
   trackingNumber: string | null;
-  deliveryStatus: string | null;
   createdAt: string; // ISO 8601 date-time
+  paidAt?: string | null; // ISO 8601 date-time
   deliveredAt: string | null; // ISO 8601 date-time
   user: OrderUserResponseDTO | null;
   items: OrderItemResponseDTO[] | null;
@@ -110,9 +120,16 @@ export interface UpdateOrderStatusRequest {
   status: OrderStatus;
 }
 
+/** Per-vendor shipping choice made at checkout. */
+export interface VendorDeliverySelectionDTO {
+  vendorId: string;
+  optionId: string;
+}
+
 export interface CreateOrderRequestDTO {
   shippingAddressId: string;
   paymentMethod: PaymentMethod;
   notes?: string | null;
   couponCode?: string | null;
+  deliverySelections?: VendorDeliverySelectionDTO[] | null;
 }
