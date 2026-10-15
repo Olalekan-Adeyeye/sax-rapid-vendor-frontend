@@ -1,12 +1,14 @@
 "use client";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { ShieldCheck, CreditCard, Check } from "lucide-react";
 import React, { useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
+import * as paymentsService from "@/lib/api/services/payments";
 import * as walletService from "@/lib/api/services/wallet";
+import type { PaymentGateway } from "@/lib/api/types/payments.types";
 import { useToast } from "@/lib/context/ToastContext";
 import { getCurrencySymbol } from "@/lib/utils/countries";
 import { getErrorMessage } from "@/lib/utils/errors";
@@ -19,14 +21,11 @@ interface FundWalletModalProps {
   userEmail: string;
 }
 
-const PROVIDERS: {
-  id: "Paystack" | "PayFast" | "Manual";
+const FALLBACK_PROVIDERS: {
+  id: PaymentGateway;
   name: string;
   region: string;
-  logo: string;
-}[] = [
-  { id: "Paystack", name: "Paystack", region: "Nigeria & Africa", logo: "PS" },
-];
+}[] = [{ id: "Paystack", name: "Paystack", region: "Nigeria & Africa" }];
 
 export function FundWalletModal({
   isOpen,
@@ -37,9 +36,30 @@ export function FundWalletModal({
 }: FundWalletModalProps) {
   const { toast } = useToast();
   const [amount, setAmount] = useState("");
-  const [provider, setProvider] = useState<"Paystack" | "PayFast" | "Manual">(
-    "Paystack",
-  );
+  const [provider, setProvider] = useState<PaymentGateway>("Paystack");
+
+  const { data: gatewayOptions, isLoading: loadingGateways } = useQuery({
+    queryKey: ["payment-gateways", currency],
+    queryFn: () => paymentsService.getPaymentGateways({ currency }),
+    enabled: isOpen,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const providers =
+    gatewayOptions && gatewayOptions.length > 0
+      ? gatewayOptions.map((option) => ({
+          id: option.gateway,
+          name: option.displayName || option.gateway,
+          region: [option.countryCode, option.currency]
+            .filter(Boolean)
+            .join(" · "),
+        }))
+      : FALLBACK_PROVIDERS;
+
+  // Keep the selection valid when the gateway list loads/changes.
+  const selectedGateway: PaymentGateway = providers.some((p) => p.id === provider)
+    ? provider
+    : (providers[0]?.id ?? "Paystack");
 
   const mutation = useMutation({
     mutationFn: walletService.fundWallet,
@@ -77,7 +97,7 @@ export function FundWalletModal({
     mutation.mutate({
       amount: numAmount,
       email: userEmail,
-      gateway: provider,
+      gateway: selectedGateway,
       currency,
       callbackUrl: `${window.location.origin}/wallet`,
     });
@@ -99,13 +119,18 @@ export function FundWalletModal({
             Payment Provider
           </label>
           <div className="grid grid-cols-1 gap-4">
-            {PROVIDERS.map((p) => (
+            {loadingGateways && (
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                Loading available providers...
+              </p>
+            )}
+            {providers.map((p) => (
               <button
                 key={p.id}
                 type="button"
                 onClick={() => setProvider(p.id)}
                 className={`relative p-5 rounded border transition-all text-left flex flex-col gap-1 ${
-                  provider === p.id
+                  selectedGateway === p.id
                     ? "border-gold bg-gold/5 ring-1 ring-gold"
                     : "border-gray-100 bg-white hover:border-gray-200"
                 }`}
@@ -116,7 +141,7 @@ export function FundWalletModal({
                 <span className="text-[8px] font-black uppercase tracking-widest text-gray-400">
                   {p.region}
                 </span>
-                {provider === p.id && (
+                {selectedGateway === p.id && (
                   <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-gold flex items-center justify-center">
                     <Check size={10} className="text-black" />
                   </div>
@@ -151,8 +176,8 @@ export function FundWalletModal({
         <div className="bg-gray-50 rounded p-6 flex gap-4">
           <ShieldCheck className="text-green-500 shrink-0" size={20} />
           <p className="text-[10px] font-medium text-gray-500 leading-relaxed">
-            Transactions are secured by {provider}. Your payment information is
-            encrypted and processed directly by the gateway.
+            Transactions are secured by {selectedGateway}. Your payment
+            information is encrypted and processed directly by the gateway.
           </p>
         </div>
 

@@ -20,12 +20,16 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { AddBankAccountModal } from "@/components/wallet/AddBankAccountModal";
 import { WithdrawModal } from "@/components/wallet/WithdrawModal";
 import * as bankAccountService from "@/lib/api/services/bank-accounts";
+import * as disputesService from "@/lib/api/services/disputes";
 import * as walletService from "@/lib/api/services/wallet";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useToast } from "@/lib/context/ToastContext";
 import { useCurrency } from "@/lib/hooks/useCurrency";
 import { formatCurrency, resolveCurrency } from "@/lib/utils/currency";
 import { getErrorMessage } from "@/lib/utils/errors";
+import { resolveWalletBreakdown } from "@/lib/utils/wallet";
+
+const CLOSED_DISPUTE_STATUSES = new Set(["resolved", "closed", "dismissed"]);
 
 export default function PayoutsPage() {
   const queryClient = useQueryClient();
@@ -44,12 +48,26 @@ export default function PayoutsPage() {
   });
 
   const activeCurrency = resolveCurrency(wallet?.currency, regionCurrency);
+  const walletBreakdown = resolveWalletBreakdown(wallet);
 
   const { data: bankAccounts = [], isLoading: loadingBankAccounts } = useQuery({
     queryKey: ["bank-accounts"],
     queryFn: bankAccountService.getBankAccounts,
     enabled: isAuthenticated,
   });
+
+  const { data: vendorDisputes = [] } = useQuery({
+    queryKey: ["vendor-disputes"],
+    queryFn: disputesService.getVendorDisputes,
+    enabled: isAuthenticated,
+    retry: false,
+  });
+
+  const openDisputesCount = (vendorDisputes || []).filter((dispute) => {
+    const status = (dispute.status || "").trim().toLowerCase();
+    return status !== "" && !CLOSED_DISPUTE_STATUSES.has(status);
+  }).length;
+  const hasOpenDisputes = openDisputesCount > 0;
 
   const setDefaultMutation = useMutation({
     mutationFn: bankAccountService.setDefaultBankAccount,
@@ -120,24 +138,39 @@ export default function PayoutsPage() {
         <StatCard
           icon={Banknote}
           title="Available Balance"
-          value={formatCurrency(wallet?.balance || 0, activeCurrency)}
-          detail="Ready for payout"
+          value={formatCurrency(walletBreakdown.available, activeCurrency)}
+          detail={
+            walletBreakdown.heldEarnings > 0
+              ? "Held order earnings excluded"
+              : "Ready for payout"
+          }
         />
         <StatCard
           icon={Clock}
           title="Pending Balance"
-          value={formatCurrency(wallet?.pendingBalance || 0, activeCurrency)}
-          detail="Awaiting settlement"
+          value={formatCurrency(walletBreakdown.pendingTotal, activeCurrency)}
+          detail={
+            [
+              walletBreakdown.heldEarnings > 0
+                ? `${formatCurrency(walletBreakdown.heldEarnings, activeCurrency)} awaiting order confirmation`
+                : null,
+              walletBreakdown.reservedWithdrawals > 0
+                ? `${formatCurrency(walletBreakdown.reservedWithdrawals, activeCurrency)} reserved for payout`
+                : null,
+              walletBreakdown.unclassifiedPending > 0
+                ? `${formatCurrency(walletBreakdown.unclassifiedPending, activeCurrency)} on hold (e.g. disputes)`
+                : null,
+            ]
+              .filter(Boolean)
+              .join(" · ") || "Awaiting settlement"
+          }
           variant="dark"
         />
         <StatCard
           icon={CheckCircle}
           title="Total Balance"
-          value={formatCurrency(
-            (wallet?.balance || 0) + (wallet?.pendingBalance || 0),
-            activeCurrency,
-          )}
-          detail="Combined value"
+          value={formatCurrency(walletBreakdown.total, activeCurrency)}
+          detail="Available + pending"
         />
       </div>
 
@@ -210,8 +243,10 @@ export default function PayoutsPage() {
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ["vendor-wallet"] });
         }}
-        availableBalance={wallet?.balance || 0}
+        availableBalance={walletBreakdown.available}
         currency={wallet?.currency || activeCurrency}
+        hasOpenDisputes={hasOpenDisputes}
+        openDisputesCount={openDisputesCount}
       />
 
       <AddBankAccountModal

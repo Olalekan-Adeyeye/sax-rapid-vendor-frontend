@@ -11,6 +11,7 @@ import {
   VerifyPaymentResponseDTO,
   PaymentResponseDTO,
   PaymentGateway,
+  PaymentGatewayOptionResponseDTO,
 } from "../types/payments.types";
 
 const BASE = "/Payment";
@@ -69,4 +70,18 @@ export async function getMyPayments(): Promise<PaymentResponseDTO[]> {
 export async function getPaymentsByOrder(orderId: string): Promise<PaymentResponseDTO[]> {
   const response = await apiClient.get<ApiResponse<PaymentResponseDTO[]>>(`${BASE}/order/${orderId}`);
   return response.data.data;
+}
+
+/**
+ * GET /api/Payment/gateways
+ * Lists configured checkout gateways (NGN & ZAR), optionally filtered by currency/country.
+ */
+export async function getPaymentGateways(params?: {
+  currency?: string;
+  country?: string;
+}): Promise<PaymentGatewayOptionResponseDTO[]> {
+  const response = await apiClient.get<
+    ApiResponse<PaymentGatewayOptionResponseDTO[]>
+  >(`${BASE}/gateways`, { params });
+  return response.data.data ?? [];
 }

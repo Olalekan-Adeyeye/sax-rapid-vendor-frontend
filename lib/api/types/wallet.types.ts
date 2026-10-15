@@ -5,6 +5,16 @@
 
 export interface WalletDetailsResponseDTO {
   balance: number;
+  /** Funds the vendor can withdraw right now (excludes held earnings + reserved withdrawals). */
+  availableBalance?: number;
+  /** Accounting total: available + all held/pending amounts. */
+  totalBalance?: number;
+  /** Order earnings held until the customer confirms the order was received. */
+  heldOrderEarnings?: number;
+  /** Amounts already reserved by in-flight withdrawal requests. */
+  pendingWithdrawalBalance?: number;
+  /** Pending funds that are neither held earnings nor reserved withdrawals (e.g. disputed orders). */
+  unclassifiedPendingBalance?: number;
   pendingBalance: number;
   currency?: string | null;
   recentTransactions?: WalletTransactionResponseDTO[] | null;

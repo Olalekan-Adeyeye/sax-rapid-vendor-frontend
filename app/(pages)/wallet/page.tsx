@@ -25,6 +25,7 @@ import { useCurrency } from "@/lib/hooks/useCurrency";
 import { formatCurrency, resolveCurrency } from "@/lib/utils/currency";
 import { getRelativeTime } from "@/lib/utils/date";
 import { getErrorMessage } from "@/lib/utils/errors";
+import { resolveWalletBreakdown } from "@/lib/utils/wallet";
 
 export default function WalletPage() {
   const queryClient = useQueryClient();
@@ -46,6 +47,44 @@ export default function WalletPage() {
   });
 
   const activeCurrency = resolveCurrency(wallet?.currency, regionCurrency);
+  const walletBreakdown = resolveWalletBreakdown(wallet);
+  const balanceBreakdownItems = [
+    {
+      label: "Total Balance",
+      value: walletBreakdown.total,
+      hint: "Available + all pending funds",
+    },
+    {
+      label: "Available to Withdraw",
+      value: walletBreakdown.available,
+      hint: "Ready for payout now",
+    },
+    {
+      label: "Held Order Earnings",
+      value: walletBreakdown.heldEarnings,
+      hint: "Released once customers confirm receipt",
+    },
+    {
+      label: "Reserved for Payout",
+      value: walletBreakdown.reservedWithdrawals,
+      hint: "Set aside for withdrawal requests",
+    },
+    {
+      label: "On Hold / Disputes",
+      value: walletBreakdown.unclassifiedPending,
+      hint: "Frozen by disputes or reviews",
+    },
+    {
+      label: "Pending Total",
+      value: walletBreakdown.pendingTotal,
+      hint: "Held + reserved + on hold",
+    },
+    {
+      label: "Ledger Balance",
+      value: wallet?.balance ?? 0,
+      hint: "Raw wallet ledger figure",
+    },
+  ];
   const transactions = wallet?.recentTransactions || [];
   const error = walletError ? getErrorMessage(walletError) : null;
   const loadingTransactions = loadingWallet;
@@ -121,7 +160,7 @@ export default function WalletPage() {
                         </div>
                       </div>
                       <h3 className="text-3xl lg:text-4xl font-black tracking-tighter">
-                        {formatCurrency(wallet?.balance || 0, activeCurrency)}
+                        {formatCurrency(walletBreakdown.total, activeCurrency)}
                       </h3>
                       <p className="text-[10px] font-bold text-gray-500">
                         Total Wallet Balance
@@ -135,8 +174,16 @@ export default function WalletPage() {
                           Available
                         </p>
                         <p className="text-sm font-bold wrap-break-word">
-                          {formatCurrency(wallet?.balance || 0, activeCurrency)}
+                          {formatCurrency(
+                            walletBreakdown.available,
+                            activeCurrency,
+                          )}
                         </p>
+                        {walletBreakdown.heldEarnings > 0 && (
+                          <p className="text-[9px] font-bold text-gray-500 mt-1">
+                            Held until order confirmed
+                          </p>
+                        )}
                       </div>
                       <div className="bg-white/5 rounded p-4 group-hover:bg-white/10 transition-colors border border-white/5">
                         <p className="text-[9px] font-bold text-gray-500 mb-1 uppercase tracking-widest">
@@ -144,13 +191,54 @@ export default function WalletPage() {
                         </p>
                         <p className="text-sm font-bold">
                           {formatCurrency(
-                            wallet?.pendingBalance || 0,
+                            walletBreakdown.pendingTotal,
                             activeCurrency,
                           )}
                         </p>
+                        {walletBreakdown.reservedWithdrawals > 0 && (
+                          <p className="text-[9px] font-bold text-gray-500 mt-1">
+                            {formatCurrency(
+                              walletBreakdown.reservedWithdrawals,
+                              activeCurrency,
+                            )}{" "}
+                            reserved for payout
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Balance Breakdown */}
+            {!loadingWallet && wallet && !error && (
+              <div className="bg-white border border-gray-100 rounded p-8 space-y-6">
+                <div className="flex items-center justify-between gap-4">
+                  <h4 className="text-xs font-bold text-black">
+                    Balance Breakdown
+                  </h4>
+                  <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">
+                    {activeCurrency}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {balanceBreakdownItems.map((item) => (
+                    <div
+                      key={item.label}
+                      className="bg-gray-50/50 border border-gray-100 rounded p-5 space-y-2"
+                    >
+                      <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">
+                        {item.label}
+                      </p>
+                      <p className="text-sm font-black text-black wrap-break-word">
+                        {formatCurrency(item.value, activeCurrency)}
+                      </p>
+                      <p className="text-[9px] font-medium text-gray-400 leading-relaxed">
+                        {item.hint}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}

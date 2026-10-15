@@ -20,6 +20,8 @@ interface WithdrawModalProps {
   onSuccess: () => void;
   availableBalance: number;
   currency: string;
+  hasOpenDisputes?: boolean;
+  openDisputesCount?: number;
 }
 
 export function WithdrawModal({
@@ -28,6 +30,8 @@ export function WithdrawModal({
   onSuccess,
   availableBalance,
   currency,
+  hasOpenDisputes = false,
+  openDisputesCount = 0,
 }: WithdrawModalProps) {
   const { toast } = useToast();
 
@@ -75,6 +79,15 @@ export function WithdrawModal({
       toast(
         "Insufficient Funds",
         "The withdrawal amount exceeds your available balance",
+        "error",
+      );
+      return;
+    }
+
+    if (hasOpenDisputes) {
+      toast(
+        "Withdrawal Blocked",
+        "Funds on hold — resolve your open disputes before withdrawing.",
         "error",
       );
       return;
@@ -160,6 +173,20 @@ export function WithdrawModal({
             delays.
           </p>
         </div>
+
+        {hasOpenDisputes && (
+          <div className="bg-amber-50 rounded p-6 flex gap-4 border border-amber-200">
+            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-amber-500 shrink-0">
+              <span className="text-xs font-black">!</span>
+            </div>
+            <p className="text-[10px] font-medium text-amber-700/80 leading-relaxed">
+              Withdrawals are blocked while you have
+              {openDisputesCount > 0 ? ` ${openDisputesCount} ` : " "}
+              open dispute{openDisputesCount === 1 ? "" : "s"}. Resolve your
+              open disputes to unlock payouts.
+            </p>
+          </div>
+        )}
 
         <div className="flex gap-4 pt-4">
           <Button

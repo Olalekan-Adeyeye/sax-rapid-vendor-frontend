@@ -5,6 +5,14 @@
 
 export type PaymentGateway = "Paystack" | "PayFast" | "Manual";
 
+/** GET /api/Payment/gateways — configured checkout choices for the vendor's market (NGN/ZAR). */
+export interface PaymentGatewayOptionResponseDTO {
+  gateway: PaymentGateway;
+  displayName?: string | null;
+  currency?: string | null;
+  countryCode?: string | null;
+}
+
 export type PaymentStatus =
   | "Pending"
   | "Authorized"
