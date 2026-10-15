@@ -4,9 +4,7 @@ const PRODUCT_QUERY_PREFIXES: string[][] = [
   ["product"],
   ["my-products"],
   ["vendor-products"],
-  ["vendor-inventory"],
   ["vendor-product-stats"],
-  ["inventory-status"],
 ];
 
 export function invalidateProductQueries(queryClient: QueryClient): void {

@@ -21,7 +21,6 @@ import {
   Headphones,
   ShieldAlert,
   Boxes,
-  Database,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -42,7 +41,6 @@ const navGroups = [
     title: "Inventory",
     items: [
       { name: "All Products", href: "/products", icon: Package },
-      { name: "Stock Management", href: "/inventory", icon: Database },
       { name: "Add Product", href: "/products/add", icon: Plus },
       { name: "Categories", href: "/products/categories", icon: Tags },
     ],
