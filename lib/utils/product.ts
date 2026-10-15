@@ -110,6 +110,7 @@ export function generateVariations(attributes: Attribute[]): Variation[] {
 		saleStartDate: "",
 		saleEndDate: "",
 		stock: "",
+		weight: "",
 		attributes: combo.attrList,
 	}));
 }

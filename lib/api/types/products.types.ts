@@ -37,6 +37,7 @@ export interface ProductVariationResponseDTO {
 	effectivePrice: number;
 	stockQuantity: number;
 	isInStock: boolean;
+	weight?: number | null;
 	imageUrl?: string | null;
 	attributes: Record<string, string> | null;
 }
@@ -142,6 +143,7 @@ export interface CreateVariationDTO {
 	salePriceStartDate?: string | null;
 	salePriceEndDate?: string | null;
 	stockQuantity: number;
+	weight?: number | null;
 	imageUrl?: string | null;
 	attributes: VariationAttributeDTO[] | null;
 }

@@ -187,9 +187,10 @@ export default function EditProductPage() {
 	const [bulkPrice, setBulkPrice] = useState("");
 	const [bulkSalePrice, setBulkSalePrice] = useState("");
 	const [bulkStock, setBulkStock] = useState("");
+	const [bulkWeight, setBulkWeight] = useState("");
 
 	const applyBulkVariations = () => {
-		if (!bulkPrice && !bulkSalePrice && !bulkStock) {
+		if (!bulkPrice && !bulkSalePrice && !bulkStock && !bulkWeight) {
 			toast("Empty", "Enter at least one value to apply to all variations.", "warning");
 			return;
 		}
@@ -198,11 +199,13 @@ export default function EditProductPage() {
 			...(bulkPrice ? { price: bulkPrice } : {}),
 			...(bulkSalePrice ? { salePrice: bulkSalePrice } : {}),
 			...(bulkStock ? { stock: bulkStock } : {}),
+			...(bulkWeight ? { weight: bulkWeight } : {}),
 		}));
 		setValue("variations", updated);
 		setBulkPrice("");
 		setBulkSalePrice("");
 		setBulkStock("");
+		setBulkWeight("");
 		toast("Applied", "Bulk values applied to all variations.", "success");
 	};
 
@@ -331,15 +334,29 @@ export default function EditProductPage() {
               attributeValue: val,
             }));
           }
+          const weightEntry = attrsList.find(
+            (a) => a.attributeName.toLowerCase() === "weight",
+          );
+          const legacyWeightValue = weightEntry
+            ? weightEntry.attributeValue.replace(/kg\s*$/i, "").trim()
+            : "";
+          const weightValue =
+            v.weight != null && Number.isFinite(Number(v.weight))
+              ? String(v.weight)
+              : legacyWeightValue;
+          const filteredAttrs = attrsList.filter(
+            (a) => a.attributeName.toLowerCase() !== "weight",
+          );
 
           return {
             id: v.id,
             name:
-              attrsList.length > 0
-                ? attrsList.map((a) => a.attributeValue).join(" / ")
+              filteredAttrs.length > 0
+                ? filteredAttrs.map((a) => a.attributeValue).join(" / ")
                 : v.sku || "Variation",
             price: v.price?.toString() || "",
             stock: v.stockQuantity?.toString() || "0",
+            weight: weightValue,
             salePrice: v.salePrice?.toString() || "",
             saleStartDate: v.salePriceStartDate
               ? v.salePriceStartDate.split("T")[0]
@@ -347,7 +364,7 @@ export default function EditProductPage() {
             saleEndDate: v.salePriceEndDate
               ? v.salePriceEndDate.split("T")[0]
               : "",
-            attributes: attrsList,
+            attributes: filteredAttrs,
             imageUrl: v.imageUrl || undefined,
           };
         });
@@ -595,16 +612,23 @@ export default function EditProductPage() {
                 name: attr.name,
                 value: attr.values.join(", "),
               })),
-              variations: (data.variations || []).map((v) => ({
-                sku: v.id,
-                price: Number(v.price),
-                salePrice: v.salePrice ? Number(v.salePrice) : undefined,
-                salePriceStartDate: v.saleStartDate || null,
-                salePriceEndDate: v.saleEndDate || null,
-                stockQuantity: Number(v.stock),
-                imageUrl: variationImageUrls[v.id] || varUrls[v.id] || null,
-                attributes: v.attributes || [],
-              })),
+              variations: (data.variations || []).map((v) => {
+                const attributes = (v.attributes || []).filter(
+                  (a) => a.attributeName?.toLowerCase() !== "weight",
+                );
+                const trimmedWeight = (v.weight || "").trim();
+                return {
+                  sku: v.id,
+                  price: Number(v.price),
+                  salePrice: v.salePrice ? Number(v.salePrice) : undefined,
+                  salePriceStartDate: v.saleStartDate || null,
+                  salePriceEndDate: v.saleEndDate || null,
+                  stockQuantity: Number(v.stock),
+                  weight: trimmedWeight ? Number(trimmedWeight) : null,
+                  imageUrl: variationImageUrls[v.id] || varUrls[v.id] || null,
+                  attributes,
+                };
+              }),
             }),
       };
 
@@ -1119,6 +1143,21 @@ export default function EditProductPage() {
                           className="bg-white border-gray-200 focus:border-gold/50 py-2.5! px-3!"
                         />
                       </div>
+                      <div className="flex-1 w-full">
+                        <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1.5 block">
+                          Bulk Weight (kg)
+                        </label>
+                        <Input
+                          id="bulk-weight"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          placeholder="0.00"
+                          value={bulkWeight}
+                          onChange={(e) => setBulkWeight(e.target.value)}
+                          className="bg-white border-gray-200 focus:border-gold/50 py-2.5! px-3!"
+                        />
+                      </div>
                       <Button
                         onClick={applyBulkVariations}
                         variant="black"
@@ -1166,6 +1205,9 @@ export default function EditProductPage() {
                               </th>
                               <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 w-1/6">
                                 Stock
+                              </th>
+                              <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 w-1/6">
+                                Weight (kg)
                               </th>
                               <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 w-1/6">
                                 Image
@@ -1238,6 +1280,24 @@ export default function EditProductPage() {
                                       className="bg-white border-gray-200 focus:border-gold/50 py-2.5! px-4!"
                                     />
                                   </td>
+                                  <td className="p-3">
+                                    <Input
+                                      id={`var-weight-${v.id}`}
+                                      type="number"
+                                      min="0"
+                                      step="0.01"
+                                      value={v.weight || ""}
+                                      onChange={(e) =>
+                                        updateVariation(
+                                          v.id,
+                                          "weight",
+                                          e.target.value,
+                                        )
+                                      }
+                                      placeholder="0.00"
+                                      className="bg-white border-gray-200 focus:border-gold/50 py-2.5! px-4!"
+                                    />
+                                  </td>
                                   <td className="p-3 align-middle">
                                     <input
                                       type="file"
@@ -1303,7 +1363,7 @@ export default function EditProductPage() {
                                 </tr>
                                 {expandedVariationSchedules.has(v.id) && (
                                   <tr className="bg-gray-50/30">
-                                    <td colSpan={5} className="px-5 py-4">
+                                    <td colSpan={6} className="px-5 py-4">
                                       <div className="grid grid-cols-2 gap-4 animate-in slide-in-from-top-1 duration-200">
                                         <div className="space-y-1.5">
                                           <label className="text-[8px] font-black uppercase tracking-widest text-gray-400 ml-1">

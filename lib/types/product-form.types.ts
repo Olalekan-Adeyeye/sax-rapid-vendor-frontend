@@ -35,6 +35,7 @@ export interface Variation {
 	saleStartDate?: string;
 	saleEndDate?: string;
 	stock: string;
+	weight?: string;
 	attributes?: { attributeName: string; attributeValue: string }[];
 	imageUrl?: string;
 }

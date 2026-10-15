@@ -18,6 +18,18 @@ const nonNegativeInteger = (label: string) =>
       `${label} must be a whole number (0 or more)`,
     );
 
+const optionalPositiveAmount = (label: string) =>
+  z
+    .string()
+    .optional()
+    .refine(
+      (v) =>
+        v === undefined ||
+        v === "" ||
+        (!Number.isNaN(Number(v)) && Number(v) > 0),
+      `${label} must be a positive number`,
+    );
+
 /**
  * Profile Schema
  */
@@ -69,6 +81,7 @@ export const variableProductSchema = baseProductSchema.extend({
     saleStartDate: z.string().optional(),
     saleEndDate: z.string().optional(),
     stock: nonNegativeInteger("Stock"),
+    weight: optionalPositiveAmount("Weight"),
     attributes: z.array(z.object({
       attributeName: z.string(),
       attributeValue: z.string(),

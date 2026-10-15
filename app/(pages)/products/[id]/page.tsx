@@ -494,6 +494,9 @@ export default function SingleProductPage() {
                         Stock Status
                       </th>
                       <th className="px-10 py-6 text-[10px] font-black uppercase tracking-widest text-gray-500 border-b border-gray-100">
+                        Weight
+                      </th>
+                      <th className="px-10 py-6 text-[10px] font-black uppercase tracking-widest text-gray-500 border-b border-gray-100">
                         Image
                       </th>
                       <th className="px-10 py-6 text-[10px] font-black uppercase tracking-widest text-gray-500 border-b border-gray-100">
@@ -538,6 +541,27 @@ export default function SingleProductPage() {
                               {v.stockQuantity} in stock
                             </span>
                           </div>
+                        </td>
+                        <td className="px-10 py-8">
+                          {(() => {
+                            const legacyWeight = v.attributes
+                              ? Object.entries(v.attributes).find(([key]) =>
+                                  key.toLowerCase() === "weight",
+                                )?.[1]
+                              : undefined;
+                            const weight =
+                              v.weight ??
+                              legacyWeight?.replace(/kg\s*$/i, "").trim();
+                            return weight != null && `${weight}` !== "" ? (
+                              <span className="text-xs font-black text-black">
+                                {weight} kg
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-gray-300 font-bold">
+                                —
+                              </span>
+                            );
+                          })()}
                         </td>
                         <td className="px-10 py-8">
                           {v.imageUrl ? (
